@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pokemon Card Prices</title>
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #16161a;
+      --surface2: #1e1e24;
+      --border: #2a2a35;
+      --accent: #7c6aff;
+      --accent-glow: rgba(124, 106, 255, 0.25);
+      --text: #e8e8f0;
+      --muted: #6b6b80;
+      --nm: #4ade80;
+      --lp: #a3e635;
+      --mp: #facc15;
+      --hp: #f87171;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      width: 260px;
+      min-width: 260px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #sidebar-header {
+      padding: 20px 16px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #sidebar-header h1 {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    #card-list {
+      overflow-y: auto;
+      flex: 1;
+      padding: 8px 0;
+    }
+
+    #card-list::-webkit-scrollbar { width: 4px; }
+    #card-list::-webkit-scrollbar-track { background: transparent; }
+    #card-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .card-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .card-item:hover { background: var(--surface2); }
+
+    .card-item.active {
+      background: var(--surface2);
+      border-left-color: var(--accent);
+    }
+
+    .card-item .thumb {
+      width: 38px;
+      height: 53px;
+      object-fit: cover;
+      border-radius: 4px;
+      background: var(--surface2);
+      flex-shrink: 0;
+    }
+
+    .card-item .thumb-placeholder {
+      width: 38px;
+      height: 53px;
+      border-radius: 4px;
+      background: var(--border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .card-item .info { min-width: 0; }
+
+    .card-item .name {
+      font-size: 12.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text);
+    }
+
+    .card-item .meta {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-item .price-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--nm);
+      margin-top: 3px;
+    }
+
+    /* ── Main ── */
+    #main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    #main::-webkit-scrollbar { width: 6px; }
+    #main::-webkit-scrollbar-track { background: transparent; }
+    #main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── Empty / Loading state ── */
+    #state-msg {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      color: var(--muted);
+      font-size: 15px;
+      gap: 12px;
+      text-align: center;
+    }
+
+    #state-msg .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Card detail ── */
+    #card-detail { display: none; }
+
+    #card-detail.visible { display: flex; gap: 40px; flex-wrap: wrap; }
+
+    .card-image-wrap {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .card-image-wrap img {
+      width: 240px;
+      border-radius: 10px;
+      box-shadow: 0 0 40px var(--accent-glow), 0 8px 32px rgba(0,0,0,0.6);
+      transition: transform 0.3s;
+    }
+
+    .card-image-wrap img:hover { transform: scale(1.03); }
+
+    .tcg-link {
+      font-size: 12px;
+      color: var(--accent);
+      text-decoration: none;
+      border: 1px solid var(--accent);
+      padding: 5px 14px;
+      border-radius: 20px;
+      transition: background 0.15s;
+    }
+
+    .tcg-link:hover { background: var(--accent-glow); }
+
+    .card-info { flex: 1; min-width: 280px; }
+
+    .card-info h2 {
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+
+    .card-info .card-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    .tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .tag-set { background: #1a1a2e; color: #818cf8; border: 1px solid #312e81; }
+    .tag-num { background: #1a2035; color: #60a5fa; border: 1px solid #1e3a5f; }
+    .tag-rev { background: #1a2820; color: #4ade80; border: 1px solid #14532d; }
+    .tag-holo { background: #2a1a35; color: #c084fc; border: 1px solid #4c1d95; }
+
+    /* ── Price table ── */
+    .price-section h3 {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .price-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .price-table th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      padding: 0 12px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .price-table th:last-child { text-align: right; }
+
+    .price-table td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .price-table tr:last-child td { border-bottom: none; }
+
+    .price-table tr:hover td { background: var(--surface2); }
+
+    .cond-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    .price-table td:last-child {
+      text-align: right;
+      font-weight: 700;
+      font-size: 15px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .price-table .est-note {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 24px 0;
+    }
+
+    .market-row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .market-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 20px;
+      min-width: 120px;
+    }
+
+    .market-stat .stat-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .market-stat .stat-val {
+      font-size: 20px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .updated {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<aside id="sidebar">
+  <div id="sidebar-header">
+    <h1>My Cards</h1>
+  </div>
+  <div id="card-list"></div>
+</aside>
+
+<main id="main">
+  <div id="state-msg">
+    <div class="spinner"></div>
+    <span>Loading cards...</span>
+  </div>
+  <div id="card-detail"></div>
+</main>
+
+<script>
+const CARDS = [
+  { label: "Charizard",    set: "Crystal Guardians", setId: "ex14", pokemon: "charizard",    isReverse: true  },
+  { label: "Gyarados",     set: "Holon Phantoms",    setId: "ex13", pokemon: "gyarados",     isReverse: true  },
+  { label: "Meowth",       set: "Holon Phantoms",    setId: "ex13", pokemon: "meowth",       isReverse: true  },
+  { label: "Gloom",        set: "Holon Phantoms",    setId: "ex13", pokemon: "gloom",        isReverse: true  },
+  { label: "Salamence ex", set: "Dragon Frontiers",  setId: "ex15", pokemon: "salamence ex", isReverse: false },
+  { label: "Feraligatr",   set: "Dragon Frontiers",  setId: "ex15", pokemon: "feraligatr",   isReverse: true  },
+  { label: "Typhlosion",   set: "Dragon Frontiers",  setId: "ex15", pokemon: "typhlosion",   isReverse: true  },
+  { label: "Dragonite",    set: "Delta Species",     setId: "ex11", pokemon: "dragonite",    isReverse: true  },
+  { label: "Ampharos",     set: "Dragon Frontiers",  setId: "ex15", pokemon: "ampharos",     isReverse: true  },
+  { label: "Gardevoir ex", set: "Dragon Frontiers",  setId: "ex15", pokemon: "gardevoir ex", isReverse: false },
+  { label: "Vaporeon",     set: "Delta Species",     setId: "ex11", pokemon: "vaporeon",     isReverse: true  },
+];
+
+const CONDITIONS = [
+  { label: "NM — Near Mint",          mult: 1.00, color: "#4ade80" },
+  { label: "LP — Lightly Played",     mult: 0.80, color: "#a3e635" },
+  { label: "MP — Moderately Played",  mult: 0.57, color: "#facc15" },
+  { label: "HP — Heavily Played",     mult: 0.40, color: "#f87171" },
+];
+
+const cache = {};
+let activeIndex = null;
+
+async function fetchCard(card) {
+  const key = `${card.pokemon}-${card.setId}`;
+  if (cache[key]) return cache[key];
+
+  const q = `name:"${card.pokemon}" set.id:${card.setId}`;
+  const url = `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(q)}&select=name,number,set,tcgplayer,images`;
+  const res = await fetch(url);
+  const data = await res.json();
+  const result = data.data?.[0] ?? null;
+  cache[key] = result;
+  return result;
+}
+
+function getPrices(apiCard, isReverse) {
+  const prices = apiCard?.tcgplayer?.prices ?? {};
+  if (isReverse && prices.reverseHolofoil) return [prices.reverseHolofoil, "Reverse Holo"];
+  if (prices.holofoil)                     return [prices.holofoil, "Holofoil"];
+  if (prices.normal)                        return [prices.normal, "Normal"];
+  const first = Object.keys(prices)[0];
+  return first ? [prices[first], first] : [null, null];
+}
+
+function fmt(val) {
+  return val != null ? `$${parseFloat(val).toFixed(2)}` : "N/A";
+}
+
+// ── Build sidebar ──
+async function buildSidebar() {
+  const list = document.getElementById("card-list");
+
+  CARDS.forEach((card, i) => {
+    const item = document.createElement("div");
+    item.className = "card-item";
+    item.dataset.index = i;
+    item.innerHTML = `
+      <div class="thumb-placeholder">🃏</div>
+      <div class="info">
+        <div class="name">${card.label}</div>
+        <div class="meta">${card.set}</div>
+        <div class="price-badge">—</div>
+      </div>
+    `;
+    item.addEventListener("click", () => selectCard(i));
+    list.appendChild(item);
+  });
+
+  // Load all card data and update sidebar in background
+  CARDS.forEach(async (card, i) => {
+    try {
+      const data = await fetchCard(card);
+      if (!data) return;
+
+      const item = list.children[i];
+      const [prices] = getPrices(data, card.isReverse);
+
+      // Swap placeholder for real thumbnail
+      const img = document.createElement("img");
+      img.className = "thumb";
+      img.src = data.images?.small;
+      img.alt = card.label;
+      item.replaceChild(img, item.querySelector(".thumb-placeholder"));
+
+      // Show market price in sidebar
+      if (prices?.market) {
+        item.querySelector(".price-badge").textContent = fmt(prices.market);
+      }
+    } catch (e) { /* silent */ }
+  });
+
+  // Auto-select first card
+  selectCard(0);
+}
+
+// ── Render detail panel ──
+async function selectCard(index) {
+  activeIndex = index;
+
+  // Update active state in sidebar
+  document.querySelectorAll(".card-item").forEach((el, i) => {
+    el.classList.toggle("active", i === index);
+  });
+
+  const stateMsg = document.getElementById("state-msg");
+  const detail = document.getElementById("card-detail");
+
+  stateMsg.style.display = "flex";
+  stateMsg.innerHTML = `<div class="spinner"></div><span>Loading...</span>`;
+  detail.className = "";
+
+  const card = CARDS[index];
+  let apiCard;
+  try {
+    apiCard = await fetchCard(card);
+  } catch (e) {
+    stateMsg.innerHTML = `<span>Failed to load card data.</span>`;
+    return;
+  }
+
+  if (!apiCard) {
+    stateMsg.innerHTML = `<span>No data found for this card.</span>`;
+    return;
+  }
+
+  const [prices, priceType] = getPrices(apiCard, card.isReverse);
+  const setInfo = apiCard.set ?? {};
+  const number = apiCard.number ?? "?";
+  const total = setInfo.printedTotal ?? "?";
+  const updatedAt = apiCard.tcgplayer?.updatedAt ?? "";
+  const tcgUrl = apiCard.tcgplayer?.url ?? "#";
+
+  const condRows = CONDITIONS.map(c => {
+    const est = prices?.market ? fmt(prices.market * c.mult) : "N/A";
+    return `
+      <tr>
+        <td>
+          <span class="cond-dot" style="background:${c.color}"></span>
+          ${c.label}
+        </td>
+        <td><span class="est-note">est.</span> ${est}</td>
+      </tr>`;
+  }).join("");
+
+  detail.innerHTML = `
+    <div class="card-image-wrap">
+      <img src="${apiCard.images?.large ?? apiCard.images?.small}" alt="${apiCard.name}" />
+      <a class="tcg-link" href="${tcgUrl}" target="_blank">View on TCGPlayer ↗</a>
+    </div>
+
+    <div class="card-info">
+      <h2>${apiCard.name}</h2>
+      <div class="card-meta">
+        <span class="tag tag-set">${setInfo.name ?? card.set}</span>
+        <span class="tag tag-num">#${number}/${total}</span>
+        ${card.isReverse ? '<span class="tag tag-rev">Reverse Holo</span>' : '<span class="tag tag-holo">Holo</span>'}
+      </div>
+
+      <div class="price-section">
+        <h3>Condition Estimates</h3>
+        <table class="price-table">
+          <thead>
+            <tr>
+              <th>Condition</th>
+              <th>Price</th>
+            </tr>
+          </thead>
+          <tbody>${condRows}</tbody>
+        </table>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="price-section">
+        <h3>TCGPlayer Market Data</h3>
+        <div class="market-row">
+          <div class="market-stat">
+            <div class="stat-label">Market</div>
+            <div class="stat-val" style="color:#4ade80">${fmt(prices?.market)}</div>
+          </div>
+          <div class="market-stat">
+            <div class="stat-label">Low Listed</div>
+            <div class="stat-val">${fmt(prices?.low)}</div>
+          </div>
+          <div class="market-stat">
+            <div class="stat-label">Mid Listed</div>
+            <div class="stat-val">${fmt(prices?.mid)}</div>
+          </div>
+          <div class="market-stat">
+            <div class="stat-label">High Listed</div>
+            <div class="stat-val">${fmt(prices?.high)}</div>
+          </div>
+        </div>
+        ${updatedAt ? `<div class="updated">Last updated: ${updatedAt}</div>` : ""}
+      </div>
+    </div>
+  `;
+
+  stateMsg.style.display = "none";
+  detail.className = "visible";
+}
+
+buildSidebar();
+</script>
+</body>
+</html>
