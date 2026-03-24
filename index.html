@@ -15,9 +15,6 @@
       --text: #e8e8f0;
       --muted: #6b6b80;
       --nm: #4ade80;
-      --lp: #a3e635;
-      --mp: #facc15;
-      --hp: #f87171;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,8 +30,8 @@
 
     /* ── Sidebar ── */
     #sidebar {
-      width: 260px;
-      min-width: 260px;
+      width: 210px;
+      min-width: 210px;
       background: var(--surface);
       border-right: 1px solid var(--border);
       display: flex;
@@ -43,86 +40,81 @@
     }
 
     #sidebar-header {
-      padding: 20px 16px 14px;
+      padding: 18px 16px 12px;
       border-bottom: 1px solid var(--border);
     }
 
     #sidebar-header h1 {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--muted);
     }
 
-    #card-list {
-      overflow-y: auto;
-      flex: 1;
-      padding: 8px 0;
-    }
-
-    #card-list::-webkit-scrollbar { width: 4px; }
-    #card-list::-webkit-scrollbar-track { background: transparent; }
+    #card-list { overflow-y: auto; flex: 1; padding: 6px 0; }
+    #card-list::-webkit-scrollbar { width: 3px; }
     #card-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-    /* ── Set groups ── */
     .set-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 16px 8px;
+      padding: 9px 14px 7px;
       cursor: pointer;
-      user-select: none;
+      border-left: 3px solid transparent;
       border-top: 1px solid var(--border);
+      transition: background 0.15s, border-color 0.15s;
+      user-select: none;
     }
 
     .set-header:first-child { border-top: none; }
-
     .set-header:hover { background: var(--surface2); }
 
-    .set-header .set-name {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    .set-header .set-count {
-      font-size: 10px;
-      color: var(--border);
+    .set-header.active {
+      border-left-color: var(--accent);
       background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1px 7px;
-      margin-right: 6px;
     }
 
-    .set-header .chevron {
+    .set-header .set-name {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .set-header .set-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .set-count {
       font-size: 10px;
+      color: var(--muted);
+      background: var(--border);
+      border-radius: 8px;
+      padding: 1px 6px;
+    }
+
+    .chevron {
+      font-size: 9px;
       color: var(--muted);
       transition: transform 0.2s;
-      flex-shrink: 0;
     }
 
     .set-header.collapsed .chevron { transform: rotate(-90deg); }
 
-    .set-cards {
-      overflow: hidden;
-      max-height: 2000px;
-      transition: max-height 0.25s ease;
-    }
-
+    .set-cards { overflow: hidden; max-height: 1000px; transition: max-height 0.2s ease; }
     .set-cards.collapsed { max-height: 0; }
 
     .card-item {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 16px;
+      gap: 10px;
+      padding: 8px 14px 8px 20px;
       cursor: pointer;
       border-left: 3px solid transparent;
-      transition: background 0.15s, border-color 0.15s;
+      transition: background 0.12s, border-color 0.12s;
     }
 
     .card-item:hover { background: var(--surface2); }
@@ -133,271 +125,272 @@
     }
 
     .card-item .thumb {
-      width: 38px;
-      height: 53px;
-      object-fit: cover;
-      border-radius: 4px;
-      background: var(--surface2);
-      flex-shrink: 0;
+      width: 30px; height: 42px;
+      object-fit: cover; border-radius: 3px;
+      background: var(--border); flex-shrink: 0;
     }
 
     .card-item .thumb-placeholder {
-      width: 38px;
-      height: 53px;
-      border-radius: 4px;
-      background: var(--border);
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
+      width: 30px; height: 42px;
+      border-radius: 3px; background: var(--border);
+      flex-shrink: 0; display: flex;
+      align-items: center; justify-content: center; font-size: 14px;
     }
 
-    .card-item .info { min-width: 0; }
-
-    .card-item .name {
-      font-size: 12.5px;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: var(--text);
+    .card-item .ci-name {
+      font-size: 11.5px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
-    .card-item .meta {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .card-item .price-badge {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--nm);
-      margin-top: 3px;
+    .card-item .ci-price {
+      font-size: 10.5px; color: var(--nm);
+      font-weight: 700; margin-top: 2px;
     }
 
     /* ── Main ── */
     #main {
-      flex: 1;
-      overflow-y: auto;
-      padding: 40px;
-      display: flex;
-      flex-direction: column;
-      gap: 32px;
+      flex: 1; overflow-y: auto; padding: 32px 36px;
+      display: flex; flex-direction: column;
     }
 
     #main::-webkit-scrollbar { width: 6px; }
-    #main::-webkit-scrollbar-track { background: transparent; }
     #main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-    /* ── Empty / Loading state ── */
-    #state-msg {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      flex: 1;
-      color: var(--muted);
-      font-size: 15px;
-      gap: 12px;
-      text-align: center;
+    /* ── Empty state ── */
+    #empty-state {
+      flex: 1; display: flex; align-items: center;
+      justify-content: center; color: var(--muted); font-size: 14px;
     }
 
-    #state-msg .spinner {
-      width: 32px;
-      height: 32px;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+    /* ── Set view ── */
+    #set-view { display: none; flex-direction: column; gap: 24px; }
+    #set-view.visible { display: flex; }
+
+    .set-view-header {
+      display: flex; align-items: baseline;
+      justify-content: space-between;
     }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .set-view-header h2 { font-size: 22px; font-weight: 700; }
 
-    /* ── Card detail ── */
-    #card-detail { display: none; }
-
-    #card-detail.visible { display: flex; gap: 40px; flex-wrap: wrap; }
-
-    .card-image-wrap {
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
+    .set-view-header .page-info {
+      font-size: 12px; color: var(--muted);
     }
 
-    .card-image-wrap img {
-      width: 240px;
+    /* ── Card grid ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .grid-card {
+      cursor: pointer;
       border-radius: 10px;
-      box-shadow: 0 0 40px var(--accent-glow), 0 8px 32px rgba(0,0,0,0.6);
+      border: 2px solid transparent;
+      padding: 10px 10px 8px;
+      background: var(--surface);
+      transition: border-color 0.15s, background 0.15s, transform 0.15s;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+
+    .grid-card:hover { background: var(--surface2); transform: translateY(-2px); }
+
+    .grid-card.selected {
+      border-color: var(--accent);
+      background: var(--surface2);
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    .grid-card img {
+      width: 100%; border-radius: 6px;
+      display: block;
+    }
+
+    .grid-card .gc-placeholder {
+      width: 100%; aspect-ratio: 0.72;
+      border-radius: 6px; background: var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+    }
+
+    .grid-card .gc-name {
+      font-size: 11.5px; font-weight: 600;
+      text-align: center; line-height: 1.3;
+    }
+
+    .grid-card .gc-price {
+      font-size: 11px; font-weight: 700;
+      color: var(--nm);
+    }
+
+    /* ── Expanded detail panel ── */
+    #detail-panel {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      gap: 32px;
+    }
+
+    #detail-panel.visible { display: flex; flex-wrap: wrap; }
+
+    .dp-image-wrap {
+      flex-shrink: 0;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+
+    .dp-image-wrap img {
+      width: 180px; border-radius: 8px;
+      box-shadow: 0 0 30px var(--accent-glow), 0 6px 24px rgba(0,0,0,0.5);
       transition: transform 0.3s;
     }
 
-    .card-image-wrap img:hover { transform: scale(1.03); }
+    .dp-image-wrap img:hover { transform: scale(1.04); }
 
     .tcg-link {
-      font-size: 12px;
-      color: var(--accent);
-      text-decoration: none;
-      border: 1px solid var(--accent);
-      padding: 5px 14px;
-      border-radius: 20px;
+      font-size: 11px; color: var(--accent);
+      text-decoration: none; border: 1px solid var(--accent);
+      padding: 4px 12px; border-radius: 16px;
       transition: background 0.15s;
     }
 
     .tcg-link:hover { background: var(--accent-glow); }
 
-    .card-info { flex: 1; min-width: 280px; }
+    .dp-info { flex: 1; min-width: 260px; }
 
-    .card-info h2 {
-      font-size: 26px;
-      font-weight: 700;
-      line-height: 1.2;
-      margin-bottom: 6px;
-    }
+    .dp-info h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
 
-    .card-info .card-meta {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 28px;
-    }
+    .dp-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
 
     .tag {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 10px;
-      border-radius: 12px;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
+      font-size: 10px; font-weight: 600;
+      padding: 3px 9px; border-radius: 10px;
+      letter-spacing: 0.05em; text-transform: uppercase;
     }
 
-    .tag-set { background: #1a1a2e; color: #818cf8; border: 1px solid #312e81; }
-    .tag-num { background: #1a2035; color: #60a5fa; border: 1px solid #1e3a5f; }
-    .tag-rev { background: #1a2820; color: #4ade80; border: 1px solid #14532d; }
+    .tag-set  { background: #1a1a2e; color: #818cf8; border: 1px solid #312e81; }
+    .tag-num  { background: #1a2035; color: #60a5fa; border: 1px solid #1e3a5f; }
+    .tag-rev  { background: #1a2820; color: #4ade80; border: 1px solid #14532d; }
     .tag-holo { background: #2a1a35; color: #c084fc; border: 1px solid #4c1d95; }
 
-    /* ── Price table ── */
-    .price-section h3 {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 14px;
+    .dp-section-label {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 10px;
     }
 
-    .price-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
+    .price-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 
     .price-table th {
-      text-align: left;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-      padding: 0 12px 10px;
+      text-align: left; font-size: 10px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      color: var(--muted); padding: 0 10px 8px;
       border-bottom: 1px solid var(--border);
     }
 
     .price-table th:last-child { text-align: right; }
 
     .price-table td {
-      padding: 11px 12px;
+      padding: 9px 10px;
       border-bottom: 1px solid var(--border);
     }
 
     .price-table tr:last-child td { border-bottom: none; }
-
     .price-table tr:hover td { background: var(--surface2); }
 
     .cond-dot {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      margin-right: 8px;
-      vertical-align: middle;
+      display: inline-block; width: 7px; height: 7px;
+      border-radius: 50%; margin-right: 7px; vertical-align: middle;
     }
 
     .price-table td:last-child {
-      text-align: right;
-      font-weight: 700;
-      font-size: 15px;
-      font-variant-numeric: tabular-nums;
+      text-align: right; font-weight: 700;
+      font-size: 14px; font-variant-numeric: tabular-nums;
     }
 
-    .price-table .est-note {
-      font-size: 11px;
-      color: var(--muted);
-      font-weight: 400;
-    }
+    .est-note { font-size: 10px; color: var(--muted); font-weight: 400; }
 
-    .divider {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 24px 0;
-    }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
 
-    .market-row {
-      display: flex;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
+    .market-row { display: flex; gap: 12px; flex-wrap: wrap; }
 
     .market-stat {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 20px;
-      min-width: 120px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 16px; min-width: 100px;
     }
 
-    .market-stat .stat-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-      margin-bottom: 6px;
+    .stat-label {
+      font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--muted); margin-bottom: 4px;
     }
 
-    .market-stat .stat-val {
-      font-size: 20px;
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
+    .stat-val { font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    .updated { font-size: 10px; color: var(--muted); margin-top: 12px; }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex; align-items: center;
+      justify-content: flex-end; gap: 8px;
+      padding-top: 4px;
     }
 
-    .updated {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 16px;
+    .page-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); border-radius: 6px;
+      padding: 5px 12px; cursor: pointer;
+      font-size: 13px; transition: background 0.15s, border-color 0.15s;
     }
+
+    .page-btn:hover:not(:disabled) {
+      background: var(--surface2); border-color: var(--accent);
+    }
+
+    .page-btn:disabled { opacity: 0.35; cursor: default; }
+
+    .page-label { font-size: 12px; color: var(--muted); }
+
+    /* ── Loading spinner ── */
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
 <aside id="sidebar">
-  <div id="sidebar-header">
-    <h1>My Cards</h1>
-  </div>
+  <div id="sidebar-header"><h1>My Cards</h1></div>
   <div id="card-list"></div>
 </aside>
 
 <main id="main">
-  <div id="state-msg">
-    <div class="spinner"></div>
-    <span>Loading cards...</span>
+  <div id="empty-state">← Select a set to get started</div>
+
+  <div id="set-view">
+    <div class="set-view-header">
+      <h2 id="set-title"></h2>
+      <span class="page-info" id="page-info"></span>
+    </div>
+
+    <div class="card-grid" id="card-grid"></div>
+
+    <div id="detail-panel"></div>
+
+    <div class="pagination">
+      <button class="page-btn" id="btn-prev" onclick="changePage(-1)">← Prev</button>
+      <span class="page-label" id="page-label"></span>
+      <button class="page-btn" id="btn-next" onclick="changePage(1)">Next →</button>
+    </div>
   </div>
-  <div id="card-detail"></div>
 </main>
 
 <script>
@@ -415,78 +408,72 @@ const CARDS = [
   { label: "Vaporeon",     set: "Delta Species",     setId: "ex11", pokemon: "vaporeon",     isReverse: true  },
 ];
 
+const SET_ORDER = ["Holon Phantoms", "Crystal Guardians", "Delta Species", "Dragon Frontiers"];
+const PER_PAGE = 8;
 const CONDITIONS = [
-  { label: "NM — Near Mint",          mult: 1.00, color: "#4ade80" },
-  { label: "LP — Lightly Played",     mult: 0.80, color: "#a3e635" },
-  { label: "MP — Moderately Played",  mult: 0.57, color: "#facc15" },
-  { label: "HP — Heavily Played",     mult: 0.40, color: "#f87171" },
+  { label: "NM — Near Mint",         mult: 1.00, color: "#4ade80" },
+  { label: "LP — Lightly Played",    mult: 0.80, color: "#a3e635" },
+  { label: "MP — Moderately Played", mult: 0.57, color: "#facc15" },
+  { label: "HP — Heavily Played",    mult: 0.40, color: "#f87171" },
 ];
 
 const cache = {};
-let activeIndex = null;
+let currentSet = null;
+let currentPage = 1;
+let expandedIndex = null;
 
+// ── API ──
 async function fetchCard(card) {
   const key = `${card.pokemon}-${card.setId}`;
   if (cache[key]) return cache[key];
-
   const q = `name:"${card.pokemon}" set.id:${card.setId}`;
   const url = `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(q)}&select=name,number,set,tcgplayer,images`;
   const res = await fetch(url);
   const data = await res.json();
-  const result = data.data?.[0] ?? null;
-  cache[key] = result;
-  return result;
+  cache[key] = data.data?.[0] ?? null;
+  return cache[key];
 }
 
 function getPrices(apiCard, isReverse) {
   const prices = apiCard?.tcgplayer?.prices ?? {};
   if (isReverse && prices.reverseHolofoil) return [prices.reverseHolofoil, "Reverse Holo"];
-  if (prices.holofoil)                     return [prices.holofoil, "Holofoil"];
-  if (prices.normal)                        return [prices.normal, "Normal"];
+  if (prices.holofoil)  return [prices.holofoil, "Holofoil"];
+  if (prices.normal)    return [prices.normal, "Normal"];
   const first = Object.keys(prices)[0];
   return first ? [prices[first], first] : [null, null];
 }
 
-function fmt(val) {
-  return val != null ? `$${parseFloat(val).toFixed(2)}` : "N/A";
-}
+function fmt(val) { return val != null ? `$${parseFloat(val).toFixed(2)}` : "N/A"; }
 
-// ── Set order for sidebar ──
-const SET_ORDER = ["Holon Phantoms", "Crystal Guardians", "Delta Species", "Dragon Frontiers"];
-
-// ── Build sidebar with collapsible set groups ──
+// ── Sidebar ──
 async function buildSidebar() {
   const list = document.getElementById("card-list");
-
-  // Group cards by set, preserving original CARDS indices
   const groups = {};
   SET_ORDER.forEach(s => groups[s] = []);
-  CARDS.forEach((card, i) => {
-    if (groups[card.set]) groups[card.set].push({ card, i });
-  });
+  CARDS.forEach((card, i) => { if (groups[card.set]) groups[card.set].push({ card, i }); });
 
   SET_ORDER.forEach(setName => {
     const entries = groups[setName];
     if (!entries.length) return;
 
-    // Set header
     const header = document.createElement("div");
     header.className = "set-header";
+    header.dataset.set = setName;
     header.innerHTML = `
       <span class="set-name">${setName}</span>
-      <span>
+      <span class="set-right">
         <span class="set-count">${entries.length}</span>
         <span class="chevron">▾</span>
-      </span>
-    `;
+      </span>`;
 
-    // Cards container
     const cardsEl = document.createElement("div");
     cardsEl.className = "set-cards";
 
-    header.addEventListener("click", () => {
-      header.classList.toggle("collapsed");
-      cardsEl.classList.toggle("collapsed");
+    header.addEventListener("click", (e) => {
+      // Toggle collapse on chevron click, navigate on name click
+      const collapsed = header.classList.toggle("collapsed");
+      cardsEl.classList.toggle("collapsed", collapsed);
+      showSet(setName);
     });
 
     entries.forEach(({ card, i }) => {
@@ -495,13 +482,14 @@ async function buildSidebar() {
       item.dataset.index = i;
       item.innerHTML = `
         <div class="thumb-placeholder">🃏</div>
-        <div class="info">
-          <div class="name">${card.label}</div>
-          <div class="meta">${card.isReverse ? "Reverse Holo" : "Holo"}</div>
-          <div class="price-badge">—</div>
-        </div>
-      `;
-      item.addEventListener("click", () => selectCard(i));
+        <div>
+          <div class="ci-name">${card.label}</div>
+          <div class="ci-price">—</div>
+        </div>`;
+      item.addEventListener("click", (e) => {
+        e.stopPropagation();
+        showSet(card.set, i);
+      });
       cardsEl.appendChild(item);
     });
 
@@ -509,61 +497,161 @@ async function buildSidebar() {
     list.appendChild(cardsEl);
   });
 
-  // Load all card data and update sidebar thumbnails/prices in background
+  // Background: load thumbs + prices into sidebar
   CARDS.forEach(async (card, i) => {
     try {
       const data = await fetchCard(card);
       if (!data) return;
-
       const item = list.querySelector(`.card-item[data-index="${i}"]`);
       if (!item) return;
       const [prices] = getPrices(data, card.isReverse);
-
       const img = document.createElement("img");
-      img.className = "thumb";
-      img.src = data.images?.small;
-      img.alt = card.label;
+      img.className = "thumb"; img.src = data.images?.small; img.alt = card.label;
       item.replaceChild(img, item.querySelector(".thumb-placeholder"));
-
-      if (prices?.market) {
-        item.querySelector(".price-badge").textContent = fmt(prices.market);
-      }
-    } catch (e) { /* silent */ }
+      if (prices?.market) item.querySelector(".ci-price").textContent = fmt(prices.market);
+    } catch (e) {}
   });
-
-  // Auto-select first card
-  selectCard(0);
 }
 
-// ── Render detail panel ──
-async function selectCard(index) {
-  activeIndex = index;
+// ── Set view ──
+function getSetCards(setName) {
+  return CARDS.map((card, i) => ({ card, i })).filter(({ card }) => card.set === setName);
+}
 
-  // Update active state in sidebar
-  document.querySelectorAll(".card-item").forEach(el => {
-    el.classList.toggle("active", parseInt(el.dataset.index) === index);
+function showSet(setName, jumpToIndex = null) {
+  currentSet = setName;
+  expandedIndex = null;
+
+  // Sidebar active states
+  document.querySelectorAll(".set-header").forEach(el => {
+    el.classList.toggle("active", el.dataset.set === setName);
+  });
+  document.querySelectorAll(".card-item").forEach(el => el.classList.remove("active"));
+
+  const entries = getSetCards(setName);
+
+  // If jumping to a specific card, calculate which page it's on
+  if (jumpToIndex !== null) {
+    const posInSet = entries.findIndex(e => e.i === jumpToIndex);
+    if (posInSet >= 0) currentPage = Math.floor(posInSet / PER_PAGE) + 1;
+    expandedIndex = jumpToIndex;
+  } else {
+    currentPage = 1;
+  }
+
+  document.getElementById("empty-state").style.display = "none";
+  const setView = document.getElementById("set-view");
+  setView.classList.add("visible");
+  document.getElementById("set-title").textContent = setName;
+
+  renderGrid();
+}
+
+function renderGrid() {
+  const entries = getSetCards(currentSet);
+  const totalPages = Math.ceil(entries.length / PER_PAGE);
+  const pageEntries = entries.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+
+  document.getElementById("page-info").textContent =
+    totalPages > 1 ? `Page ${currentPage} of ${totalPages}` : "";
+  document.getElementById("page-label").textContent = `${currentPage} / ${totalPages}`;
+  document.getElementById("btn-prev").disabled = currentPage <= 1;
+  document.getElementById("btn-next").disabled = currentPage >= totalPages;
+
+  // Show/hide pagination row
+  const paginationEl = document.querySelector(".pagination");
+  paginationEl.style.display = totalPages > 1 ? "flex" : "none";
+
+  const grid = document.getElementById("card-grid");
+  grid.innerHTML = "";
+
+  pageEntries.forEach(({ card, i }) => {
+    const gc = document.createElement("div");
+    gc.className = "grid-card" + (expandedIndex === i ? " selected" : "");
+    gc.dataset.index = i;
+
+    const cached = cache[`${card.pokemon}-${card.setId}`];
+    const [prices] = cached ? getPrices(cached, card.isReverse) : [null];
+    const imgSrc = cached?.images?.small;
+
+    gc.innerHTML = `
+      ${imgSrc
+        ? `<img src="${imgSrc}" alt="${card.label}" />`
+        : `<div class="gc-placeholder">🃏</div>`}
+      <div class="gc-name">${card.label}</div>
+      <div class="gc-price">${prices?.market ? fmt(prices.market) : "—"}</div>`;
+
+    gc.addEventListener("click", () => toggleDetail(i));
+    grid.appendChild(gc);
   });
 
-  const stateMsg = document.getElementById("state-msg");
-  const detail = document.getElementById("card-detail");
+  // If a card is expanded and on this page, render its detail
+  if (expandedIndex !== null && pageEntries.some(e => e.i === expandedIndex)) {
+    renderDetail(expandedIndex);
+  } else {
+    document.getElementById("detail-panel").className = "";
+    document.getElementById("detail-panel").innerHTML = "";
+  }
 
-  stateMsg.style.display = "flex";
-  stateMsg.innerHTML = `<div class="spinner"></div><span>Loading...</span>`;
-  detail.className = "";
+  // Fill in any missing thumbnails/prices async
+  pageEntries.forEach(async ({ card, i }) => {
+    if (cache[`${card.pokemon}-${card.setId}`]) return;
+    try {
+      const data = await fetchCard(card);
+      if (!data) return;
+      const gc = grid.querySelector(`.grid-card[data-index="${i}"]`);
+      if (!gc) return;
+      const [prices] = getPrices(data, card.isReverse);
+      gc.querySelector(".gc-placeholder")?.replaceWith(Object.assign(document.createElement("img"), { src: data.images.small, alt: card.label }));
+      if (prices?.market) gc.querySelector(".gc-price").textContent = fmt(prices.market);
+      // Also update sidebar
+      const sideItem = document.querySelector(`.card-item[data-index="${i}"]`);
+      if (sideItem) {
+        const img = document.createElement("img");
+        img.className = "thumb"; img.src = data.images?.small; img.alt = card.label;
+        sideItem.querySelector(".thumb-placeholder") && sideItem.replaceChild(img, sideItem.querySelector(".thumb-placeholder"));
+        if (prices?.market) sideItem.querySelector(".ci-price").textContent = fmt(prices.market);
+      }
+    } catch (e) {}
+  });
+}
 
+async function toggleDetail(index) {
+  if (expandedIndex === index) {
+    // Collapse
+    expandedIndex = null;
+    document.querySelectorAll(".grid-card").forEach(el => el.classList.remove("selected"));
+    const panel = document.getElementById("detail-panel");
+    panel.className = "";
+    panel.innerHTML = "";
+    document.querySelectorAll(".card-item").forEach(el => el.classList.remove("active"));
+    return;
+  }
+
+  expandedIndex = index;
+  document.querySelectorAll(".grid-card").forEach(el =>
+    el.classList.toggle("selected", parseInt(el.dataset.index) === index));
+  document.querySelectorAll(".card-item").forEach(el =>
+    el.classList.toggle("active", parseInt(el.dataset.index) === index));
+
+  const panel = document.getElementById("detail-panel");
+  panel.className = "visible";
+  panel.innerHTML = `<div class="spinner"></div>`;
+
+  await renderDetail(index);
+  panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+async function renderDetail(index) {
   const card = CARDS[index];
+  const panel = document.getElementById("detail-panel");
+
   let apiCard;
-  try {
-    apiCard = await fetchCard(card);
-  } catch (e) {
-    stateMsg.innerHTML = `<span>Failed to load card data.</span>`;
-    return;
+  try { apiCard = await fetchCard(card); } catch (e) {
+    panel.innerHTML = `<p style="color:var(--muted)">Failed to load.</p>`; return;
   }
 
-  if (!apiCard) {
-    stateMsg.innerHTML = `<span>No data found for this card.</span>`;
-    return;
-  }
+  if (!apiCard) { panel.innerHTML = `<p style="color:var(--muted)">No data found.</p>`; return; }
 
   const [prices, priceType] = getPrices(apiCard, card.isReverse);
   const setInfo = apiCard.set ?? {};
@@ -574,72 +662,62 @@ async function selectCard(index) {
 
   const condRows = CONDITIONS.map(c => {
     const est = prices?.market ? fmt(prices.market * c.mult) : "N/A";
-    return `
-      <tr>
-        <td>
-          <span class="cond-dot" style="background:${c.color}"></span>
-          ${c.label}
-        </td>
-        <td><span class="est-note">est.</span> ${est}</td>
-      </tr>`;
+    return `<tr>
+      <td><span class="cond-dot" style="background:${c.color}"></span>${c.label}</td>
+      <td><span class="est-note">est.</span> ${est}</td>
+    </tr>`;
   }).join("");
 
-  detail.innerHTML = `
-    <div class="card-image-wrap">
+  panel.className = "visible";
+  panel.innerHTML = `
+    <div class="dp-image-wrap">
       <img src="${apiCard.images?.large ?? apiCard.images?.small}" alt="${apiCard.name}" />
-      <a class="tcg-link" href="${tcgUrl}" target="_blank">View on TCGPlayer ↗</a>
+      <a class="tcg-link" href="${tcgUrl}" target="_blank">TCGPlayer ↗</a>
     </div>
-
-    <div class="card-info">
-      <h2>${apiCard.name}</h2>
-      <div class="card-meta">
+    <div class="dp-info">
+      <h3>${apiCard.name}</h3>
+      <div class="dp-tags">
         <span class="tag tag-set">${setInfo.name ?? card.set}</span>
         <span class="tag tag-num">#${number}/${total}</span>
         ${card.isReverse ? '<span class="tag tag-rev">Reverse Holo</span>' : '<span class="tag tag-holo">Holo</span>'}
       </div>
-
-      <div class="price-section">
-        <h3>Condition Estimates</h3>
-        <table class="price-table">
-          <thead>
-            <tr>
-              <th>Condition</th>
-              <th>Price</th>
-            </tr>
-          </thead>
-          <tbody>${condRows}</tbody>
-        </table>
-      </div>
-
+      <div class="dp-section-label">Condition Estimates</div>
+      <table class="price-table">
+        <thead><tr><th>Condition</th><th>Price</th></tr></thead>
+        <tbody>${condRows}</tbody>
+      </table>
       <hr class="divider" />
-
-      <div class="price-section">
-        <h3>TCGPlayer Market Data</h3>
-        <div class="market-row">
-          <div class="market-stat">
-            <div class="stat-label">Market</div>
-            <div class="stat-val" style="color:#4ade80">${fmt(prices?.market)}</div>
-          </div>
-          <div class="market-stat">
-            <div class="stat-label">Low Listed</div>
-            <div class="stat-val">${fmt(prices?.low)}</div>
-          </div>
-          <div class="market-stat">
-            <div class="stat-label">Mid Listed</div>
-            <div class="stat-val">${fmt(prices?.mid)}</div>
-          </div>
-          <div class="market-stat">
-            <div class="stat-label">High Listed</div>
-            <div class="stat-val">${fmt(prices?.high)}</div>
-          </div>
+      <div class="dp-section-label">TCGPlayer Market</div>
+      <div class="market-row">
+        <div class="market-stat">
+          <div class="stat-label">Market</div>
+          <div class="stat-val" style="color:#4ade80">${fmt(prices?.market)}</div>
         </div>
-        ${updatedAt ? `<div class="updated">Last updated: ${updatedAt}</div>` : ""}
+        <div class="market-stat">
+          <div class="stat-label">Low</div>
+          <div class="stat-val">${fmt(prices?.low)}</div>
+        </div>
+        <div class="market-stat">
+          <div class="stat-label">Mid</div>
+          <div class="stat-val">${fmt(prices?.mid)}</div>
+        </div>
+        <div class="market-stat">
+          <div class="stat-label">High</div>
+          <div class="stat-val">${fmt(prices?.high)}</div>
+        </div>
       </div>
-    </div>
-  `;
+      ${updatedAt ? `<div class="updated">Last updated: ${updatedAt}</div>` : ""}
+    </div>`;
+}
 
-  stateMsg.style.display = "none";
-  detail.className = "visible";
+function changePage(delta) {
+  const entries = getSetCards(currentSet);
+  const totalPages = Math.ceil(entries.length / PER_PAGE);
+  const next = currentPage + delta;
+  if (next < 1 || next > totalPages) return;
+  currentPage = next;
+  expandedIndex = null;
+  renderGrid();
 }
 
 buildSidebar();
