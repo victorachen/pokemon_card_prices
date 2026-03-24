@@ -65,6 +65,56 @@
     #card-list::-webkit-scrollbar-track { background: transparent; }
     #card-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
+    /* ── Set groups ── */
+    .set-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px 8px;
+      cursor: pointer;
+      user-select: none;
+      border-top: 1px solid var(--border);
+    }
+
+    .set-header:first-child { border-top: none; }
+
+    .set-header:hover { background: var(--surface2); }
+
+    .set-header .set-name {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .set-header .set-count {
+      font-size: 10px;
+      color: var(--border);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1px 7px;
+      margin-right: 6px;
+    }
+
+    .set-header .chevron {
+      font-size: 10px;
+      color: var(--muted);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .set-header.collapsed .chevron { transform: rotate(-90deg); }
+
+    .set-cards {
+      overflow: hidden;
+      max-height: 2000px;
+      transition: max-height 0.25s ease;
+    }
+
+    .set-cards.collapsed { max-height: 0; }
+
     .card-item {
       display: flex;
       align-items: center;
@@ -401,43 +451,80 @@ function fmt(val) {
   return val != null ? `$${parseFloat(val).toFixed(2)}` : "N/A";
 }
 
-// ── Build sidebar ──
+// ── Set order for sidebar ──
+const SET_ORDER = ["Holon Phantoms", "Crystal Guardians", "Delta Species", "Dragon Frontiers"];
+
+// ── Build sidebar with collapsible set groups ──
 async function buildSidebar() {
   const list = document.getElementById("card-list");
 
+  // Group cards by set, preserving original CARDS indices
+  const groups = {};
+  SET_ORDER.forEach(s => groups[s] = []);
   CARDS.forEach((card, i) => {
-    const item = document.createElement("div");
-    item.className = "card-item";
-    item.dataset.index = i;
-    item.innerHTML = `
-      <div class="thumb-placeholder">🃏</div>
-      <div class="info">
-        <div class="name">${card.label}</div>
-        <div class="meta">${card.set}</div>
-        <div class="price-badge">—</div>
-      </div>
-    `;
-    item.addEventListener("click", () => selectCard(i));
-    list.appendChild(item);
+    if (groups[card.set]) groups[card.set].push({ card, i });
   });
 
-  // Load all card data and update sidebar in background
+  SET_ORDER.forEach(setName => {
+    const entries = groups[setName];
+    if (!entries.length) return;
+
+    // Set header
+    const header = document.createElement("div");
+    header.className = "set-header";
+    header.innerHTML = `
+      <span class="set-name">${setName}</span>
+      <span>
+        <span class="set-count">${entries.length}</span>
+        <span class="chevron">▾</span>
+      </span>
+    `;
+
+    // Cards container
+    const cardsEl = document.createElement("div");
+    cardsEl.className = "set-cards";
+
+    header.addEventListener("click", () => {
+      header.classList.toggle("collapsed");
+      cardsEl.classList.toggle("collapsed");
+    });
+
+    entries.forEach(({ card, i }) => {
+      const item = document.createElement("div");
+      item.className = "card-item";
+      item.dataset.index = i;
+      item.innerHTML = `
+        <div class="thumb-placeholder">🃏</div>
+        <div class="info">
+          <div class="name">${card.label}</div>
+          <div class="meta">${card.isReverse ? "Reverse Holo" : "Holo"}</div>
+          <div class="price-badge">—</div>
+        </div>
+      `;
+      item.addEventListener("click", () => selectCard(i));
+      cardsEl.appendChild(item);
+    });
+
+    list.appendChild(header);
+    list.appendChild(cardsEl);
+  });
+
+  // Load all card data and update sidebar thumbnails/prices in background
   CARDS.forEach(async (card, i) => {
     try {
       const data = await fetchCard(card);
       if (!data) return;
 
-      const item = list.children[i];
+      const item = list.querySelector(`.card-item[data-index="${i}"]`);
+      if (!item) return;
       const [prices] = getPrices(data, card.isReverse);
 
-      // Swap placeholder for real thumbnail
       const img = document.createElement("img");
       img.className = "thumb";
       img.src = data.images?.small;
       img.alt = card.label;
       item.replaceChild(img, item.querySelector(".thumb-placeholder"));
 
-      // Show market price in sidebar
       if (prices?.market) {
         item.querySelector(".price-badge").textContent = fmt(prices.market);
       }
@@ -453,8 +540,8 @@ async function selectCard(index) {
   activeIndex = index;
 
   // Update active state in sidebar
-  document.querySelectorAll(".card-item").forEach((el, i) => {
-    el.classList.toggle("active", i === index);
+  document.querySelectorAll(".card-item").forEach(el => {
+    el.classList.toggle("active", parseInt(el.dataset.index) === index);
   });
 
   const stateMsg = document.getElementById("state-msg");
