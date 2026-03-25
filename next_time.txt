@@ -1,47 +1,65 @@
-Last session: 2026-03-25 10:01 PM
+Last session: 2026-03-26
 ================================================
 
 WHERE WE LEFT OFF
 -----------------
-Everything is live on GitHub Pages. Site has 12 watchlist cards with:
-- Tabs: PSA 8 / PSA 9 / PSA 10 / NM/LP / Raw eBay / TCGPlayer
-- Delta badge per card (PSA 9 slab premium vs NM raw median)
-- Gardevoir Celebrations reprint junk filtered out (-celebrations)
-- deal_finder.py fully working — pings Discord when listing is 25%+ below median
-  and deduplicates via prices.db so you never get double-pinged
+Site is live on GitHub Pages. deal_finder.py now runs automatically on GitHub Actions
+every 4 hours — no PC needed. Watchlist expanded from 12 to 15 cards.
 
+WHAT WAS DONE TODAY
+--------------------
+1. Split Gyarados, Dragonite, Charizard into Rev + Holo entries (15 cards total now)
+   - Rev graded queries now include "reverse" to filter PSA listings correctly
+   - Holo queries have "-reverse" to exclude reverse holo listings
+   - Need to re-run fetch_watchlist_prices.py to get data for the 3 new cards
+
+2. GitHub Actions set up — deal_finder.py runs every 4 hours from GitHub's servers
+   - Workflow: .github/workflows/deal_finder.yml
+   - Secrets added to repo: EBAY_APP_ID, EBAY_CERT_ID, DISCORD_WEBHOOK_URL
+   - prices.db persisted between runs via Actions cache (deduplication works)
+
+3. Fixed Unicode crash in deal_finder.py (Windows terminal can't print δ symbol)
+
+4. Ran deal_finder.py --dry-run — found 5 potential deals:
+   - Feraligatr Rev PSA 9: $536 vs $1268 median (58% off) — only 2 data points, take with salt
+   - Gardevoir ex PSA 9: $140 vs $652 median (79% off) — likely false positive, check manually
+   - Vaporeon Rev PSA 9: $600 vs $804 median (25% off) — looks legit
+   - Vaporeon JP PSA 10: $1750 and $1887 vs $3000 median (42%/37% off)
+
+5. Diagnosed eBay Live as a blind spot — Browse API doesn't index live auctions at all.
+   Workaround: ebay_auction_searches.html — open in browser, clickable links for all
+   15 cards × PSA 8/9/10, filtered to auctions + eBay Live.
 
 NEXT SESSION TODO (in order)
 -----------------------------
-1. SCHEDULE deal_finder.py to run automatically every 4 hours
-   Run this one command in terminal:
+1. RE-FETCH watchlist data (now 15 cards, old json only has 12):
+   python fetch_watchlist_prices.py
+   git add watchlist_data.json && git commit -m "Refresh watchlist data (15 cards)" && git push
 
-   schtasks /create /tn "PokemonDealFinder" /tr "python C:\Users\vchen\OneDrive\Documents\pycharmprojects\pokemon_delta_species\deal_finder.py" /sc hourly /mo 4
+2. VERIFY GitHub Actions is running:
+   https://github.com/victorachen/pokemon_card_prices/actions
+   → Should see runs every 4 hours under "Pokemon Deal Finder"
+   → Can trigger manually: Run workflow button
 
-   That's it — Windows Task Scheduler handles the rest, runs silently in background.
-   To check it: Task Scheduler app → Task Scheduler Library → PokemonDealFinder
-
-2. OPTIONAL: PSA population data
+3. OPTIONAL — PSA population data:
    - Endpoint api.psacard.com/publicapi/pop/GetPSASetItems/{setId} works without auth
-   - Need to find PSA set IDs for: Crystal Guardians, Holon Phantoms, Delta Species, Dragon Frontiers
-   - Would show PSA 8/9/10 pop counts inside each card tab on the site
-
-3. OPTIONAL: Re-fetch watchlist_data.json any time to refresh prices
-   Just run: python fetch_watchlist_prices.py
-   Then commit + push watchlist_data.json
-
+   - Need PSA set IDs for Crystal Guardians, Holon Phantoms, Delta Species, Dragon Frontiers
 
 CREDENTIALS (all in .env — never committed)
 --------------------------------------------
 All credentials are already in your .env file. Do not re-enter them.
-If .env is missing, check CLAUDE.md for where to get them.
-
+github_secrets.txt has the values if you ever need to re-add GitHub secrets.
+DO NOT commit github_secrets.txt.
 
 KEY FILES
 ---------
-index.html                — live site (814 cards + watchlist tab)
-watchlist_data.json       — price data fetched locally, committed to repo
-fetch_watchlist_prices.py — run to refresh prices
-deal_finder.py            — run for Discord deal alerts (or auto via Task Scheduler)
-prices.db                 — SQLite: tracks which listings already alerted
-.env                      — credentials (never commit this)
+index.html                    — live site (814 cards + watchlist tab)
+watchlist_data.json           — price data, commit + push to update site
+fetch_watchlist_prices.py     — run to refresh prices (now fetches 15 cards)
+deal_finder.py                — Discord deal alerts; also runs via GitHub Actions
+.github/workflows/deal_finder.yml — GitHub Actions schedule (every 4 hours)
+ebay_auction_searches.html    — open in browser for eBay Live auction links per card
+prices.db                     — SQLite deduplication DB (local + Actions cache)
+Cards_I_Care_About.txt        — 15-card watchlist
+.env                          — credentials (never commit)
+github_secrets.txt            — GitHub secret values for reference (never commit)

@@ -79,50 +79,58 @@ All 4 sets are now fully catalogued in the site. `index.html` now tracks ALL car
 
 ---
 
-## Current State (end of session 2026-03-25)
+## Current State (end of session 2026-03-26)
 
-Everything is live and working on GitHub Pages.
+Everything is live and working on GitHub Pages. deal_finder.py runs automatically every 4 hours via GitHub Actions — no PC required.
 
 ### What's done
 - [x] All credentials in `.env` — EBAY_APP_ID, EBAY_CERT_ID, DISCORD_WEBHOOK_URL
-- [x] `fetch_watchlist_prices.py` — fetches 12 cards, saves `watchlist_data.json` (160 listings)
-- [x] `deal_finder.py` — pings Discord when PSA 8/9/10 listing is 25%+ below median; deduplicates via `prices.db` (never double-pings same listing)
+- [x] `fetch_watchlist_prices.py` — fetches **15 cards** (was 12), saves `watchlist_data.json`
+- [x] `deal_finder.py` — pings Discord when PSA 8/9/10 listing is 25%+ below median; deduplicates via `prices.db`
+- [x] GitHub Actions workflow — `deal_finder.py` runs every 4 hours, secrets stored in repo, `prices.db` persisted via Actions cache
+- [x] Watchlist expanded: Gyarados, Dragonite, Charizard each split into Rev + Holo entries (15 total)
+- [x] Rev graded queries fixed to include "reverse" so PSA searches filter correctly
+- [x] Unicode crash fixed in `deal_finder.py` (δ symbol on Windows)
+- [x] `ebay_auction_searches.html` — browser page with all 15 cards × PSA 8/9/10 auction links (covers eBay Live which Browse API can't see)
 - [x] Site watchlist tab: PSA 8/9/10/NM-LP/Raw/TCGPlayer tabs, delta badge, language badges
-- [x] Gardevoir Celebrations reprint junk filtered (`-celebrations` in query)
-- [x] `PC_TOKEN` / PriceCharting dropped — site requires paid sub now; using pokemontcg.io instead
+
+### eBay Live blind spot
+The Browse API does NOT index eBay Live auctions — they're a separate platform. Use `ebay_auction_searches.html` to manually check for live auction deals.
 
 ### Next session TODO (in order)
 
-**#1 — Schedule deal_finder.py (one command, do this first)**
-```
-schtasks /create /tn "PokemonDealFinder" /tr "python C:\Users\vchen\OneDrive\Documents\pycharmprojects\pokemon_delta_species\deal_finder.py" /sc hourly /mo 4
-```
-Runs every 4 hours automatically. Check it: Task Scheduler app → Task Scheduler Library → PokemonDealFinder.
-
-**#2 — PSA population data (optional)**
-- Endpoint `api.psacard.com/publicapi/pop/GetPSASetItems/{setId}` works without auth (got 429 = rate limited, not blocked)
-- Need to find PSA set IDs for Crystal Guardians, Holon Phantoms, Delta Species, Dragon Frontiers
-- Would show PSA 8/9/10 pop counts in each card's tab on the site
-
-**#3 — Refresh prices any time**
+**#1 — Re-fetch watchlist data (new cards need data)**
 ```bash
-python fetch_watchlist_prices.py   # re-fetch all 12 cards
-# then commit + push watchlist_data.json
+python fetch_watchlist_prices.py
+git add watchlist_data.json && git commit -m "Refresh watchlist data (15 cards)" && git push
 ```
+
+**#2 — Verify GitHub Actions is running**
+- Go to: github.com/victorachen/pokemon_card_prices/actions
+- Should see runs every 4 hours under "Pokemon Deal Finder"
+- Can trigger manually with "Run workflow" button
+
+**#3 — PSA population data (optional)**
+- Endpoint `api.psacard.com/publicapi/pop/GetPSASetItems/{setId}` works without auth
+- Need PSA set IDs for Crystal Guardians, Holon Phantoms, Delta Species, Dragon Frontiers
+- Would show PSA 8/9/10 pop counts in each card's tab on the site
 
 ---
 
 ## Key Files
-- `index.html` — live site: 814 cards across 4 sets + watchlist tab for 12 cards
+- `index.html` — live site: 814 cards across 4 sets + watchlist tab for 15 cards
 - `watchlist_data.json` — fetched locally, committed to repo, read by site JS at runtime
 - `fetch_watchlist_prices.py` — run this to refresh prices → commit watchlist_data.json
-- `deal_finder.py` — Discord deal alerts (25% below median); run manually or via Task Scheduler
+- `deal_finder.py` — Discord deal alerts (25% below median); runs via GitHub Actions every 4h
+- `.github/workflows/deal_finder.yml` — GitHub Actions schedule config
 - `prices.db` — SQLite: `alerts_sent` table deduplicates Discord pings by eBay item_id
-- `Cards_I_Care_About.txt` — 12-card personal watchlist
+- `ebay_auction_searches.html` — browser page: all 15 cards × PSA 8/9/10 auction search links
+- `Cards_I_Care_About.txt` — 15-card personal watchlist
 - `all_set_cards.json` — full card database (426 cards) from pokemontcg.io API
 - `generate_card_list.py` — re-fetches all set cards from API → updates all_set_cards.json
 - `build_site.py` — re-generates index.html from all_set_cards.json
 - `next_time.txt` — session handoff notes
 - `.env` — credentials (not committed): EBAY_APP_ID, EBAY_CERT_ID, DISCORD_WEBHOOK_URL
+- `github_secrets.txt` — GitHub secret values for reference (not committed)
 - `ebay_prices.py` — OLD/DEAD: used retired Finding API, ignore
 - `ebay_tracker.py` — OLD/SUPERSEDED by deal_finder.py
