@@ -211,8 +211,8 @@ def search_ebay(token: str, query: str, n: int = RESULTS_PER_GRADE,
 
 # ── TCGPlayer price via pokemontcg.io ─────────────────────────────────────────
 
-def get_tcgplayer_price(name: str, set_id: str, is_rev: bool) -> tuple[float | None, str | None]:
-    """Returns (market_price_usd, tcgplayer_url) for a card."""
+def get_tcgplayer_price(name: str, set_id: str, is_rev: bool) -> tuple[float | None, float | None, str | None]:
+    """Returns (market_price_usd, low_price_usd, tcgplayer_url) for a card."""
     try:
         r = requests.get(
             PTCG_API_URL,
@@ -223,10 +223,10 @@ def get_tcgplayer_price(name: str, set_id: str, is_rev: bool) -> tuple[float | N
         cards = r.json().get("data", [])
     except requests.RequestException as e:
         print(f"    pokemontcg.io error: {e}")
-        return None, None
+        return None, None, None
 
     if not cards:
-        return None, None
+        return None, None, None
 
     tcg    = cards[0].get("tcgplayer", {})
     prices = tcg.get("prices", {})

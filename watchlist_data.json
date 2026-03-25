@@ -1,11 +1,24 @@
 {
-  "last_updated": "2026-03-25T12:47:24.198583+00:00",
+  "last_updated": "2026-03-25T13:35:04.345444+00:00",
   "cards": [
     {
       "name": "Charizard Crystal Guardians (Rev)",
       "language": "English",
+      "graded_q": "Charizard Crystal Guardians reverse -japanese -keychain -pin -lot -proxy",
+      "required_in_title": [
+        "charizard",
+        "crystal"
+      ],
       "tcgplayer_market": 433.19,
+      "tcgplayer_low": 425.0,
       "tcgplayer_url": "https://prices.pokemontcg.io/tcgplayer/ex14-4",
+      "delta_usd": 2599.0,
+      "delta_pct": 108.3,
+      "market_medians": {
+        "psa8": 2167.5,
+        "psa9": 4999.0,
+        "psa10": 124999.98
+      },
       "ebay": {
         "psa9": [
           {
@@ -111,6 +124,36 @@
             "best_offer": true,
             "title": "Charizard (Delta Species) 4/100 Crystal Guardians stamped Reverse Holo beckett 7",
             "url": "https://www.ebay.com/itm/198200849397?_skw=Charizard+Crystal+Guardians+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item2e25b0f3f5:g:6ZUAAeSw7x1pugWM"
+          },
+          {
+            "price": 1699.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Charizard (Delta Species) 4/100 Crystal Guardians Reverse Holo",
+            "url": "https://www.ebay.com/itm/146877841117?_skw=Charizard+Crystal+Guardians+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item223299fedd:g:2XsAAeSwsnBo5Eh0"
+          },
+          {
+            "price": 2400.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Charizard (Delta Species) 4/100 Crystal Guardians Reverse Holo NM! Clean!",
+            "url": "https://www.ebay.com/itm/318049110716?_skw=Charizard+Crystal+Guardians+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item4a0d344abc:g:wO4AAeSw5JVpwZbM"
+          },
+          {
+            "price": 5000.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Charizard (Delta Species) 4/100 Crystal Guardians Reverse Holo",
+            "url": "https://www.ebay.com/itm/117005615885?_skw=Charizard+Crystal+Guardians+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item1b3e14030d:g:YMkAAeSw6uFpbOIH"
+          }
+        ],
+        "raw_nm": [
+          {
+            "price": 2400.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Charizard (Delta Species) 4/100 Crystal Guardians Reverse Holo NM! Clean!",
+            "url": "https://www.ebay.com/itm/318049110716?_skw=Charizard+Crystal+Guardians+reverse+holo+NM+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-damaged+-HP+-MP&hash=item4a0d344abc:g:wO4AAeSw5JVpwZbM"
           }
         ]
       }
@@ -118,8 +161,21 @@
     {
       "name": "Gyarados Holon Phantoms (Rev)",
       "language": "English",
-      "tcgplayer_market": 349.99,
-      "tcgplayer_url": "https://prices.pokemontcg.io/tcgplayer/ex13-8",
+      "graded_q": "Gyarados Holon Phantoms -japanese -keychain -pin -lot -proxy",
+      "required_in_title": [
+        "gyarados",
+        "holon"
+      ],
+      "tcgplayer_market": null,
+      "tcgplayer_low": null,
+      "tcgplayer_url": null,
+      "delta_usd": null,
+      "delta_pct": null,
+      "market_medians": {
+        "psa8": 271.96,
+        "psa9": 662.5,
+        "psa10": 22500.0
+      },
       "ebay": {
         "psa9": [
           {
@@ -156,6 +212,27 @@
             "best_offer": true,
             "title": "PSA 9 Gyarados (Delta Species) 8/110 Holon Phantoms Holo",
             "url": "https://www.ebay.com/itm/267536526623?_skw=Gyarados+Holon+Phantoms+-japanese+-keychain+-pin+-lot+-proxy+PSA+9&hash=item3e4a6b6d1f:g:oo8AAeSw5XRpXeoi"
+          },
+          {
+            "price": 750.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "2006 POKEMON EX HOLON PHANTOMS #8 GYARADOS-HOLO PSA 9",
+            "url": "https://www.ebay.com/itm/306840978715?_skw=Gyarados+Holon+Phantoms+-japanese+-keychain+-pin+-lot+-proxy+PSA+9&hash=item477125c51b:g:EQQAAeSwxbxpws5n"
+          },
+          {
+            "price": 800.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "2006 Pokemon Gyarados #8 EX Holon Phantoms Holo PSA 9 Mint",
+            "url": "https://www.ebay.com/itm/336480853003?_skw=Gyarados+Holon+Phantoms+-japanese+-keychain+-pin+-lot+-proxy+PSA+9&hash=item4e57d25c0b:g:ZkEAAeSwAANptbMs"
+          },
+          {
+            "price": 1300.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Pokémon EX Holon Phantoms Gyarados Delta Species 8/110 Holo Rare PSA 9 2006",
+            "url": "https://www.ebay.com/itm/358367053636?_skw=Gyarados+Holon+Phantoms+-japanese+-keychain+-pin+-lot+-proxy+PSA+9&hash=item5370574744:g:jF8AAeSwfKJpwbhO"
           }
         ],
         "psa10": [
@@ -230,6 +307,27 @@
             "best_offer": false,
             "title": "2006 POKEMON EX HOLON PHANTOMS #8 GYARADOS-REVERSE FOIL PSA 1",
             "url": "https://www.ebay.com/itm/306840978292?_skw=Gyarados+Holon+Phantoms+-japanese+-keychain+-pin+-lot+-proxy+PSA+8&hash=item477125c374:g:zmwAAeSw59dpsMby"
+          },
+          {
+            "price": 300.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "2006 POKEMON EX HOLON PHANTOMS #8 GYARADOS-HOLO PSA 5",
+            "url": "https://www.ebay.com/itm/298082960608?_skw=Gyarados+Holon+Phantoms+-japanese+-keychain+-pin+-lot+-proxy+PSA+8&hash=item45672104e0:g:e2wAAeSwrWhppia7"
+          },
+          {
+            "price": 289.04,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Pokemon PSA 8 Gyarados #8 Holo Ex Holon Phantoms 2006 English",
+            "url": "https://www.ebay.com/itm/287088110925?_skw=Gyarados+Holon+Phantoms+-japanese+-keychain+-pin+-lot+-proxy+PSA+8&hash=item42d7c8ed4d:g:GBAAAeSw45xpb018"
+          },
+          {
+            "price": 350.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "2006 POKEMON EX HOLON PHANTOMS #8 GYARADOS-HOLO PSA 8",
+            "url": "https://www.ebay.com/itm/306819904688?_skw=Gyarados+Holon+Phantoms+-japanese+-keychain+-pin+-lot+-proxy+PSA+8&hash=item476fe434b0:g:qF4AAeSwchFptEF9"
           }
         ],
         "raw": [
@@ -267,15 +365,50 @@
             "best_offer": false,
             "title": "Pokemon Gyarados 8/110 Delta Species Holon Phantoms 2006 Reverse Holo Near Mint",
             "url": "https://www.ebay.com/itm/318044372663?_skw=Gyarados+Holon+Phantoms+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item4a0cebfeb7:g:Rx4AAeSw7v1pbvjh"
+          },
+          {
+            "price": 100.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Pokemon Gyarados Delta Species Reverse Holo Card 8/110 From Holon Phantoms",
+            "url": "https://www.ebay.com/itm/389703630381?_skw=Gyarados+Holon+Phantoms+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item5abc257e2d:g:lVoAAeSwCxZpqb6H"
+          },
+          {
+            "price": 150.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Gyarados Delta Species Holon Phantoms Reverse Holo Card 8/110",
+            "url": "https://www.ebay.com/itm/286943195770?_skw=Gyarados+Holon+Phantoms+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item42cf25b27a:g:GQ0AAeSwxpFpGVEf"
+          },
+          {
+            "price": 259.99,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "2006 Pokemon Ex Holon Phantoms Gyarados 8/110 Reverse Holo Stamped Delta Species",
+            "url": "https://www.ebay.com/itm/366293789224?_skw=Gyarados+Holon+Phantoms+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item5548cfaa28:g:ficAAeSw~QxpvuSd"
           }
-        ]
+        ],
+        "raw_nm": []
       }
     },
     {
       "name": "Meowth Holon Phantoms (Rev)",
       "language": "English",
+      "graded_q": "Meowth Holon Phantoms -japanese -keychain -pin -lot -proxy",
+      "required_in_title": [
+        "meowth",
+        "holon"
+      ],
       "tcgplayer_market": 24.86,
+      "tcgplayer_low": 81.35,
       "tcgplayer_url": "https://prices.pokemontcg.io/tcgplayer/ex13-71",
+      "delta_usd": null,
+      "delta_pct": null,
+      "market_medians": {
+        "psa8": null,
+        "psa9": null,
+        "psa10": 299.0
+      },
       "ebay": {
         "psa9": [],
         "psa10": [
@@ -323,6 +456,36 @@
             "best_offer": true,
             "title": "Pokemon TCG Holon Phantoms Meowth 71/110 Delta Species Reverse Holo (Stamped)",
             "url": "https://www.ebay.com/itm/177951441620?_skw=Meowth+Holon+Phantoms+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item296ebb82d4:g:R3YAAeSwQ-tpsni-"
+          },
+          {
+            "price": 69.99,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Pokémon TCG Meowth Delta Species Holon Phantoms 71/110 Reverse Holo NM/LP-c",
+            "url": "https://www.ebay.com/itm/317972993775?_skw=Meowth+Holon+Phantoms+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item4a08aad6ef:g:uKcAAeSwchFprdqu"
+          }
+        ],
+        "raw_nm": [
+          {
+            "price": 101.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Pokémon Meowth (Delta Species) Holon Phantoms 71/110 Reverse Holo NM/LP",
+            "url": "https://www.ebay.com/itm/406797387541?_skw=Meowth+Holon+Phantoms+reverse+holo+NM+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-damaged+-HP+-MP&hash=item5eb7038715:g:dzcAAeSw0GlpwqXA"
+          },
+          {
+            "price": 127.15,
+            "type": "FIXED_PRICE",
+            "best_offer": false,
+            "title": "NM - Holon Phantoms Meowth 71/110 Delta Species Reverse Holo (Stamped)",
+            "url": "https://www.ebay.com/itm/406789669759?_skw=Meowth+Holon+Phantoms+reverse+holo+NM+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-damaged+-HP+-MP&hash=item5eb68dc37f:g:w-0AAeSwkBlpvxbZ"
+          },
+          {
+            "price": 69.99,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Pokémon TCG Meowth Delta Species Holon Phantoms 71/110 Reverse Holo NM/LP-c",
+            "url": "https://www.ebay.com/itm/317972993775?_skw=Meowth+Holon+Phantoms+reverse+holo+NM+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-damaged+-HP+-MP&hash=item4a08aad6ef:g:uKcAAeSwchFprdqu"
           }
         ]
       }
@@ -330,8 +493,21 @@
     {
       "name": "Gloom Holon Phantoms (Rev)",
       "language": "English",
+      "graded_q": "Gloom Holon Phantoms -japanese -keychain -pin -lot -proxy",
+      "required_in_title": [
+        "gloom",
+        "holon"
+      ],
       "tcgplayer_market": null,
+      "tcgplayer_low": null,
       "tcgplayer_url": null,
+      "delta_usd": null,
+      "delta_pct": null,
+      "market_medians": {
+        "psa8": 48.21,
+        "psa9": 289.99,
+        "psa10": 499.0
+      },
       "ebay": {
         "psa9": [
           {
@@ -395,15 +571,43 @@
             "best_offer": true,
             "title": "Gloom (Delta Species) 42/110 Holon Phantoms Reverse Holo",
             "url": "https://www.ebay.com/itm/157236872555?_skw=Gloom+Holon+Phantoms+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item249c0c456b:g:8iYAAeSw4cFommmw"
+          },
+          {
+            "price": 21.8,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Gloom (Delta Species) Uncommon Reverse Holo Holon Phantoms 42/110 VLP",
+            "url": "https://www.ebay.com/itm/406795835817?_skw=Gloom+Holon+Phantoms+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item5eb6ebd9a9:g:mzcAAeSwiSFpwgrD"
+          },
+          {
+            "price": 500.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "The #1 Graded card Gloom Delta Species 42/110 Holon Phantoms Reverse Holo",
+            "url": "https://www.ebay.com/itm/388116098728?_skw=Gloom+Holon+Phantoms+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item5a5d85aea8:g:h3MAAeSwn5xn2zzT"
           }
-        ]
+        ],
+        "raw_nm": []
       }
     },
     {
       "name": "Salamence ex Dragon Frontiers",
       "language": "English",
+      "graded_q": "Salamence ex Dragon Frontiers -japanese -keychain -pin -lot -proxy",
+      "required_in_title": [
+        "salamence",
+        "frontier"
+      ],
       "tcgplayer_market": 205.0,
+      "tcgplayer_low": 115.0,
       "tcgplayer_url": "https://prices.pokemontcg.io/tcgplayer/ex15-98",
+      "delta_usd": 1339.07,
+      "delta_pct": 832.1,
+      "market_medians": {
+        "psa8": 375.0,
+        "psa9": 1500.0,
+        "psa10": 3499.99
+      },
       "ebay": {
         "psa9": [
           {
@@ -488,6 +692,36 @@
             "best_offer": true,
             "title": "Salamence ex (Delta Species) 98/101 Dragon Frontiers Holo",
             "url": "https://www.ebay.com/itm/388699442253?_skw=Salamence+ex+Dragon+Frontiers+-reverse+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item5a804acc4d:g:MNgAAeSw8n1oclCB"
+          },
+          {
+            "price": 98.79,
+            "type": "FIXED_PRICE",
+            "best_offer": false,
+            "title": "MP Salamence ex Delta 022/068 EX Dragon Frontiers PokemonCard Imp From Japan",
+            "url": "https://www.ebay.com/itm/287207951839?_skw=Salamence+ex+Dragon+Frontiers+-reverse+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item42deed8ddf:g:l60AAeSwle9pt4IR"
+          },
+          {
+            "price": 149.99,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Salamence Ex (Delta Species) 98/101 Dragon Frontiers Holo LP - READ DESCRIPTION",
+            "url": "https://www.ebay.com/itm/397733573878?_skw=Salamence+ex+Dragon+Frontiers+-reverse+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item5c9ac4b4f6:g:BRAAAeSwGzppu2Hs"
+          },
+          {
+            "price": 148.95,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Pokemon Salamence ex δ 98/101  Dragon Frontiers Holofoil MP",
+            "url": "https://www.ebay.com/itm/256966263970?_skw=Salamence+ex+Dragon+Frontiers+-reverse+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item3bd46204a2:g:AdwAAOSwXCNoRIPG"
+          }
+        ],
+        "raw_nm": [
+          {
+            "price": 160.93,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Salamence EX 98/101 Dragon Frontiers Holo NM condition with small slight crease",
+            "url": "https://www.ebay.com/itm/277657523349?_skw=Salamence+ex+Dragon+Frontiers+-reverse+NM+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-damaged+-HP+-MP&hash=item40a5ad9495:g:DsgAAeSwcRppbOTI"
           }
         ]
       }
@@ -495,8 +729,21 @@
     {
       "name": "Feraligatr Dragon Frontiers (Rev)",
       "language": "English",
+      "graded_q": "Feraligatr Dragon Frontiers reverse -japanese -keychain -pin -lot -proxy",
+      "required_in_title": [
+        "feraligatr",
+        "frontier"
+      ],
       "tcgplayer_market": null,
+      "tcgplayer_low": null,
       "tcgplayer_url": null,
+      "delta_usd": 1123.23,
+      "delta_pct": 774.7,
+      "market_medians": {
+        "psa8": 299.99,
+        "psa9": 1268.22,
+        "psa10": null
+      },
       "ebay": {
         "psa9": [
           {
@@ -559,6 +806,36 @@
             "best_offer": true,
             "title": "Feraligatr (Delta Species) Reverse Holo Holo Rare Dragon Frontiers 2/101 Damage",
             "url": "https://www.ebay.com/itm/376787722806?_skw=Feraligatr+Dragon+Frontiers+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item57ba4c6236:g:0m4AAeSwLWJpRJ96"
+          },
+          {
+            "price": 15.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Feraligatr (Delta Species) 2/101 Dragon Frontiers Reverse Holo",
+            "url": "https://www.ebay.com/itm/376355102348?_skw=Feraligatr+Dragon+Frontiers+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item57a0831e8c:g:liYAAeSwObpoVeqY"
+          },
+          {
+            "price": 20.0,
+            "type": "FIXED_PRICE",
+            "best_offer": false,
+            "title": "Feraligatr (Delta Species) 2/101 Dragon Frontiers Reverse Holo",
+            "url": "https://www.ebay.com/itm/157640615838?_skw=Feraligatr+Dragon+Frontiers+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item24b41ce79e:g:gj8AAeSw78FpeF56"
+          },
+          {
+            "price": 15.99,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Feraligatr 2/101 Reverse Holo – Dragon Frontiers (2006) – Damaged Pokémon Card",
+            "url": "https://www.ebay.com/itm/317968991823?_skw=Feraligatr+Dragon+Frontiers+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item4a086dc64f:g:UCYAAeSwHqRprLJO"
+          }
+        ],
+        "raw_nm": [
+          {
+            "price": 144.99,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Feraligatr (Delta Species) Dragon Frontiers 2/101 Reverse Holo NM",
+            "url": "https://www.ebay.com/itm/397225735859?_skw=Feraligatr+Dragon+Frontiers+reverse+holo+NM+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-damaged+-HP+-MP&hash=item5c7c7fb6b3:g:vvgAAeSwsVtpCWLX"
           }
         ]
       }
@@ -566,8 +843,21 @@
     {
       "name": "Typhlosion Dragon Frontiers (Rev)",
       "language": "English",
+      "graded_q": "Typhlosion Dragon Frontiers reverse -japanese -keychain -pin -lot -proxy",
+      "required_in_title": [
+        "typhlosion",
+        "frontier"
+      ],
       "tcgplayer_market": 75.33,
+      "tcgplayer_low": 44.0,
       "tcgplayer_url": "https://prices.pokemontcg.io/tcgplayer/ex15-12",
+      "delta_usd": 914.84,
+      "delta_pct": 1074.3,
+      "market_medians": {
+        "psa8": null,
+        "psa9": 1000.0,
+        "psa10": 19999.99
+      },
       "ebay": {
         "psa9": [
           {
@@ -623,6 +913,43 @@
             "best_offer": false,
             "title": "2006 Pokemon Dragon Frontiers Reverse Holo Typhlosion (Delta Species) 12/101",
             "url": "https://www.ebay.com/itm/377022346026?_skw=Typhlosion+Dragon+Frontiers+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item57c848732a:g:laAAAeSwlvBpr8CT"
+          },
+          {
+            "price": 18.5,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Typhlosion (Delta Species) 12/101 Dragon Frontiers Reverse Holo",
+            "url": "https://www.ebay.com/itm/365784370875?_skw=Typhlosion+Dragon+Frontiers+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item552a728ebb:g:Q-gAAeSwk8polQiD"
+          },
+          {
+            "price": 24.59,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Pokémon - Typhlosion (Delta Species) - 12/101 - Dragon Frontiers - Reverse Holo",
+            "url": "https://www.ebay.com/itm/296920176715?_skw=Typhlosion+Dragon+Frontiers+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item4521d2584b:g:kFQAAOSwl5lnd1KV"
+          },
+          {
+            "price": 15.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Pokémon TCG Typhlosion  EX Dragon Frontiers 12/101 Reverse Holo Holo Rare",
+            "url": "https://www.ebay.com/itm/393986726953?_skw=Typhlosion+Dragon+Frontiers+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item5bbb705c29:g:O4MAAOSwGVdiL8Ul"
+          }
+        ],
+        "raw_nm": [
+          {
+            "price": 42.92,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "2006 Typhlosion Reverse Holo Pokemon TCG Dragon Frontiers 12/101 NM",
+            "url": "https://www.ebay.com/itm/327023818752?_skw=Typhlosion+Dragon+Frontiers+reverse+holo+NM+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-damaged+-HP+-MP&hash=item4c24237800:g:TJEAAeSwl8lppByx"
+          },
+          {
+            "price": 127.4,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Pokémon TCG EX Dragon Frontiers Typhlosion 12/101 Rare Reverse Holo - LP/NM",
+            "url": "https://www.ebay.com/itm/405966447996?_skw=Typhlosion+Dragon+Frontiers+reverse+holo+NM+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-damaged+-HP+-MP&hash=item5e857c657c:g:Xj0AAeSwTWVoTvdE"
           }
         ]
       }
@@ -630,8 +957,21 @@
     {
       "name": "Dragonite Delta Species (Rev)",
       "language": "English",
-      "tcgplayer_market": null,
-      "tcgplayer_url": null,
+      "graded_q": "Dragonite Delta Species reverse -japanese -keychain -pin -lot -proxy",
+      "required_in_title": [
+        "dragonite",
+        "delta"
+      ],
+      "tcgplayer_market": 399.95,
+      "tcgplayer_low": 169.25,
+      "tcgplayer_url": "https://prices.pokemontcg.io/tcgplayer/ex11-3",
+      "delta_usd": null,
+      "delta_pct": null,
+      "market_medians": {
+        "psa8": 1161.81,
+        "psa9": 2410.8,
+        "psa10": null
+      },
       "ebay": {
         "psa9": [
           {
@@ -694,15 +1034,43 @@
             "best_offer": false,
             "title": "Vintage Dragonite 3/113 Ex Delta Species Stamped Reverse Holo Pokemon Card TCG",
             "url": "https://www.ebay.com/itm/366294574668?_skw=Dragonite+Delta+Species+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item5548dba64c:g:x7kAAeSw64xpv2AL"
+          },
+          {
+            "price": 95.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Dragonite (Delta Species) 3/113 Delta Species Reverse Holo",
+            "url": "https://www.ebay.com/itm/376592870362?_skw=Dragonite+Delta+Species+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item57aeaf2bda:g:fLEAAeSwRbxo3uWB"
+          },
+          {
+            "price": 402.33,
+            "type": "FIXED_PRICE",
+            "best_offer": false,
+            "title": "Pokemon Dragonite Reverse Holo EX Delta Species 3/113 ",
+            "url": "https://www.ebay.com/itm/198039589420?_skw=Dragonite+Delta+Species+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item2e1c14522c:g:ftcAAeSwsFtpcpBD"
           }
-        ]
+        ],
+        "raw_nm": []
       }
     },
     {
       "name": "Ampharos Dragon Frontiers (Rev)",
       "language": "English",
-      "tcgplayer_market": 40.71,
-      "tcgplayer_url": "https://prices.pokemontcg.io/tcgplayer/ex15-1",
+      "graded_q": "Ampharos Dragon Frontiers reverse -japanese -keychain -pin -lot -proxy",
+      "required_in_title": [
+        "ampharos",
+        "frontier"
+      ],
+      "tcgplayer_market": null,
+      "tcgplayer_low": null,
+      "tcgplayer_url": null,
+      "delta_usd": null,
+      "delta_pct": null,
+      "market_medians": {
+        "psa8": 149.99,
+        "psa9": 500.0,
+        "psa10": null
+      },
       "ebay": {
         "psa9": [
           {
@@ -758,119 +1126,163 @@
             "best_offer": true,
             "title": "Ampharos (Delta Species) 1/101 Dragon Frontiers Reverse Holo",
             "url": "https://www.ebay.com/itm/366265112752?_skw=Ampharos+Dragon+Frontiers+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item55471a18b0:g:lVEAAeSwBxdpshht"
+          },
+          {
+            "price": 13.41,
+            "type": "FIXED_PRICE",
+            "best_offer": false,
+            "title": "Pokemon Ampharos 1/101 Reverse Holo Rare EX Dragon Frontiers Stamped",
+            "url": "https://www.ebay.com/itm/136274984004?_skw=Ampharos+Dragon+Frontiers+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item1fba9f3c44:g:amEAAeSwfx5okmsZ"
+          },
+          {
+            "price": 16.76,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Pokemon AMPHAROS 1/101 Reverse Holo RARE LP  EX Dragon Frontiers 2006",
+            "url": "https://www.ebay.com/itm/155886805269?_skw=Ampharos+Dragon+Frontiers+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item244b93e115:g:mLsAAOSwUp9lUpUd"
+          },
+          {
+            "price": 18.5,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Ampharos (Delta Species) 1/101 Dragon Frontiers Reverse Holo",
+            "url": "https://www.ebay.com/itm/287168802474?_skw=Ampharos+Dragon+Frontiers+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item42dc982eaa:g:EZgAAeSwd6RpofBD"
           }
-        ]
+        ],
+        "raw_nm": []
       }
     },
     {
       "name": "Gardevoir ex Dragon Frontiers",
       "language": "English",
+      "graded_q": "Gardevoir ex Dragon Frontiers -japanese -keychain -pin -lot -proxy -celebrations",
+      "required_in_title": [
+        "gardevoir",
+        "frontier"
+      ],
       "tcgplayer_market": 164.75,
+      "tcgplayer_low": 180.0,
       "tcgplayer_url": "https://prices.pokemontcg.io/tcgplayer/ex15-93",
+      "delta_usd": 478.38,
+      "delta_pct": 275.3,
+      "market_medians": {
+        "psa8": null,
+        "psa9": 652.12,
+        "psa10": 12999.95
+      },
       "ebay": {
         "psa9": [
-          {
-            "price": 40.49,
-            "type": "FIXED_PRICE",
-            "best_offer": false,
-            "title": "2021 Pokemon Celebrations Classic Coll Dragon Frontiers Holo Gardevoir Ex PSA 9",
-            "url": "https://www.ebay.com/itm/177827233869?_skw=Gardevoir+ex+Dragon+Frontiers+-japanese+-keychain+-pin+-lot+-proxy+PSA+9&hash=item296754404d:g:9doAAeSw8A5pf6Vr"
-          },
           {
             "price": 140.0,
             "type": "FIXED_PRICE",
             "best_offer": true,
             "title": "2006 POKEMON EX DRAGON FRONTIERS GARDEVOIR EX HOLO #93 PSA 9!",
-            "url": "https://www.ebay.com/itm/204924603161?_skw=Gardevoir+ex+Dragon+Frontiers+-japanese+-keychain+-pin+-lot+-proxy+PSA+9&hash=item2fb6754b19:g:CUAAAOSwyxtmsS3-"
+            "url": "https://www.ebay.com/itm/204924603161?_skw=Gardevoir+ex+Dragon+Frontiers+-japanese+-keychain+-pin+-lot+-proxy+-celebrations+PSA+9&hash=item2fb6754b19:g:CUAAAOSwyxtmsS3-"
           },
           {
             "price": 579.24,
             "type": "FIXED_PRICE",
             "best_offer": true,
             "title": "💎 Gardevoir Ex 93/101 PSA 9 2006 Dragon Frontiers 📈 Pokemon Vintage Gem",
-            "url": "https://www.ebay.com/itm/336491693077?_skw=Gardevoir+ex+Dragon+Frontiers+-japanese+-keychain+-pin+-lot+-proxy+PSA+9&hash=item4e5877c415:g:z5oAAeSweh9pvTx3"
+            "url": "https://www.ebay.com/itm/336491693077?_skw=Gardevoir+ex+Dragon+Frontiers+-japanese+-keychain+-pin+-lot+-proxy+-celebrations+PSA+9&hash=item4e5877c415:g:z5oAAeSweh9pvTx3"
           },
           {
             "price": 725.0,
             "type": "FIXED_PRICE",
             "best_offer": false,
             "title": "Pokemon Gardevoir ex EX Dragon Frontiers Holo Ultra Rare #93 PSA 9 Mint",
-            "url": "https://www.ebay.com/itm/287217830124?_skw=Gardevoir+ex+Dragon+Frontiers+-japanese+-keychain+-pin+-lot+-proxy+PSA+9&hash=item42df8448ec:g:gksAAeSwrqNpvDuV"
+            "url": "https://www.ebay.com/itm/287217830124?_skw=Gardevoir+ex+Dragon+Frontiers+-japanese+-keychain+-pin+-lot+-proxy+-celebrations+PSA+9&hash=item42df8448ec:g:gksAAeSwrqNpvDuV"
           },
           {
             "price": 1000.0,
             "type": "FIXED_PRICE",
             "best_offer": true,
             "title": "2006 POKEMON EX DRAGON FRONTIERS #93 GARDEVOIR EX-HOLO PSA 9",
-            "url": "https://www.ebay.com/itm/298147849131?_skw=Gardevoir+ex+Dragon+Frontiers+-japanese+-keychain+-pin+-lot+-proxy+PSA+9&hash=item456aff23ab:g:bpMAAeSwl~dpvv5R"
+            "url": "https://www.ebay.com/itm/298147849131?_skw=Gardevoir+ex+Dragon+Frontiers+-japanese+-keychain+-pin+-lot+-proxy+-celebrations+PSA+9&hash=item456aff23ab:g:bpMAAeSwl~dpvv5R"
           }
         ],
         "psa10": [
-          {
-            "price": 84.97,
-            "type": "FIXED_PRICE",
-            "best_offer": false,
-            "title": "2021 Pokemon Celebrations Dragon Frontiers #93 Gardevoir EX Holo PSA 10 GEM MINT",
-            "url": "https://www.ebay.com/itm/157612227208?_skw=Gardevoir+ex+Dragon+Frontiers+-japanese+-keychain+-pin+-lot+-proxy+PSA+10&hash=item24b26bba88:g:YCkAAeSwxEVpZAuX"
-          },
           {
             "price": 12999.95,
             "type": "FIXED_PRICE",
             "best_offer": false,
             "title": "PSA 10 Gardevoir ex 93/101 EX Dragon Frontiers Pokemon 2006",
-            "url": "https://www.ebay.com/itm/188054857750?_skw=Gardevoir+ex+Dragon+Frontiers+-japanese+-keychain+-pin+-lot+-proxy+PSA+10&hash=item2bc8f16816:g:1~4AAeSwnnppjs3H"
-          },
-          {
-            "price": 130.0,
-            "type": "AUCTION",
-            "best_offer": false,
-            "title": "2021 Pokemon Celebrations Classic Gardevoir EX Dragon Frontiers PSA 10 #93",
-            "url": "https://www.ebay.com/itm/406785730934?_skw=Gardevoir+ex+Dragon+Frontiers+-japanese+-keychain+-pin+-lot+-proxy+PSA+10&hash=item5eb651a976:g:iicAAeSwMoRpvRvv"
-          },
-          {
-            "price": 149.0,
-            "type": "FIXED_PRICE",
-            "best_offer": true,
-            "title": "2021 Pokemon Celebrations Classic Dragon Frontiers Gardevoir Ex Holo PSA 10",
-            "url": "https://www.ebay.com/itm/227148033167?_skw=Gardevoir+ex+Dragon+Frontiers+-japanese+-keychain+-pin+-lot+-proxy+PSA+10&hash=item34e313ec8f:g:gdcAAeSwuCdpTxby"
+            "url": "https://www.ebay.com/itm/188054857750?_skw=Gardevoir+ex+Dragon+Frontiers+-japanese+-keychain+-pin+-lot+-proxy+-celebrations+PSA+10&hash=item2bc8f16816:g:1~4AAeSwnnppjs3H"
           }
         ],
         "psa8": [],
         "raw": [
           {
-            "price": 11.5,
-            "type": "FIXED_PRICE",
-            "best_offer": true,
-            "title": "Pokemon TCG Gardevoir Ex 93/101 Celebrations Delta Species Dragon Frontiers",
-            "url": "https://www.ebay.com/itm/318052650382?_skw=Gardevoir+ex+Dragon+Frontiers+-reverse+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item4a0d6a4d8e:g:RGUAAeSwx~hpwoKk"
-          },
-          {
             "price": 15.0,
             "type": "FIXED_PRICE",
             "best_offer": false,
             "title": "POKEMON TCG GARDEVOIR EX (DELTA SPECIES) EX DRAGON FRONTIERS 93/101 HOLO RARE",
-            "url": "https://www.ebay.com/itm/314877099464?_skw=Gardevoir+ex+Dragon+Frontiers+-reverse+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item4950233dc8:g:ocgAAOSwEidlI3Fa"
+            "url": "https://www.ebay.com/itm/314877099464?_skw=Gardevoir+ex+Dragon+Frontiers+-reverse+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-celebrations&hash=item4950233dc8:g:ocgAAOSwEidlI3Fa"
           },
           {
             "price": 70.0,
             "type": "FIXED_PRICE",
             "best_offer": false,
             "title": "Dragon Frontiers #93/101 Gardevoir ex (Delta Species)",
-            "url": "https://www.ebay.com/itm/389408557577?_skw=Gardevoir+ex+Dragon+Frontiers+-reverse+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item5aaa8f0a09:g:rGgAAeSwNntpSyn0"
+            "url": "https://www.ebay.com/itm/389408557577?_skw=Gardevoir+ex+Dragon+Frontiers+-reverse+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-celebrations&hash=item5aaa8f0a09:g:rGgAAeSwNntpSyn0"
           },
           {
             "price": 100.0,
             "type": "FIXED_PRICE",
             "best_offer": true,
             "title": "Gardevoir EX 005/024 Delta Species Dragon Frontiers 1st Edition Jap Pokemon Card",
-            "url": "https://www.ebay.com/itm/376078119075?_skw=Gardevoir+ex+Dragon+Frontiers+-reverse+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item579000b0a3:g:bvQAAeSwZT5n2OdQ"
+            "url": "https://www.ebay.com/itm/376078119075?_skw=Gardevoir+ex+Dragon+Frontiers+-reverse+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-celebrations&hash=item579000b0a3:g:bvQAAeSwZT5n2OdQ"
           },
           {
             "price": 80.1,
             "type": "FIXED_PRICE",
             "best_offer": true,
             "title": "Pokemon Card Gardevoir ex 93/101 Delta Species Dragon Frontiers Holo MP 2006",
-            "url": "https://www.ebay.com/itm/157605049067?_skw=Gardevoir+ex+Dragon+Frontiers+-reverse+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item24b1fe32eb:g:6C4AAeSwc6hpZBBE"
+            "url": "https://www.ebay.com/itm/157605049067?_skw=Gardevoir+ex+Dragon+Frontiers+-reverse+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-celebrations&hash=item24b1fe32eb:g:6C4AAeSwc6hpZBBE"
+          },
+          {
+            "price": 164.99,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Gardevoir ex (Delta Species) Ultra Rare Dragon Frontiers 93/101 Pokémon TCG",
+            "url": "https://www.ebay.com/itm/168244406354?_skw=Gardevoir+ex+Dragon+Frontiers+-reverse+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-celebrations&hash=item272c25e852:g:fo0AAeSw1adpuuI2"
+          },
+          {
+            "price": 180.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Gardevoir ex (Delta Species) - 93/101 Pokemon Dragon Frontiers - Holo LP 🔥",
+            "url": "https://www.ebay.com/itm/318020068835?_skw=Gardevoir+ex+Dragon+Frontiers+-reverse+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-celebrations&hash=item4a0b7925e3:g:pmAAAeSwSEVpubYG"
+          },
+          {
+            "price": 197.49,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Gardevoir ex (Delta Species) Holo Ultra Rare Dragon Frontiers 93/101 NM",
+            "url": "https://www.ebay.com/itm/167944390167?_skw=Gardevoir+ex+Dragon+Frontiers+-reverse+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-celebrations&hash=item271a440617:g:zB0AAeSwANVpHydp"
+          },
+          {
+            "price": 156.71,
+            "type": "FIXED_PRICE",
+            "best_offer": false,
+            "title": "Pokemon GARDEVOIR EX DELTA SPECIES 93/101 - DRAGON FRONTIERS holo rare US - Mint",
+            "url": "https://www.ebay.com/itm/265247854135?_skw=Gardevoir+ex+Dragon+Frontiers+-reverse+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-celebrations&hash=item3dc2010e37:g:~tgAAOSwr7Vncwzj"
+          }
+        ],
+        "raw_nm": [
+          {
+            "price": 197.49,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Gardevoir ex (Delta Species) Holo Ultra Rare Dragon Frontiers 93/101 NM",
+            "url": "https://www.ebay.com/itm/167944390167?_skw=Gardevoir+ex+Dragon+Frontiers+-reverse+NM+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-celebrations+-damaged+-HP+-MP&hash=item271a440617:g:zB0AAeSwANVpHydp"
+          },
+          {
+            "price": 149.99,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Pokémon Dragon Frontiers - Gardevoir EX Delta Species ULTRA RARE NM/LP",
+            "url": "https://www.ebay.com/itm/377047895472?_skw=Gardevoir+ex+Dragon+Frontiers+-reverse+NM+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-celebrations+-damaged+-HP+-MP&hash=item57c9ce4db0:g:hUQAAeSwgH9pvG2o"
           }
         ]
       }
@@ -878,8 +1290,21 @@
     {
       "name": "Vaporeon Delta Species (Rev)",
       "language": "English",
-      "tcgplayer_market": null,
-      "tcgplayer_url": null,
+      "graded_q": "Vaporeon Delta Species reverse -japanese -keychain -pin -lot -proxy",
+      "required_in_title": [
+        "vaporeon",
+        "delta"
+      ],
+      "tcgplayer_market": 199.99,
+      "tcgplayer_low": 159.99,
+      "tcgplayer_url": "https://prices.pokemontcg.io/tcgplayer/ex11-18",
+      "delta_usd": 579.66,
+      "delta_pct": 257.6,
+      "market_medians": {
+        "psa8": 367.97,
+        "psa9": 804.66,
+        "psa10": null
+      },
       "ebay": {
         "psa9": [
           {
@@ -956,6 +1381,29 @@
             "best_offer": true,
             "title": "Pokémon Tcg Vaporeon EX Delta Species 18/113 Reverse Stamped Holo",
             "url": "https://www.ebay.com/itm/267599744094?_skw=Vaporeon+Delta+Species+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item3e4e300c5e:g:7S0AAeSwGBBpsBNN"
+          },
+          {
+            "price": 250.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Vaporeon EX Delta Species 18/113 Rare Reverse Holo Stamped Stage 1 Pokémon 2005",
+            "url": "https://www.ebay.com/itm/318019157573?_skw=Vaporeon+Delta+Species+reverse+holo+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin&hash=item4a0b6b3e45:g:I0sAAeSw27lpuX51"
+          }
+        ],
+        "raw_nm": [
+          {
+            "price": 300.0,
+            "type": "FIXED_PRICE",
+            "best_offer": false,
+            "title": "Vaporeon (Delta Species) Reverse Holo Rare Delta Species 18/113 NM",
+            "url": "https://www.ebay.com/itm/396915188548?_skw=Vaporeon+Delta+Species+reverse+holo+NM+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-damaged+-HP+-MP&hash=item5c69fd2344:g:A4UAAeSwt81oisVd"
+          },
+          {
+            "price": 149.99,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Vaporeon Reverse Holo – EX Delta Species 18/113 – NM – Pokémon 2006",
+            "url": "https://www.ebay.com/itm/127704033041?_skw=Vaporeon+Delta+Species+reverse+holo+NM+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-japanese+-keychain+-pin+-damaged+-HP+-MP&hash=item1dbbc0e711:g:ElEAAeSwPfFpnrth"
           }
         ]
       }
@@ -963,8 +1411,20 @@
     {
       "name": "Vaporeon Holon Research Tower (JP)",
       "language": "Japanese",
+      "graded_q": "Vaporeon Holon Research Tower -keychain -pin -lot -proxy",
+      "required_in_title": [
+        "vaporeon"
+      ],
       "tcgplayer_market": null,
+      "tcgplayer_low": null,
       "tcgplayer_url": null,
+      "delta_usd": 119.35,
+      "delta_pct": 100.7,
+      "market_medians": {
+        "psa8": 118.7,
+        "psa9": 237.85,
+        "psa10": 3000.0
+      },
       "ebay": {
         "psa9": [
           {
@@ -1077,6 +1537,43 @@
             "best_offer": true,
             "title": "Vaporeon ex 003/015 Holon Research Tower Water Quarter Deck Holo (Japanese)",
             "url": "https://www.ebay.com/itm/127693019251?_skw=Vaporeon+Holon+Research+Tower+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-keychain+-pin&hash=item1dbb18d873:g:f5IAAeSwLxhplsMd"
+          },
+          {
+            "price": 60.0,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Vaporeon (Delta Species) 030/086- Holon Research Tower Holo foil Japanese MP",
+            "url": "https://www.ebay.com/itm/147017031802?_skw=Vaporeon+Holon+Research+Tower+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-keychain+-pin&hash=item223ae5e07a:g:TuEAAeSw58JpNlNb"
+          },
+          {
+            "price": 56.45,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "MP Vaporeon ex 003/015 2005 Holon Research Tower Pokemon Card Japanese JP Import",
+            "url": "https://www.ebay.com/itm/188173036353?_skw=Vaporeon+Holon+Research+Tower+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-keychain+-pin&hash=item2bcffcab41:g:S1oAAeSwdDdpuS8Y"
+          },
+          {
+            "price": 69.95,
+            "type": "FIXED_PRICE",
+            "best_offer": false,
+            "title": "Pokemon TCG Vaporeon EX 003/015 Holon Research Tower Water Deck Japanese - MP",
+            "url": "https://www.ebay.com/itm/236647378596?_skw=Vaporeon+Holon+Research+Tower+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-keychain+-pin&hash=item3719486ea4:g:YBIAAeSwbMppmU-M"
+          }
+        ],
+        "raw_nm": [
+          {
+            "price": 85.0,
+            "type": "FIXED_PRICE",
+            "best_offer": false,
+            "title": "NM Vaporeon ex 003/015 Holon Research Tower 1ED Near Mint 2005 Japanese Pokemon",
+            "url": "https://www.ebay.com/itm/227038587263?_skw=Vaporeon+Holon+Research+Tower+NM+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-keychain+-pin+-damaged+-HP+-MP&hash=item34dc8de97f:g:RYoAAeSwcsho-ZVh"
+          },
+          {
+            "price": 151.99,
+            "type": "FIXED_PRICE",
+            "best_offer": true,
+            "title": "Vaporeon EX 003/015 Holon Research Tower Water Deck Pokemon Japanese NM/EX",
+            "url": "https://www.ebay.com/itm/406753270064?_skw=Vaporeon+Holon+Research+Tower+NM+-PSA+-BGS+-SGC+-CGC+-lot+-proxy+-keychain+-pin+-damaged+-HP+-MP&hash=item5eb4625930:g:~2YAAeSwj0RpvXFa"
           }
         ]
       }
