@@ -193,6 +193,8 @@
     .wl-empty-msg{font-size:13px}
     .wl-empty-cmd{font-size:11px;margin-top:10px;font-family:monospace;background:var(--surface2);display:inline-block;padding:6px 14px;border-radius:6px;color:var(--muted2);border:1px solid var(--border2)}
     .wl-spin{width:22px;height:22px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:60px auto}
+    .wl-lang-en{font-size:9px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;border-radius:4px;padding:1px 6px;letter-spacing:.04em;flex-shrink:0}
+    .wl-lang-jp{font-size:9px;font-weight:700;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:4px;padding:1px 6px;letter-spacing:.04em;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -205,7 +207,7 @@
   <div class="sb-watchlist" onclick="showWatchlist()">
     <span class="sb-wl-icon">⭐</span>
     <span class="sb-wl-text">My Watchlist</span>
-    <span class="sb-wl-count">11</span>
+    <span class="sb-wl-count">12</span>
   </div>
   <div id="sb-sets"></div>
   <div id="sb-stats">
@@ -1456,6 +1458,9 @@ function renderWatchlist() {
     div.className = 'wl-card';
     div.dataset.idx = idx;
 
+    const langBadge = card.language === 'Japanese'
+      ? `<span class="wl-lang-jp">JP</span>`
+      : `<span class="wl-lang-en">EN</span>`;
     const tcgHtml = card.tcgplayer_market != null
       ? `<span class="wl-hdr-tcg-lbl">TCGPlayer</span><span class="wl-hdr-tcg">$${parseFloat(card.tcgplayer_market).toFixed(2)}</span>`
       : `<span class="wl-hdr-tcg-lbl">TCGPlayer</span><span class="wl-hdr-tcg" style="color:var(--muted)">N/A</span>`;
@@ -1466,6 +1471,7 @@ function renderWatchlist() {
     div.innerHTML = `
       <div class="wl-hdr" onclick="wlToggle(${idx},this)">
         <span class="wl-hdr-name">${card.name}</span>
+        ${langBadge}
         ${tcgHtml}${tcgLink}
         <span class="wl-hdr-arrow">▶</span>
       </div>

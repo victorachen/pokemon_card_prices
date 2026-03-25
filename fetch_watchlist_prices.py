@@ -35,69 +35,100 @@ RESULTS_PER_GRADE = 5   # top N cheapest listings to store per grade
 WATCHLIST = [
     {
         "label":    "Charizard Crystal Guardians (Rev)",
-        "raw_q":    "Charizard Crystal Guardians reverse holo -PSA -BGS -SGC -CGC -lot -proxy",
-        "graded_q": "Charizard Crystal Guardians reverse",
+        "language": "English",
+        "raw_q":    "Charizard Crystal Guardians reverse holo -PSA -BGS -SGC -CGC -lot -proxy -japanese -keychain -pin",
+        "graded_q": "Charizard Crystal Guardians reverse -japanese -keychain -pin -lot -proxy",
+        "required_in_title": ["charizard", "crystal"],
         "tcg_name": "Charizard", "tcg_set": "ex14", "tcg_rev": True,
     },
     {
         "label":    "Gyarados Holon Phantoms (Rev)",
-        "raw_q":    "Gyarados Holon Phantoms reverse holo -PSA -BGS -SGC -CGC -lot -proxy",
-        "graded_q": "Gyarados Holon Phantoms",
+        "language": "English",
+        "raw_q":    "Gyarados Holon Phantoms reverse holo -PSA -BGS -SGC -CGC -lot -proxy -japanese -keychain -pin",
+        "graded_q": "Gyarados Holon Phantoms -japanese -keychain -pin -lot -proxy",
+        "required_in_title": ["gyarados", "holon"],
         "tcg_name": "Gyarados", "tcg_set": "ex13", "tcg_rev": True,
     },
     {
         "label":    "Meowth Holon Phantoms (Rev)",
-        "raw_q":    "Meowth Holon Phantoms reverse holo -PSA -BGS -SGC -CGC -lot -proxy",
-        "graded_q": "Meowth Holon Phantoms",
+        "language": "English",
+        "raw_q":    "Meowth Holon Phantoms reverse holo -PSA -BGS -SGC -CGC -lot -proxy -japanese -keychain -pin",
+        "graded_q": "Meowth Holon Phantoms -japanese -keychain -pin -lot -proxy",
+        "required_in_title": ["meowth", "holon"],
         "tcg_name": "Meowth", "tcg_set": "ex13", "tcg_rev": True,
     },
     {
         "label":    "Gloom Holon Phantoms (Rev)",
-        "raw_q":    "Gloom Holon Phantoms reverse holo -PSA -BGS -SGC -CGC -lot -proxy",
-        "graded_q": "Gloom Holon Phantoms",
+        "language": "English",
+        "raw_q":    "Gloom Holon Phantoms reverse holo -PSA -BGS -SGC -CGC -lot -proxy -japanese -keychain -pin",
+        "graded_q": "Gloom Holon Phantoms -japanese -keychain -pin -lot -proxy",
+        "required_in_title": ["gloom", "holon"],
         "tcg_name": "Gloom", "tcg_set": "ex13", "tcg_rev": True,
     },
     {
         "label":    "Salamence ex Dragon Frontiers",
-        "raw_q":    "Salamence ex Dragon Frontiers -reverse -PSA -BGS -SGC -CGC -lot -proxy",
-        "graded_q": "Salamence ex Dragon Frontiers",
+        "language": "English",
+        "raw_q":    "Salamence ex Dragon Frontiers -reverse -PSA -BGS -SGC -CGC -lot -proxy -japanese -keychain -pin",
+        "graded_q": "Salamence ex Dragon Frontiers -japanese -keychain -pin -lot -proxy",
+        "required_in_title": ["salamence", "frontier"],
         "tcg_name": "Salamence", "tcg_set": "ex15", "tcg_rev": False,
     },
     {
         "label":    "Feraligatr Dragon Frontiers (Rev)",
-        "raw_q":    "Feraligatr Dragon Frontiers reverse holo -PSA -BGS -SGC -CGC -lot -proxy",
-        "graded_q": "Feraligatr Dragon Frontiers reverse",
+        "language": "English",
+        "raw_q":    "Feraligatr Dragon Frontiers reverse holo -PSA -BGS -SGC -CGC -lot -proxy -japanese -keychain -pin",
+        "graded_q": "Feraligatr Dragon Frontiers reverse -japanese -keychain -pin -lot -proxy",
+        "required_in_title": ["feraligatr", "frontier"],
         "tcg_name": "Feraligatr", "tcg_set": "ex15", "tcg_rev": True,
     },
     {
         "label":    "Typhlosion Dragon Frontiers (Rev)",
-        "raw_q":    "Typhlosion Dragon Frontiers reverse holo -PSA -BGS -SGC -CGC -lot -proxy",
-        "graded_q": "Typhlosion Dragon Frontiers reverse",
+        "language": "English",
+        "raw_q":    "Typhlosion Dragon Frontiers reverse holo -PSA -BGS -SGC -CGC -lot -proxy -japanese -keychain -pin",
+        "graded_q": "Typhlosion Dragon Frontiers reverse -japanese -keychain -pin -lot -proxy",
+        "required_in_title": ["typhlosion", "frontier"],
         "tcg_name": "Typhlosion", "tcg_set": "ex15", "tcg_rev": True,
     },
     {
         "label":    "Dragonite Delta Species (Rev)",
-        "raw_q":    "Dragonite Delta Species reverse holo -PSA -BGS -SGC -CGC -lot -proxy",
-        "graded_q": "Dragonite Delta Species reverse",
+        "language": "English",
+        "raw_q":    "Dragonite Delta Species reverse holo -PSA -BGS -SGC -CGC -lot -proxy -japanese -keychain -pin",
+        "graded_q": "Dragonite Delta Species reverse -japanese -keychain -pin -lot -proxy",
+        "required_in_title": ["dragonite", "delta"],
         "tcg_name": "Dragonite", "tcg_set": "ex11", "tcg_rev": True,
     },
     {
         "label":    "Ampharos Dragon Frontiers (Rev)",
-        "raw_q":    "Ampharos Dragon Frontiers reverse holo -PSA -BGS -SGC -CGC -lot -proxy",
-        "graded_q": "Ampharos Dragon Frontiers reverse",
+        "language": "English",
+        "raw_q":    "Ampharos Dragon Frontiers reverse holo -PSA -BGS -SGC -CGC -lot -proxy -japanese -keychain -pin",
+        "graded_q": "Ampharos Dragon Frontiers reverse -japanese -keychain -pin -lot -proxy",
+        "required_in_title": ["ampharos", "frontier"],
         "tcg_name": "Ampharos", "tcg_set": "ex15", "tcg_rev": True,
     },
     {
         "label":    "Gardevoir ex Dragon Frontiers",
-        "raw_q":    "Gardevoir ex Dragon Frontiers -reverse -PSA -BGS -SGC -CGC -lot -proxy",
-        "graded_q": "Gardevoir ex Dragon Frontiers",
+        "language": "English",
+        "raw_q":    "Gardevoir ex Dragon Frontiers -reverse -PSA -BGS -SGC -CGC -lot -proxy -japanese -keychain -pin",
+        "graded_q": "Gardevoir ex Dragon Frontiers -japanese -keychain -pin -lot -proxy",
+        "required_in_title": ["gardevoir", "frontier"],
         "tcg_name": "Gardevoir", "tcg_set": "ex15", "tcg_rev": False,
     },
     {
         "label":    "Vaporeon Delta Species (Rev)",
-        "raw_q":    "Vaporeon Delta Species reverse holo -PSA -BGS -SGC -CGC -lot -proxy",
-        "graded_q": "Vaporeon Delta Species reverse",
+        "language": "English",
+        "raw_q":    "Vaporeon Delta Species reverse holo -PSA -BGS -SGC -CGC -lot -proxy -japanese -keychain -pin",
+        "graded_q": "Vaporeon Delta Species reverse -japanese -keychain -pin -lot -proxy",
+        "required_in_title": ["vaporeon", "delta"],
         "tcg_name": "Vaporeon", "tcg_set": "ex11", "tcg_rev": True,
+    },
+    {
+        "label":    "Vaporeon Holon Research Tower (JP)",
+        "language": "Japanese",
+        "raw_q":    "Vaporeon Holon Research Tower -PSA -BGS -SGC -CGC -lot -proxy -keychain -pin",
+        "graded_q": "Vaporeon Holon Research Tower -keychain -pin -lot -proxy",
+        "required_in_title": ["vaporeon"],
+        "skip_tcg": True,   # Japanese exclusive set, not in pokemontcg.io
+        "tcg_name": None, "tcg_set": None, "tcg_rev": False,
     },
 ]
 
@@ -127,13 +158,19 @@ def get_ebay_token() -> str:
 
 # ── eBay search ────────────────────────────────────────────────────────────────
 
-def search_ebay(token: str, query: str, n: int = RESULTS_PER_GRADE) -> list[dict]:
-    """Returns up to n cheapest active eBay listings for the given query."""
+def search_ebay(token: str, query: str, n: int = RESULTS_PER_GRADE,
+                required_in_title: list[str] | None = None) -> list[dict]:
+    """Returns up to n cheapest active eBay listings for the given query.
+
+    required_in_title: all strings must appear (case-insensitive) in the listing
+    title, or the result is discarded. Catches junk like wrong-card lots,
+    keychains, and other false positives the query alone can't filter.
+    """
     try:
         r = requests.get(
             EBAY_BROWSE_URL,
             headers={"Authorization": f"Bearer {token}", "X-EBAY-C-MARKETPLACE-ID": "EBAY_US"},
-            params={"q": query, "sort": "price", "limit": str(n * 3)},
+            params={"q": query, "sort": "price", "limit": str(n * 4)},
             timeout=15,
         )
         r.raise_for_status()
@@ -153,12 +190,17 @@ def search_ebay(token: str, query: str, n: int = RESULTS_PER_GRADE) -> list[dict
             continue
         if price < 1.00:
             continue
+        title = item.get("title", "")
+        if required_in_title:
+            title_lower = title.lower()
+            if not all(req.lower() in title_lower for req in required_in_title):
+                continue
         options = item.get("buyingOptions", [])
         results.append({
             "price":      price,
             "type":       "AUCTION" if "AUCTION" in options else "FIXED_PRICE",
             "best_offer": "BEST_OFFER" in options,
-            "title":      item.get("title", "")[:120],
+            "title":      title[:120],
             "url":        item.get("itemWebUrl", ""),
         })
         if len(results) >= n:
@@ -217,16 +259,22 @@ def main():
         print(f"[{i}/{len(WATCHLIST)}] {card['label']}")
 
         # TCGPlayer reference price
-        print(f"  TCGPlayer (pokemontcg.io)...", end=" ", flush=True)
-        tcg_market, tcg_url = get_tcgplayer_price(card["tcg_name"], card["tcg_set"], card["tcg_rev"])
-        print(f"${tcg_market:.2f}" if tcg_market else "no data")
+        if card.get("skip_tcg"):
+            print(f"  TCGPlayer... skipped (Japanese exclusive set)")
+            tcg_market, tcg_url = None, None
+        else:
+            print(f"  TCGPlayer (pokemontcg.io)...", end=" ", flush=True)
+            tcg_market, tcg_url = get_tcgplayer_price(card["tcg_name"], card["tcg_set"], card["tcg_rev"])
+            print(f"${tcg_market:.2f}" if tcg_market else "no data")
+
+        req = card.get("required_in_title")
 
         # eBay: graded
         ebay_data: dict[str, list] = {}
         for grade_key, grade_num in [("psa9", "9"), ("psa10", "10"), ("psa8", "8")]:
             q = f"{card['graded_q']} PSA {grade_num}"
             print(f"  PSA {grade_num}...", end=" ", flush=True)
-            listings = search_ebay(token, q)
+            listings = search_ebay(token, q, required_in_title=req)
             n = len(listings)
             low = f" · from ${listings[0]['price']:.2f}" if listings else ""
             print(f"{n} found{low}")
@@ -235,7 +283,7 @@ def main():
 
         # eBay: raw
         print(f"  Raw eBay...", end=" ", flush=True)
-        raw = search_ebay(token, card["raw_q"])
+        raw = search_ebay(token, card["raw_q"], required_in_title=req)
         n   = len(raw)
         low = f" · from ${raw[0]['price']:.2f}" if raw else ""
         print(f"{n} found{low}")
@@ -244,6 +292,7 @@ def main():
 
         results.append({
             "name":             card["label"],
+            "language":         card.get("language", "English"),
             "tcgplayer_market": tcg_market,
             "tcgplayer_url":    tcg_url,
             "ebay":             ebay_data,
@@ -260,7 +309,7 @@ def main():
 
     total_listings = sum(len(c['ebay'].get(g, [])) for c in results for g in ['psa8','psa9','psa10','raw'])
     print(f"Saved watchlist_data.json  ({len(results)} cards, {total_listings} total listings)")
-    print("\nNext: git add watchlist_data.json && git push  →  site updates on GitHub Pages")
+    print("\nNext: git add watchlist_data.json && git push   (GitHub Pages auto-deploys)")
 
 
 if __name__ == "__main__":
