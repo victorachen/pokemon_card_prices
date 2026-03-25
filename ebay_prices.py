@@ -7,6 +7,9 @@ import requests
 import json
 import os
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --- CONFIG ---
 EBAY_APP_ID = os.environ.get("EBAY_APP_ID", "YOUR_APP_ID_HERE")
