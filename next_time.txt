@@ -1,0 +1,47 @@
+Last session: 2026-03-25 10:01 PM
+================================================
+
+WHERE WE LEFT OFF
+-----------------
+Everything is live on GitHub Pages. Site has 12 watchlist cards with:
+- Tabs: PSA 8 / PSA 9 / PSA 10 / NM/LP / Raw eBay / TCGPlayer
+- Delta badge per card (PSA 9 slab premium vs NM raw median)
+- Gardevoir Celebrations reprint junk filtered out (-celebrations)
+- deal_finder.py fully working — pings Discord when listing is 25%+ below median
+  and deduplicates via prices.db so you never get double-pinged
+
+
+NEXT SESSION TODO (in order)
+-----------------------------
+1. SCHEDULE deal_finder.py to run automatically every 4 hours
+   Run this one command in terminal:
+
+   schtasks /create /tn "PokemonDealFinder" /tr "python C:\Users\vchen\OneDrive\Documents\pycharmprojects\pokemon_delta_species\deal_finder.py" /sc hourly /mo 4
+
+   That's it — Windows Task Scheduler handles the rest, runs silently in background.
+   To check it: Task Scheduler app → Task Scheduler Library → PokemonDealFinder
+
+2. OPTIONAL: PSA population data
+   - Endpoint api.psacard.com/publicapi/pop/GetPSASetItems/{setId} works without auth
+   - Need to find PSA set IDs for: Crystal Guardians, Holon Phantoms, Delta Species, Dragon Frontiers
+   - Would show PSA 8/9/10 pop counts inside each card tab on the site
+
+3. OPTIONAL: Re-fetch watchlist_data.json any time to refresh prices
+   Just run: python fetch_watchlist_prices.py
+   Then commit + push watchlist_data.json
+
+
+CREDENTIALS (all in .env — never committed)
+--------------------------------------------
+All credentials are already in your .env file. Do not re-enter them.
+If .env is missing, check CLAUDE.md for where to get them.
+
+
+KEY FILES
+---------
+index.html                — live site (814 cards + watchlist tab)
+watchlist_data.json       — price data fetched locally, committed to repo
+fetch_watchlist_prices.py — run to refresh prices
+deal_finder.py            — run for Discord deal alerts (or auto via Task Scheduler)
+prices.db                 — SQLite: tracks which listings already alerted
+.env                      — credentials (never commit this)
