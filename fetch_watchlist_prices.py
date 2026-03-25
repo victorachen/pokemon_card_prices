@@ -11,6 +11,7 @@ Usage:
 
 import os, json, base64, time, requests
 from datetime import datetime, timezone, timedelta
+from statistics import median as _median
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=".env")
@@ -23,7 +24,7 @@ EBAY_BROWSE_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search"
 EBAY_SCOPE      = "https://api.ebay.com/oauth/api_scope"
 PTCG_API_URL    = "https://api.pokemontcg.io/v2/cards"
 
-RESULTS_PER_GRADE = 5   # top N cheapest listings to store per grade
+RESULTS_PER_GRADE = 8   # listings to store per grade (median of these used for deal detection)
 
 # ── Watchlist definition ───────────────────────────────────────────────────────
 # raw_q    : eBay query for ungraded copies (excludes grading company keywords)
@@ -108,8 +109,8 @@ WATCHLIST = [
     {
         "label":    "Gardevoir ex Dragon Frontiers",
         "language": "English",
-        "raw_q":    "Gardevoir ex Dragon Frontiers -reverse -PSA -BGS -SGC -CGC -lot -proxy -japanese -keychain -pin",
-        "graded_q": "Gardevoir ex Dragon Frontiers -japanese -keychain -pin -lot -proxy",
+        "raw_q":    "Gardevoir ex Dragon Frontiers -reverse -PSA -BGS -SGC -CGC -lot -proxy -japanese -keychain -pin -celebrations",
+        "graded_q": "Gardevoir ex Dragon Frontiers -japanese -keychain -pin -lot -proxy -celebrations",
         "required_in_title": ["gardevoir", "frontier"],
         "tcg_name": "Gardevoir", "tcg_set": "ex15", "tcg_rev": False,
     },
@@ -235,7 +236,8 @@ def get_tcgplayer_price(name: str, set_id: str, is_rev: bool) -> tuple[float | N
         p = prices.get("holofoil") or prices.get("normal") or {}
 
     market = p.get("market")
-    return (float(market) if market else None), tcg.get("url")
+    low    = p.get("low")
+    return (float(market) if market else None), (float(low) if low else None), tcg.get("url")
 
 
 # ── Main ───────────────────────────────────────────────────────────────────────
@@ -261,10 +263,10 @@ def main():
         # TCGPlayer reference price
         if card.get("skip_tcg"):
             print(f"  TCGPlayer... skipped (Japanese exclusive set)")
-            tcg_market, tcg_url = None, None
+            tcg_market, tcg_low, tcg_url = None, None, None
         else:
             print(f"  TCGPlayer (pokemontcg.io)...", end=" ", flush=True)
-            tcg_market, tcg_url = get_tcgplayer_price(card["tcg_name"], card["tcg_set"], card["tcg_rev"])
+            tcg_market, tcg_low, tcg_url = get_tcgplayer_price(card["tcg_name"], card["tcg_set"], card["tcg_rev"])
             print(f"${tcg_market:.2f}" if tcg_market else "no data")
 
         req = card.get("required_in_title")
@@ -281,21 +283,54 @@ def main():
             ebay_data[grade_key] = listings
             time.sleep(0.3)
 
-        # eBay: raw
-        print(f"  Raw eBay...", end=" ", flush=True)
+        # eBay: raw (any condition)
+        print(f"  Raw eBay (any)...", end=" ", flush=True)
         raw = search_ebay(token, card["raw_q"], required_in_title=req)
         n   = len(raw)
-        low = f" · from ${raw[0]['price']:.2f}" if raw else ""
-        print(f"{n} found{low}")
+        low_str = f" · from ${raw[0]['price']:.2f}" if raw else ""
+        print(f"{n} found{low_str}")
         ebay_data["raw"] = raw
         time.sleep(0.3)
 
+        # eBay: raw NM/LP only
+        nm_q = card["raw_q"].replace("-PSA", "NM -PSA", 1) + " -damaged -HP -MP"
+        print(f"  Raw NM/LP...", end=" ", flush=True)
+        raw_nm = search_ebay(token, nm_q, required_in_title=req)
+        n      = len(raw_nm)
+        low_str = f" · from ${raw_nm[0]['price']:.2f}" if raw_nm else ""
+        print(f"{n} found{low_str}")
+        ebay_data["raw_nm"] = raw_nm
+        time.sleep(0.3)
+
+        # PSA 9 vs NM raw delta
+        psa9_prices   = [l["price"] for l in ebay_data.get("psa9", [])]
+        raw_nm_prices = [l["price"] for l in raw_nm]
+        if len(psa9_prices) >= 1 and len(raw_nm_prices) >= 1:
+            psa9_med   = _median(psa9_prices)
+            raw_nm_med = _median(raw_nm_prices)
+            delta_usd  = round(psa9_med - raw_nm_med, 2)
+            delta_pct  = round((delta_usd / raw_nm_med) * 100, 1) if raw_nm_med else None
+        else:
+            delta_usd = delta_pct = None
+
+        # Compute market medians per grade (used by deal_finder.py)
+        market_medians = {}
+        for g in ["psa8", "psa9", "psa10"]:
+            prices = [l["price"] for l in ebay_data.get(g, [])]
+            market_medians[g] = round(_median(prices), 2) if prices else None
+
         results.append({
-            "name":             card["label"],
-            "language":         card.get("language", "English"),
-            "tcgplayer_market": tcg_market,
-            "tcgplayer_url":    tcg_url,
-            "ebay":             ebay_data,
+            "name":              card["label"],
+            "language":          card.get("language", "English"),
+            "graded_q":          card["graded_q"],
+            "required_in_title": card.get("required_in_title"),
+            "tcgplayer_market":  tcg_market,
+            "tcgplayer_low":     tcg_low,
+            "tcgplayer_url":     tcg_url,
+            "delta_usd":         delta_usd,
+            "delta_pct":         delta_pct,
+            "market_medians":    market_medians,
+            "ebay":              ebay_data,
         })
         print()
 

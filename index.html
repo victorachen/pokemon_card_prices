@@ -195,6 +195,11 @@
     .wl-spin{width:22px;height:22px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:60px auto}
     .wl-lang-en{font-size:9px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;border-radius:4px;padding:1px 6px;letter-spacing:.04em;flex-shrink:0}
     .wl-lang-jp{font-size:9px;font-weight:700;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:4px;padding:1px 6px;letter-spacing:.04em;flex-shrink:0}
+    .wl-delta{font-size:10px;font-weight:700;opacity:.9;flex-shrink:0;margin-left:4px}
+    .wl-tcg-panel{display:flex;align-items:center;gap:24px;padding:14px 16px}
+    .wl-tcg-stat{display:flex;flex-direction:column;gap:3px}
+    .wl-tcg-stat-lbl{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+    .wl-tcg-stat-val{font-size:18px;font-weight:800;color:var(--text)}
 </style>
 </head>
 <body>
@@ -1468,17 +1473,27 @@ function renderWatchlist() {
       ? ` <a href="${card.tcgplayer_url}" target="_blank" class="tcg-btn" style="font-size:10px;padding:3px 10px" onclick="event.stopPropagation()">TCGPlayer ↗</a>`
       : '';
 
+    // Delta badge: PSA 9 premium over NM raw
+    let deltaBadge = '';
+    if (card.delta_usd != null && card.delta_pct != null) {
+      const sign = card.delta_usd >= 0 ? '+' : '';
+      // Low delta = good deal to buy slab; high delta = not worth it
+      const color = card.delta_pct < 50 ? 'var(--green)' : card.delta_pct < 150 ? 'var(--gold)' : 'var(--red)';
+      deltaBadge = `<span class="wl-delta" style="color:${color}" title="PSA 9 slab premium over NM raw median">${sign}$${card.delta_usd.toFixed(0)} / ${sign}${card.delta_pct}% slab premium</span>`;
+    }
+
     div.innerHTML = `
       <div class="wl-hdr" onclick="wlToggle(${idx},this)">
         <span class="wl-hdr-name">${card.name}</span>
         ${langBadge}
+        ${deltaBadge}
         ${tcgHtml}${tcgLink}
         <span class="wl-hdr-arrow">▶</span>
       </div>
       <div class="wl-body">
         <div class="wl-grade-tabs" id="wl-tabs-${idx}">
-          ${[['psa9','PSA 9'],['psa10','PSA 10'],['psa8','PSA 8'],['raw','Raw eBay']].map(([g,lbl],i) =>
-            `<button class="wl-gtab${i===0?' wl-gactive':''}" data-grade="${g}"
+          ${[['psa8','PSA 8'],['psa9','PSA 9'],['psa10','PSA 10'],['raw_nm','NM/LP'],['raw','Raw eBay'],['tcgplayer','TCGPlayer']].map(([g,lbl]) =>
+            `<button class="wl-gtab${g==='psa9'?' wl-gactive':''}" data-grade="${g}"
               onclick="wlGrade(${idx},'${g}',event)">${lbl}</button>`
           ).join('')}
         </div>
@@ -1506,13 +1521,33 @@ function wlGrade(idx, grade, event) {
 }
 
 function wlRenderListings(idx, grade) {
-  const card  = wlData.cards[idx];
-  const items = card.ebay && card.ebay[grade];
-  const ls    = document.getElementById(`wl-ls-${idx}`);
+  const card = wlData.cards[idx];
+  const ls   = document.getElementById(`wl-ls-${idx}`);
 
+  // TCGPlayer tab
+  if (grade === 'tcgplayer') {
+    if (card.tcgplayer_market == null && card.tcgplayer_low == null) {
+      ls.innerHTML = `<div class="wl-none">No TCGPlayer data available for this card.</div>`;
+      return;
+    }
+    const mkt = card.tcgplayer_market != null ? `$${parseFloat(card.tcgplayer_market).toFixed(2)}` : 'N/A';
+    const low = card.tcgplayer_low    != null ? `$${parseFloat(card.tcgplayer_low).toFixed(2)}`    : 'N/A';
+    const btn = card.tcgplayer_url
+      ? `<a href="${card.tcgplayer_url}" target="_blank" class="tcg-btn">View on TCGPlayer ↗</a>`
+      : '';
+    ls.innerHTML = `
+      <div class="wl-tcg-panel">
+        <div class="wl-tcg-stat"><div class="wl-tcg-stat-lbl">Market Price</div><div class="wl-tcg-stat-val">${mkt}</div></div>
+        <div class="wl-tcg-stat"><div class="wl-tcg-stat-lbl">Low Price</div><div class="wl-tcg-stat-val">${low}</div></div>
+        ${btn}
+      </div>`;
+    return;
+  }
+
+  const items = card.ebay && card.ebay[grade];
   if (!items || items.length === 0) {
-    const label = grade === 'raw' ? 'raw' : grade.replace('psa', 'PSA ');
-    ls.innerHTML = `<div class="wl-none">No ${label} listings found on eBay right now.</div>`;
+    const labels = {psa8:'PSA 8',psa9:'PSA 9',psa10:'PSA 10',raw_nm:'NM/LP',raw:'Raw eBay'};
+    ls.innerHTML = `<div class="wl-none">No ${labels[grade]||grade} listings found on eBay right now.</div>`;
     return;
   }
 
