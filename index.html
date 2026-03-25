@@ -3,724 +3,1535 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pokemon Card Prices</title>
+  <title>Delta Era — Pokemon Card Tracker</title>
   <style>
     :root {
-      --bg: #0d0d0f;
-      --surface: #16161a;
-      --surface2: #1e1e24;
-      --border: #2a2a35;
-      --accent: #7c6aff;
-      --accent-glow: rgba(124, 106, 255, 0.25);
-      --text: #e8e8f0;
-      --muted: #6b6b80;
-      --nm: #4ade80;
+      --bg:        #f5f5f7;
+      --surface:   #ffffff;
+      --surface2:  #f0f0f5;
+      --surface3:  #e8e8f0;
+      --border:    #dddde8;
+      --border2:   #c8c8d8;
+      --accent:    #5b4de8;
+      --glow:      rgba(91,77,232,0.12);
+      --text:      #1a1a2e;
+      --muted:     #707088;
+      --muted2:    #5a5a72;
+      --green:     #16a34a;
+      --gold:      #b45309;
+      --cyan:      #0e7490;
+      --blue:      #1d4ed8;
+      --purple:    #7e22ce;
+      --red:       #dc2626;
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    /* ── Sidebar ── */
-    #sidebar {
-      width: 210px;
-      min-width: 210px;
-      background: var(--surface);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    #sidebar-header {
-      padding: 18px 16px 12px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    #sidebar-header h1 {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    #card-list { overflow-y: auto; flex: 1; padding: 6px 0; }
-    #card-list::-webkit-scrollbar { width: 3px; }
-    #card-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-    .set-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 9px 14px 7px;
-      cursor: pointer;
-      border-left: 3px solid transparent;
-      border-top: 1px solid var(--border);
-      transition: background 0.15s, border-color 0.15s;
-      user-select: none;
-    }
-
-    .set-header:first-child { border-top: none; }
-    .set-header:hover { background: var(--surface2); }
-
-    .set-header.active {
-      border-left-color: var(--accent);
-      background: var(--surface2);
-    }
-
-    .set-header .set-name {
-      font-size: 11.5px;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .set-header .set-right {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .set-count {
-      font-size: 10px;
-      color: var(--muted);
-      background: var(--border);
-      border-radius: 8px;
-      padding: 1px 6px;
-    }
-
-    .chevron {
-      font-size: 9px;
-      color: var(--muted);
-      transition: transform 0.2s;
-    }
-
-    .set-header.collapsed .chevron { transform: rotate(-90deg); }
-
-    .set-cards { overflow: hidden; max-height: 1000px; transition: max-height 0.2s ease; }
-    .set-cards.collapsed { max-height: 0; }
-
-    .card-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 14px 8px 20px;
-      cursor: pointer;
-      border-left: 3px solid transparent;
-      transition: background 0.12s, border-color 0.12s;
-    }
-
-    .card-item:hover { background: var(--surface2); }
-
-    .card-item.active {
-      background: var(--surface2);
-      border-left-color: var(--accent);
-    }
-
-    .card-item .thumb {
-      width: 30px; height: 42px;
-      object-fit: cover; border-radius: 3px;
-      background: var(--border); flex-shrink: 0;
-    }
-
-    .card-item .thumb-placeholder {
-      width: 30px; height: 42px;
-      border-radius: 3px; background: var(--border);
-      flex-shrink: 0; display: flex;
-      align-items: center; justify-content: center; font-size: 14px;
-    }
-
-    .card-item .ci-name {
-      font-size: 11.5px; font-weight: 600;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-
-    .card-item .ci-price {
-      font-size: 10.5px; color: var(--nm);
-      font-weight: 700; margin-top: 2px;
-    }
-
-    /* ── Main ── */
-    #main {
-      flex: 1; overflow-y: auto; padding: 32px 36px;
-      display: flex; flex-direction: column;
-    }
-
-    #main::-webkit-scrollbar { width: 6px; }
-    #main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-    /* ── Empty state ── */
-    #empty-state {
-      flex: 1; display: flex; align-items: center;
-      justify-content: center; color: var(--muted); font-size: 14px;
-    }
-
-    /* ── Set view ── */
-    #set-view { display: none; flex-direction: column; gap: 24px; }
-    #set-view.visible { display: flex; }
-
-    .set-view-header {
-      display: flex; align-items: baseline;
-      justify-content: space-between;
-    }
-
-    .set-view-header h2 { font-size: 22px; font-weight: 700; }
-
-    .set-view-header .page-info {
-      font-size: 12px; color: var(--muted);
-    }
-
-    /* ── Card grid ── */
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-    }
-
-    .grid-card {
-      cursor: pointer;
-      border-radius: 10px;
-      border: 2px solid transparent;
-      padding: 10px 10px 8px;
-      background: var(--surface);
-      transition: border-color 0.15s, background 0.15s, transform 0.15s;
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
-    }
-
-    .grid-card:hover { background: var(--surface2); transform: translateY(-2px); }
-
-    .grid-card.selected {
-      border-color: var(--accent);
-      background: var(--surface2);
-      box-shadow: 0 0 16px var(--accent-glow);
-    }
-
-    .grid-card img {
-      width: 100%; border-radius: 6px;
-      display: block;
-    }
-
-    .grid-card .gc-placeholder {
-      width: 100%; aspect-ratio: 0.72;
-      border-radius: 6px; background: var(--border);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 28px;
-    }
-
-    .grid-card .gc-name {
-      font-size: 11.5px; font-weight: 600;
-      text-align: center; line-height: 1.3;
-    }
-
-    .grid-card .gc-price {
-      font-size: 11px; font-weight: 700;
-      color: var(--nm);
-    }
-
-    /* ── Expanded detail panel ── */
-    #detail-panel {
-      display: none;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 28px;
-      gap: 32px;
-    }
-
-    #detail-panel.visible { display: flex; flex-wrap: wrap; }
-
-    .dp-image-wrap {
-      flex-shrink: 0;
-      display: flex; flex-direction: column; align-items: center; gap: 10px;
-    }
-
-    .dp-image-wrap img {
-      width: 180px; border-radius: 8px;
-      box-shadow: 0 0 30px var(--accent-glow), 0 6px 24px rgba(0,0,0,0.5);
-      transition: transform 0.3s;
-    }
-
-    .dp-image-wrap img:hover { transform: scale(1.04); }
-
-    .tcg-link {
-      font-size: 11px; color: var(--accent);
-      text-decoration: none; border: 1px solid var(--accent);
-      padding: 4px 12px; border-radius: 16px;
-      transition: background 0.15s;
-    }
-
-    .tcg-link:hover { background: var(--accent-glow); }
-
-    .dp-info { flex: 1; min-width: 260px; }
-
-    .dp-info h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-
-    .dp-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
-
-    .tag {
-      font-size: 10px; font-weight: 600;
-      padding: 3px 9px; border-radius: 10px;
-      letter-spacing: 0.05em; text-transform: uppercase;
-    }
-
-    .tag-set  { background: #1a1a2e; color: #818cf8; border: 1px solid #312e81; }
-    .tag-num  { background: #1a2035; color: #60a5fa; border: 1px solid #1e3a5f; }
-    .tag-rev  { background: #1a2820; color: #4ade80; border: 1px solid #14532d; }
-    .tag-holo { background: #2a1a35; color: #c084fc; border: 1px solid #4c1d95; }
-
-    .dp-section-label {
-      font-size: 11px; font-weight: 700;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 10px;
-    }
-
-    .price-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-
-    .price-table th {
-      text-align: left; font-size: 10px; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.07em;
-      color: var(--muted); padding: 0 10px 8px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .price-table th:last-child { text-align: right; }
-
-    .price-table td {
-      padding: 9px 10px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .price-table tr:last-child td { border-bottom: none; }
-    .price-table tr:hover td { background: var(--surface2); }
-
-    .cond-dot {
-      display: inline-block; width: 7px; height: 7px;
-      border-radius: 50%; margin-right: 7px; vertical-align: middle;
-    }
-
-    .price-table td:last-child {
-      text-align: right; font-weight: 700;
-      font-size: 14px; font-variant-numeric: tabular-nums;
-    }
-
-    .est-note { font-size: 10px; color: var(--muted); font-weight: 400; }
-
-    .divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
-
-    .market-row { display: flex; gap: 12px; flex-wrap: wrap; }
-
-    .market-stat {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 8px; padding: 10px 16px; min-width: 100px;
-    }
-
-    .stat-label {
-      font-size: 10px; text-transform: uppercase;
-      letter-spacing: 0.07em; color: var(--muted); margin-bottom: 4px;
-    }
-
-    .stat-val { font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
-
-    .updated { font-size: 10px; color: var(--muted); margin-top: 12px; }
-
-    /* ── Pagination ── */
-    .pagination {
-      display: flex; align-items: center;
-      justify-content: flex-end; gap: 8px;
-      padding-top: 4px;
-    }
-
-    .page-btn {
-      background: var(--surface); border: 1px solid var(--border);
-      color: var(--text); border-radius: 6px;
-      padding: 5px 12px; cursor: pointer;
-      font-size: 13px; transition: background 0.15s, border-color 0.15s;
-    }
-
-    .page-btn:hover:not(:disabled) {
-      background: var(--surface2); border-color: var(--accent);
-    }
-
-    .page-btn:disabled { opacity: 0.35; cursor: default; }
-
-    .page-label { font-size: 12px; color: var(--muted); }
-
-    /* ── Loading spinner ── */
-    .spinner {
-      width: 28px; height: 28px;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;display:flex;height:100vh;overflow:hidden}
+
+    /* Sidebar */
+    #sidebar{width:196px;min-width:196px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+    #sb-header{padding:18px 16px 14px;border-bottom:1px solid var(--border)}
+    #sb-header h1{font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+    #sb-header .sb-sub{font-size:10px;color:var(--muted);margin-top:3px}
+    #sb-sets{padding:8px 0;flex:1;overflow-y:auto}
+    #sb-sets::-webkit-scrollbar{width:3px}
+    #sb-sets::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .sb-set{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;border-left:3px solid transparent;transition:background .12s,border-color .12s}
+    .sb-set:hover{background:var(--surface2)}
+    .sb-set.active{border-left-color:var(--accent);background:var(--surface2)}
+    .sb-set-name{font-size:12px;font-weight:600;line-height:1.3}
+    .sb-set-count{font-size:10px;color:var(--muted);background:var(--border);border-radius:8px;padding:2px 7px;white-space:nowrap}
+    #sb-stats{padding:12px 14px;border-top:1px solid var(--border);font-size:10px;color:var(--muted)}
+    #sb-stats .sr{display:flex;justify-content:space-between;padding:3px 0}
+    #sb-stats .sv{color:var(--muted2)}
+
+    /* Main */
+    #main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+    /* Top bar */
+    #top-bar{padding:16px 28px 12px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:11px;background:var(--surface);flex-shrink:0}
+    #top-row{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+    #set-title{font-size:20px;font-weight:800}
+    #set-subtitle{font-size:11px;color:var(--muted)}
+    #filter-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    #search-wrap{position:relative;flex:1;max-width:320px}
+    #search-wrap::before{content:"\2315";position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none}
+    #search{width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:7px;padding:7px 10px 7px 30px;font-size:12.5px;outline:none;transition:border-color .15s}
+    #search:focus{border-color:var(--accent)}
+    #search::placeholder{color:var(--muted)}
+    .filter-tabs{display:flex;gap:4px}
+    .ftab{background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:11.5px;font-weight:600;transition:background .12s,border-color .12s,color .12s}
+    .ftab:hover{background:var(--surface3);color:var(--text)}
+    .ftab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+    /* Table */
+    #table-wrap{flex:1;overflow-y:auto;padding:0}
+    #table-wrap::-webkit-scrollbar{width:6px}
+    #table-wrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+    #card-table{width:100%;border-collapse:collapse;font-size:13px}
+    #card-table thead{position:sticky;top:0;z-index:10;background:var(--bg)}
+    #card-table th{padding:12px 10px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border2)}
+    #card-table th.r{text-align:right}
+    #card-table th.c{text-align:center}
+    .card-row{cursor:pointer;transition:background .1s}
+    .card-row:hover td{background:var(--surface)}
+    .card-row.selected td{background:var(--surface2)}
+    .card-row td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+    .td-num{font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--muted2);width:60px;font-weight:600}
+    .td-name{font-size:13px;font-weight:600}
+    .td-var{width:115px;text-align:center}
+    .td-rar{font-size:11px;color:var(--muted2);width:130px}
+    .td-price{text-align:right;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;width:90px;color:var(--green)}
+    .price-loading{color:var(--muted);font-size:11px;font-weight:400}
+
+    /* Variant badges */
+    .vbadge{display:inline-block;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:8px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+    .v-holo  {background:#ede9fe;color:var(--purple);border:1px solid #c4b5fd}
+    .v-rev   {background:#dcfce7;color:var(--green);border:1px solid #86efac}
+    .v-ex    {background:#fef3c7;color:var(--gold);border:1px solid #fcd34d}
+    .v-star  {background:#cffafe;color:var(--cyan);border:1px solid #67e8f9}
+    .v-rare  {background:#dbeafe;color:var(--blue);border:1px solid #93c5fd}
+    .v-unc   {background:#f1f5f9;color:#475569;border:1px solid #cbd5e1}
+    .v-com   {background:#f8fafc;color:#64748b;border:1px solid #e2e8f0}
+    .v-secret{background:#fee2e2;color:var(--red);border:1px solid #fca5a5}
+
+    /* Detail panel */
+    .detail-row td{padding:0!important;border-bottom:2px solid var(--accent)!important;background:var(--surface)!important}
+    .detail-inner{display:flex;gap:28px;padding:22px 28px;border-top:2px solid var(--accent);background:linear-gradient(to bottom,rgba(124,106,255,.07),transparent 60%);flex-wrap:wrap}
+    .dp-img-wrap{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:10px}
+    .dp-img-wrap img{width:160px;border-radius:8px;box-shadow:0 0 28px var(--glow),0 6px 20px rgba(0,0,0,.15);transition:transform .3s}
+    .dp-img-wrap img:hover{transform:scale(1.05)}
+    .dp-img-ph{width:160px;height:222px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--muted)}
+    .tcg-btn{font-size:11px;color:var(--accent);text-decoration:none;border:1px solid var(--accent);padding:4px 14px;border-radius:14px;transition:background .15s;text-align:center}
+    .tcg-btn:hover{background:var(--glow)}
+    .dp-info{flex:1;min-width:260px}
+    .dp-info h3{font-size:18px;font-weight:800;margin-bottom:8px}
+    .dp-tags{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}
+    .tag{font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:9px;letter-spacing:.05em;text-transform:uppercase}
+    .tag-set{background:#ede9fe;color:#4f46e5;border:1px solid #c4b5fd}
+    .tag-num{background:#dbeafe;color:var(--blue);border:1px solid #93c5fd}
+    .dp-sec{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:16px 0 9px}
+    .dp-sec:first-of-type{margin-top:0}
+    .price-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+    .price-tbl th{text-align:left;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding:0 8px 6px;border-bottom:1px solid var(--border2)}
+    .price-tbl th:last-child{text-align:right}
+    .price-tbl td{padding:7px 8px;border-bottom:1px solid var(--border)}
+    .price-tbl tr:last-child td{border-bottom:none}
+    .price-tbl tr:hover td{background:var(--surface3)}
+    .price-tbl td:last-child{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+    .cond-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:middle}
+    .est-note{font-size:9px;color:var(--muted);font-weight:400}
+    .mkt-row{display:flex;gap:10px;flex-wrap:wrap}
+    .mkt-stat{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 14px;min-width:85px}
+    .mkt-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:3px}
+    .mkt-val{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+    .dp-upd{font-size:9.5px;color:var(--muted);margin-top:12px}
+    .dp-err{font-size:12px;color:var(--muted);padding:12px 0}
+    .dp-spin{width:22px;height:22px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:24px auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Pagination */
+    #pagination{display:flex;align-items:center;justify-content:space-between;padding:11px 28px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0}
+    .pag-info{font-size:11px;color:var(--muted)}
+    .pag-btns{display:flex;gap:6px;align-items:center}
+    .pag-btn{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 14px;cursor:pointer;font-size:12px;transition:background .12s,border-color .12s}
+    .pag-btn:hover:not(:disabled){background:var(--surface3);border-color:var(--accent)}
+    .pag-btn:disabled{opacity:.3;cursor:default}
+    .pag-label{font-size:11.5px;color:var(--muted2);min-width:70px;text-align:center}
+
+    /* Empty / no-results */
+    #empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted)}
+    #empty .em-ico{font-size:40px;opacity:.4}
+    #empty .em-txt{font-size:13px}
+    #no-results{text-align:center;padding:60px 20px;color:var(--muted);font-size:13px;display:none}
+
+    @media(max-width:700px){.td-rar,.th-rar{display:none}}
+
+    /* ── Watchlist ────────────────────────────────────────────────────────── */
+    .sb-watchlist{display:flex;align-items:center;gap:9px;padding:11px 14px;cursor:pointer;background:linear-gradient(135deg,rgba(91,77,232,.07),rgba(180,83,9,.05));border-left:3px solid transparent;border-bottom:1px solid var(--border);transition:background .12s,border-color .12s}
+    .sb-watchlist:hover{background:rgba(91,77,232,.12)}
+    .sb-watchlist.active{border-left-color:var(--gold)}
+    .sb-wl-icon{font-size:14px}
+    .sb-wl-text{font-size:12px;font-weight:700;color:var(--gold);flex:1}
+    .sb-wl-count{font-size:10px;color:var(--muted);background:var(--border);border-radius:8px;padding:2px 7px}
+    #watchlist-area{flex:1;display:none;flex-direction:column;overflow:hidden;min-height:0}
+    .wl-topbar{padding:16px 28px 12px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;display:flex;align-items:baseline;gap:14px}
+    .wl-title{font-size:20px;font-weight:800}
+    .wl-meta{font-size:11px;color:var(--muted)}
+    .wl-scroll{flex:1;overflow-y:auto;padding:20px 28px}
+    .wl-scroll::-webkit-scrollbar{width:6px}
+    .wl-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+    .wl-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden;transition:border-color .15s}
+    .wl-card:hover{border-color:var(--border2)}
+    .wl-card.wl-open{border-color:var(--accent)}
+    .wl-hdr{display:flex;align-items:center;padding:13px 18px;cursor:pointer;gap:12px;transition:background .12s}
+    .wl-hdr:hover{background:var(--surface2)}
+    .wl-hdr-name{font-size:14px;font-weight:700;flex:1}
+    .wl-hdr-tcg-lbl{font-size:10px;color:var(--muted);margin-right:4px}
+    .wl-hdr-tcg{font-size:13px;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums}
+    .wl-hdr-arrow{font-size:10px;color:var(--muted);transition:transform .2s;flex-shrink:0}
+    .wl-open .wl-hdr-arrow{transform:rotate(90deg)}
+    .wl-body{display:none;border-top:1px solid var(--border2)}
+    .wl-open .wl-body{display:block}
+    .wl-grade-tabs{display:flex;gap:4px;padding:10px 16px 0;background:var(--surface2);border-bottom:1px solid var(--border)}
+    .wl-gtab{background:transparent;border:1px solid transparent;color:var(--muted2);border-radius:6px 6px 0 0;padding:5px 13px;cursor:pointer;font-size:11px;font-weight:600;transition:all .12s;margin-bottom:-1px}
+    .wl-gtab:hover{background:var(--surface3);color:var(--text)}
+    .wl-gtab.wl-gactive{background:var(--surface);border-color:var(--border2) var(--border2) var(--surface);color:var(--accent)}
+    .wl-listings{padding:14px 16px;background:var(--surface)}
+    .wl-listing-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+    .wl-listing-tbl th{text-align:left;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding:0 8px 8px;border-bottom:1px solid var(--border2)}
+    .wl-listing-tbl td{padding:8px;border-bottom:1px solid var(--border);vertical-align:middle}
+    .wl-listing-tbl tr:last-child td{border-bottom:none}
+    .wl-listing-tbl tr:hover td{background:var(--surface2)}
+    .wl-price{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--green);white-space:nowrap}
+    .wl-bin{font-size:10px;font-weight:600;background:#dbeafe;color:var(--blue);border:1px solid #93c5fd;border-radius:5px;padding:2px 6px;white-space:nowrap}
+    .wl-auc{font-size:10px;font-weight:600;background:#ede9fe;color:var(--purple);border:1px solid #c4b5fd;border-radius:5px;padding:2px 6px;white-space:nowrap}
+    .wl-link{color:var(--text);text-decoration:none;font-size:12px;line-height:1.4}
+    .wl-link:hover{color:var(--accent);text-decoration:underline}
+    .wl-none{padding:20px;text-align:center;color:var(--muted);font-size:12px}
+    .wl-empty{padding:60px 28px;text-align:center;color:var(--muted)}
+    .wl-empty-ico{font-size:36px;opacity:.4;margin-bottom:12px}
+    .wl-empty-msg{font-size:13px}
+    .wl-empty-cmd{font-size:11px;margin-top:10px;font-family:monospace;background:var(--surface2);display:inline-block;padding:6px 14px;border-radius:6px;color:var(--muted2);border:1px solid var(--border2)}
+    .wl-spin{width:22px;height:22px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:60px auto}
+</style>
 </head>
 <body>
 
 <aside id="sidebar">
-  <div id="sidebar-header"><h1>My Cards</h1></div>
-  <div id="card-list"></div>
+  <div id="sb-header">
+    <h1>Delta Era</h1>
+    <div class="sb-sub">4 sets · 814 entries</div>
+  </div>
+  <div class="sb-watchlist" onclick="showWatchlist()">
+    <span class="sb-wl-icon">⭐</span>
+    <span class="sb-wl-text">My Watchlist</span>
+    <span class="sb-wl-count">11</span>
+  </div>
+  <div id="sb-sets"></div>
+  <div id="sb-stats">
+    <div class="sr"><span>Holon Phantoms</span><span class="sv">215</span></div>
+    <div class="sr"><span>Crystal Guardians</span><span class="sv">188</span></div>
+    <div class="sr"><span>Delta Species</span><span class="sv">221</span></div>
+    <div class="sr"><span>Dragon Frontiers</span><span class="sv">190</span></div>
+  </div>
 </aside>
 
-<main id="main">
-  <div id="empty-state">← Select a set to get started</div>
-
-  <div id="set-view">
-    <div class="set-view-header">
-      <h2 id="set-title"></h2>
-      <span class="page-info" id="page-info"></span>
+<div id="main">
+  <div id="top-bar" style="display:none">
+    <div id="top-row">
+      <span id="set-title"></span>
+      <span id="set-subtitle"></span>
     </div>
-
-    <div class="card-grid" id="card-grid"></div>
-
-    <div id="detail-panel"></div>
-
-    <div class="pagination">
-      <button class="page-btn" id="btn-prev" onclick="changePage(-1)">← Prev</button>
-      <span class="page-label" id="page-label"></span>
-      <button class="page-btn" id="btn-next" onclick="changePage(1)">Next →</button>
+    <div id="filter-row">
+      <div id="search-wrap"><input id="search" type="text" placeholder="Search name or №…" autocomplete="off" /></div>
+      <div class="filter-tabs">
+        <button class="ftab active" data-filter="all">All</button>
+        <button class="ftab" data-filter="regular">Regular</button>
+        <button class="ftab" data-filter="reverse">Reverse Holo</button>
+      </div>
     </div>
   </div>
-</main>
+
+  <div id="empty">
+    <div class="em-ico">🃏</div>
+    <div class="em-txt">Select a set from the sidebar</div>
+  </div>
+
+  <div id="table-area" style="display:none;flex:1;flex-direction:column;overflow:hidden;min-height:0">
+    <div id="table-wrap">
+      <table id="card-table">
+        <thead>
+          <tr>
+            <th style="width:60px">#</th>
+            <th>Name</th>
+            <th style="width:115px" class="c">Variant</th>
+            <th style="width:130px" class="th-rar">Rarity</th>
+            <th style="width:90px" class="r">Market</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="no-results">No cards match your search.</div>
+    </div>
+    <div id="pagination">
+      <span class="pag-info" id="pag-info"></span>
+      <div class="pag-btns">
+        <button class="pag-btn" id="btn-prev" onclick="changePage(-1)">← Prev</button>
+        <span class="pag-label" id="pag-label"></span>
+        <button class="pag-btn" id="btn-next" onclick="changePage(1)">Next →</button>
+      </div>
+    </div>
+  </div>
+  <div id="watchlist-area">
+    <div class="wl-topbar">
+      <span class="wl-title">My Watchlist</span>
+      <span class="wl-meta" id="wl-meta"></span>
+    </div>
+    <div class="wl-scroll" id="wl-content"></div>
+  </div>
+</div>
 
 <script>
-const CARDS = [
-  { label: "Charizard",    set: "Crystal Guardians", setId: "ex14", pokemon: "charizard",    isReverse: true  },
-  { label: "Gyarados",     set: "Holon Phantoms",    setId: "ex13", pokemon: "gyarados",     isReverse: true  },
-  { label: "Meowth",       set: "Holon Phantoms",    setId: "ex13", pokemon: "meowth",       isReverse: true  },
-  { label: "Gloom",        set: "Holon Phantoms",    setId: "ex13", pokemon: "gloom",        isReverse: true  },
-  { label: "Salamence ex", set: "Dragon Frontiers",  setId: "ex15", pokemon: "salamence ex", isReverse: false },
-  { label: "Feraligatr",   set: "Dragon Frontiers",  setId: "ex15", pokemon: "feraligatr",   isReverse: true  },
-  { label: "Typhlosion",   set: "Dragon Frontiers",  setId: "ex15", pokemon: "typhlosion",   isReverse: true  },
-  { label: "Dragonite",    set: "Delta Species",     setId: "ex11", pokemon: "dragonite",    isReverse: true  },
-  { label: "Ampharos",     set: "Dragon Frontiers",  setId: "ex15", pokemon: "ampharos",     isReverse: true  },
-  { label: "Gardevoir ex", set: "Dragon Frontiers",  setId: "ex15", pokemon: "gardevoir ex", isReverse: false },
-  { label: "Vaporeon",     set: "Delta Species",     setId: "ex11", pokemon: "vaporeon",     isReverse: true  },
+const R=[
+["ex13-1","Armaldo δ","1","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-1","Armaldo δ (Reverse)","1","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-2","Cradily δ","2","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-2","Cradily δ (Reverse)","2","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-3","Deoxys δ","3","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-3","Deoxys δ (Reverse)","3","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-4","Deoxys δ","4","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-4","Deoxys δ (Reverse)","4","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-5","Deoxys δ","5","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-5","Deoxys δ (Reverse)","5","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-6","Deoxys δ","6","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-6","Deoxys δ (Reverse)","6","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-7","Flygon δ","7","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-7","Flygon δ (Reverse)","7","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-8","Gyarados δ","8","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-8","Gyarados δ (Reverse)","8","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-9","Kabutops δ","9","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-9","Kabutops δ (Reverse)","9","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-10","Kingdra δ","10","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-10","Kingdra δ (Reverse)","10","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-11","Latias δ","11","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-11","Latias δ (Reverse)","11","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-12","Latios δ","12","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-12","Latios δ (Reverse)","12","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-13","Omastar δ","13","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-13","Omastar δ (Reverse)","13","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-14","Pidgeot δ","14","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-14","Pidgeot δ (Reverse)","14","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-15","Raichu δ","15","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-15","Raichu δ (Reverse)","15","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-16","Rayquaza δ","16","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-16","Rayquaza δ (Reverse)","16","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-17","Vileplume δ","17","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-17","Vileplume δ (Reverse)","17","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-18","Absol","18","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-18","Absol (Reverse)","18","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-19","Bellossom δ","19","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-19","Bellossom δ (Reverse)","19","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-20","Blaziken","20","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-20","Blaziken (Reverse)","20","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-21","Latias δ","21","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-21","Latias δ (Reverse)","21","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-22","Latios δ","22","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-22","Latios δ (Reverse)","22","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-23","Mawile","23","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-23","Mawile (Reverse)","23","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-24","Mewtwo δ","24","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-24","Mewtwo δ (Reverse)","24","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-25","Nosepass","25","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-25","Nosepass (Reverse)","25","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-26","Rayquaza δ","26","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-26","Rayquaza δ (Reverse)","26","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-27","Regice","27","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-27","Regice (Reverse)","27","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-28","Regirock","28","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-28","Regirock (Reverse)","28","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-29","Registeel","29","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-29","Registeel (Reverse)","29","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-30","Relicanth","30","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-30","Relicanth (Reverse)","30","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-31","Sableye","31","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-31","Sableye (Reverse)","31","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-32","Seviper","32","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-32","Seviper (Reverse)","32","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-33","Torkoal","33","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-33","Torkoal (Reverse)","33","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-34","Zangoose","34","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-34","Zangoose (Reverse)","34","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-35","Aerodactyl δ","35","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-35","Aerodactyl δ (Reverse)","35","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-36","Camerupt","36","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-36","Camerupt (Reverse)","36","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-37","Chimecho δ","37","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-37","Chimecho δ (Reverse)","37","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-38","Claydol","38","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-38","Claydol (Reverse)","38","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-39","Combusken","39","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-39","Combusken (Reverse)","39","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-40","Donphan","40","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-40","Donphan (Reverse)","40","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-41","Exeggutor δ","41","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-41","Exeggutor δ (Reverse)","41","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-42","Gloom δ","42","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-42","Gloom δ (Reverse)","42","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-43","Golduck δ","43","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-43","Golduck δ (Reverse)","43","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-44","Holon's Castform","44","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-44","Holon's Castform (Reverse)","44","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-45","Lairon","45","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-45","Lairon (Reverse)","45","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-46","Manectric","46","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-46","Manectric (Reverse)","46","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-47","Masquerain","47","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-47","Masquerain (Reverse)","47","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-48","Persian δ","48","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-48","Persian δ (Reverse)","48","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-49","Pidgeotto δ","49","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-49","Pidgeotto δ (Reverse)","49","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-50","Primeape δ","50","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-50","Primeape δ (Reverse)","50","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-51","Raichu","51","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-51","Raichu (Reverse)","51","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-52","Seadra δ","52","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-52","Seadra δ (Reverse)","52","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-53","Sharpedo δ","53","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-53","Sharpedo δ (Reverse)","53","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-54","Vibrava δ","54","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-54","Vibrava δ (Reverse)","54","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-55","Whiscash","55","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-55","Whiscash (Reverse)","55","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-56","Wobbuffet","56","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-56","Wobbuffet (Reverse)","56","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-57","Anorith δ","57","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-57","Anorith δ (Reverse)","57","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-58","Aron","58","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-58","Aron (Reverse)","58","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-59","Baltoy","59","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-59","Baltoy (Reverse)","59","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-60","Barboach","60","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-60","Barboach (Reverse)","60","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-61","Carvanha δ","61","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-61","Carvanha δ (Reverse)","61","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-62","Corphish","62","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-62","Corphish (Reverse)","62","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-63","Corphish","63","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-63","Corphish (Reverse)","63","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-64","Electrike","64","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-64","Electrike (Reverse)","64","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-65","Exeggcute δ","65","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-65","Exeggcute δ (Reverse)","65","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-66","Horsea δ","66","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-66","Horsea δ (Reverse)","66","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-67","Kabuto δ","67","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-67","Kabuto δ (Reverse)","67","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-68","Lileep δ","68","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-68","Lileep δ (Reverse)","68","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-69","Magikarp δ","69","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-69","Magikarp δ (Reverse)","69","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-70","Mankey δ","70","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-70","Mankey δ (Reverse)","70","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-71","Meowth δ","71","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-71","Meowth δ (Reverse)","71","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-72","Numel","72","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-72","Numel (Reverse)","72","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-73","Oddish δ","73","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-73","Oddish δ (Reverse)","73","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-74","Omanyte δ","74","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-74","Omanyte δ (Reverse)","74","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-75","Phanpy","75","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-75","Phanpy (Reverse)","75","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-76","Pichu δ","76","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-76","Pichu δ (Reverse)","76","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-77","Pidgey δ","77","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-77","Pidgey δ (Reverse)","77","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-78","Pikachu","78","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-78","Pikachu (Reverse)","78","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-79","Pikachu δ","79","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-79","Pikachu δ (Reverse)","79","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-80","Poochyena","80","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-80","Poochyena (Reverse)","80","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-81","Psyduck δ","81","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-81","Psyduck δ (Reverse)","81","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-82","Surskit","82","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-82","Surskit (Reverse)","82","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-83","Torchic","83","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-83","Torchic (Reverse)","83","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-84","Trapinch δ","84","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-84","Trapinch δ (Reverse)","84","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-85","Holon Adventurer","85","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-85","Holon Adventurer (Reverse)","85","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-86","Holon Fossil","86","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-86","Holon Fossil (Reverse)","86","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-87","Holon Lake","87","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-87","Holon Lake (Reverse)","87","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-88","Mr. Stone's Project","88","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-88","Mr. Stone's Project (Reverse)","88","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-89","Professor Cozmo's Discovery","89","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-89","Professor Cozmo's Discovery (Reverse)","89","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-90","Rare Candy","90","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-90","Rare Candy (Reverse)","90","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-91","Claw Fossil","91","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-91","Claw Fossil (Reverse)","91","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-92","Mysterious Fossil","92","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-92","Mysterious Fossil (Reverse)","92","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-93","Root Fossil","93","110","Holon Phantoms","ex13","Common","Common",0],
+["ex13-93","Root Fossil (Reverse)","93","110","Holon Phantoms","ex13","Common","Reverse Holo",1],
+["ex13-94","Darkness Energy","94","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-94","Darkness Energy (Reverse)","94","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-95","Metal Energy","95","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-95","Metal Energy (Reverse)","95","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-96","Multi Energy","96","110","Holon Phantoms","ex13","Rare","Rare",0],
+["ex13-96","Multi Energy (Reverse)","96","110","Holon Phantoms","ex13","Rare","Reverse Holo",1],
+["ex13-97","Dark Metal Energy","97","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-97","Dark Metal Energy (Reverse)","97","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-98","δ Rainbow Energy","98","110","Holon Phantoms","ex13","Uncommon","Uncommon",0],
+["ex13-98","δ Rainbow Energy (Reverse)","98","110","Holon Phantoms","ex13","Uncommon","Reverse Holo",1],
+["ex13-99","Crawdaunt ex","99","110","Holon Phantoms","ex13","Rare Holo EX","pokémon-ex",0],
+["ex13-100","Mew ex","100","110","Holon Phantoms","ex13","Rare Holo EX","pokémon-ex",0],
+["ex13-101","Mightyena ex","101","110","Holon Phantoms","ex13","Rare Holo EX","pokémon-ex",0],
+["ex13-102","Gyarados ★ δ","102","110","Holon Phantoms","ex13","Rare Holo Star","Gold Star",0],
+["ex13-103","Mewtwo ★","103","110","Holon Phantoms","ex13","Rare Holo Star","Gold Star",0],
+["ex13-104","Pikachu ★","104","110","Holon Phantoms","ex13","Rare Holo Star","Gold Star",0],
+["ex13-105","Grass Energy","105","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-105","Grass Energy (Reverse)","105","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-106","Fire Energy","106","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-106","Fire Energy (Reverse)","106","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-107","Water Energy","107","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-107","Water Energy (Reverse)","107","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-108","Lightning Energy","108","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-108","Lightning Energy (Reverse)","108","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-109","Psychic Energy","109","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-109","Psychic Energy (Reverse)","109","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-110","Fighting Energy","110","110","Holon Phantoms","ex13","Rare Holo","Holo Rare",0],
+["ex13-110","Fighting Energy (Reverse)","110","110","Holon Phantoms","ex13","Rare Holo","Reverse Holo",1],
+["ex13-111","Mew","111","110","Holon Phantoms","ex13","Rare Secret","Rare Secret",0],
+["ex14-1","Banette","1","100","Crystal Guardians","ex14","Rare Holo","Holo Rare",0],
+["ex14-1","Banette (Reverse)","1","100","Crystal Guardians","ex14","Rare Holo","Reverse Holo",1],
+["ex14-2","Blastoise δ","2","100","Crystal Guardians","ex14","Rare Holo","Holo Rare",0],
+["ex14-2","Blastoise δ (Reverse)","2","100","Crystal Guardians","ex14","Rare Holo","Reverse Holo",1],
+["ex14-3","Camerupt","3","100","Crystal Guardians","ex14","Rare Holo","Holo Rare",0],
+["ex14-3","Camerupt (Reverse)","3","100","Crystal Guardians","ex14","Rare Holo","Reverse Holo",1],
+["ex14-4","Charizard δ","4","100","Crystal Guardians","ex14","Rare Holo","Holo Rare",0],
+["ex14-4","Charizard δ (Reverse)","4","100","Crystal Guardians","ex14","Rare Holo","Reverse Holo",1],
+["ex14-5","Dugtrio","5","100","Crystal Guardians","ex14","Rare Holo","Holo Rare",0],
+["ex14-5","Dugtrio (Reverse)","5","100","Crystal Guardians","ex14","Rare Holo","Reverse Holo",1],
+["ex14-6","Ludicolo δ","6","100","Crystal Guardians","ex14","Rare Holo","Holo Rare",0],
+["ex14-6","Ludicolo δ (Reverse)","6","100","Crystal Guardians","ex14","Rare Holo","Reverse Holo",1],
+["ex14-7","Luvdisc","7","100","Crystal Guardians","ex14","Rare Holo","Holo Rare",0],
+["ex14-7","Luvdisc (Reverse)","7","100","Crystal Guardians","ex14","Rare Holo","Reverse Holo",1],
+["ex14-8","Manectric","8","100","Crystal Guardians","ex14","Rare Holo","Holo Rare",0],
+["ex14-8","Manectric (Reverse)","8","100","Crystal Guardians","ex14","Rare Holo","Reverse Holo",1],
+["ex14-9","Mawile","9","100","Crystal Guardians","ex14","Rare Holo","Holo Rare",0],
+["ex14-9","Mawile (Reverse)","9","100","Crystal Guardians","ex14","Rare Holo","Reverse Holo",1],
+["ex14-10","Sableye","10","100","Crystal Guardians","ex14","Rare Holo","Holo Rare",0],
+["ex14-10","Sableye (Reverse)","10","100","Crystal Guardians","ex14","Rare Holo","Reverse Holo",1],
+["ex14-11","Swalot","11","100","Crystal Guardians","ex14","Rare Holo","Holo Rare",0],
+["ex14-11","Swalot (Reverse)","11","100","Crystal Guardians","ex14","Rare Holo","Reverse Holo",1],
+["ex14-12","Tauros","12","100","Crystal Guardians","ex14","Rare Holo","Holo Rare",0],
+["ex14-12","Tauros (Reverse)","12","100","Crystal Guardians","ex14","Rare Holo","Reverse Holo",1],
+["ex14-13","Wigglytuff","13","100","Crystal Guardians","ex14","Rare Holo","Holo Rare",0],
+["ex14-13","Wigglytuff (Reverse)","13","100","Crystal Guardians","ex14","Rare Holo","Reverse Holo",1],
+["ex14-14","Blastoise","14","100","Crystal Guardians","ex14","Rare","Rare",0],
+["ex14-14","Blastoise (Reverse)","14","100","Crystal Guardians","ex14","Rare","Reverse Holo",1],
+["ex14-15","Cacturne δ","15","100","Crystal Guardians","ex14","Rare","Rare",0],
+["ex14-15","Cacturne δ (Reverse)","15","100","Crystal Guardians","ex14","Rare","Reverse Holo",1],
+["ex14-16","Combusken","16","100","Crystal Guardians","ex14","Rare","Rare",0],
+["ex14-16","Combusken (Reverse)","16","100","Crystal Guardians","ex14","Rare","Reverse Holo",1],
+["ex14-17","Dusclops","17","100","Crystal Guardians","ex14","Rare","Rare",0],
+["ex14-17","Dusclops (Reverse)","17","100","Crystal Guardians","ex14","Rare","Reverse Holo",1],
+["ex14-18","Fearow δ","18","100","Crystal Guardians","ex14","Rare","Rare",0],
+["ex14-18","Fearow δ (Reverse)","18","100","Crystal Guardians","ex14","Rare","Reverse Holo",1],
+["ex14-19","Grovyle δ","19","100","Crystal Guardians","ex14","Rare","Rare",0],
+["ex14-19","Grovyle δ (Reverse)","19","100","Crystal Guardians","ex14","Rare","Reverse Holo",1],
+["ex14-20","Grumpig","20","100","Crystal Guardians","ex14","Rare","Rare",0],
+["ex14-20","Grumpig (Reverse)","20","100","Crystal Guardians","ex14","Rare","Reverse Holo",1],
+["ex14-21","Igglybuff","21","100","Crystal Guardians","ex14","Rare","Rare",0],
+["ex14-21","Igglybuff (Reverse)","21","100","Crystal Guardians","ex14","Rare","Reverse Holo",1],
+["ex14-22","Kingler δ","22","100","Crystal Guardians","ex14","Rare","Rare",0],
+["ex14-22","Kingler δ (Reverse)","22","100","Crystal Guardians","ex14","Rare","Reverse Holo",1],
+["ex14-23","Loudred","23","100","Crystal Guardians","ex14","Rare","Rare",0],
+["ex14-23","Loudred (Reverse)","23","100","Crystal Guardians","ex14","Rare","Reverse Holo",1],
+["ex14-24","Marshtomp","24","100","Crystal Guardians","ex14","Rare","Rare",0],
+["ex14-24","Marshtomp (Reverse)","24","100","Crystal Guardians","ex14","Rare","Reverse Holo",1],
+["ex14-25","Medicham","25","100","Crystal Guardians","ex14","Rare","Rare",0],
+["ex14-25","Medicham (Reverse)","25","100","Crystal Guardians","ex14","Rare","Reverse Holo",1],
+["ex14-26","Pelipper δ","26","100","Crystal Guardians","ex14","Rare","Rare",0],
+["ex14-26","Pelipper δ (Reverse)","26","100","Crystal Guardians","ex14","Rare","Reverse Holo",1],
+["ex14-27","Swampert","27","100","Crystal Guardians","ex14","Rare","Rare",0],
+["ex14-27","Swampert (Reverse)","27","100","Crystal Guardians","ex14","Rare","Reverse Holo",1],
+["ex14-28","Venusaur","28","100","Crystal Guardians","ex14","Rare","Rare",0],
+["ex14-28","Venusaur (Reverse)","28","100","Crystal Guardians","ex14","Rare","Reverse Holo",1],
+["ex14-29","Charmeleon","29","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-29","Charmeleon (Reverse)","29","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-30","Charmeleon δ","30","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-30","Charmeleon δ (Reverse)","30","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-31","Combusken","31","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-31","Combusken (Reverse)","31","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-32","Grovyle","32","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-32","Grovyle (Reverse)","32","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-33","Gulpin","33","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-33","Gulpin (Reverse)","33","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-34","Ivysaur","34","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-34","Ivysaur (Reverse)","34","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-35","Ivysaur","35","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-35","Ivysaur (Reverse)","35","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-36","Lairon","36","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-36","Lairon (Reverse)","36","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-37","Lombre","37","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-37","Lombre (Reverse)","37","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-38","Marshtomp","38","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-38","Marshtomp (Reverse)","38","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-39","Nuzleaf","39","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-39","Nuzleaf (Reverse)","39","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-40","Shuppet","40","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-40","Shuppet (Reverse)","40","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-41","Skitty","41","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-41","Skitty (Reverse)","41","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-42","Wartortle","42","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-42","Wartortle (Reverse)","42","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-43","Wartortle","43","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-43","Wartortle (Reverse)","43","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-44","Aron","44","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-44","Aron (Reverse)","44","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-45","Bulbasaur","45","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-45","Bulbasaur (Reverse)","45","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-46","Bulbasaur","46","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-46","Bulbasaur (Reverse)","46","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-47","Cacnea","47","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-47","Cacnea (Reverse)","47","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-48","Charmander","48","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-48","Charmander (Reverse)","48","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-49","Charmander δ","49","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-49","Charmander δ (Reverse)","49","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-50","Diglett","50","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-50","Diglett (Reverse)","50","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-51","Duskull","51","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-51","Duskull (Reverse)","51","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-52","Electrike","52","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-52","Electrike (Reverse)","52","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-53","Jigglypuff","53","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-53","Jigglypuff (Reverse)","53","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-54","Krabby","54","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-54","Krabby (Reverse)","54","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-55","Lotad","55","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-55","Lotad (Reverse)","55","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-56","Meditite","56","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-56","Meditite (Reverse)","56","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-57","Mudkip","57","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-57","Mudkip (Reverse)","57","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-58","Mudkip","58","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-58","Mudkip (Reverse)","58","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-59","Numel","59","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-59","Numel (Reverse)","59","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-60","Seedot","60","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-60","Seedot (Reverse)","60","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-61","Spearow","61","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-61","Spearow (Reverse)","61","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-62","Spoink","62","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-62","Spoink (Reverse)","62","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-63","Squirtle","63","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-63","Squirtle (Reverse)","63","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-64","Squirtle","64","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-64","Squirtle (Reverse)","64","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-65","Torchic","65","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-65","Torchic (Reverse)","65","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-66","Torchic","66","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-66","Torchic (Reverse)","66","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-67","Treecko","67","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-67","Treecko (Reverse)","67","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-68","Treecko δ","68","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-68","Treecko δ (Reverse)","68","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-69","Whismur","69","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-69","Whismur (Reverse)","69","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-70","Wingull","70","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-70","Wingull (Reverse)","70","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-71","Bill's Maintenance","71","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-71","Bill's Maintenance (Reverse)","71","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-72","Castaway","72","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-72","Castaway (Reverse)","72","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-73","Celio's Network","73","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-73","Celio's Network (Reverse)","73","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-74","Cessation Crystal","74","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-74","Cessation Crystal (Reverse)","74","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-75","Crystal Beach","75","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-75","Crystal Beach (Reverse)","75","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-76","Crystal Shard","76","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-76","Crystal Shard (Reverse)","76","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-77","Double Full Heal","77","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-77","Double Full Heal (Reverse)","77","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-78","Dual Ball","78","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-78","Dual Ball (Reverse)","78","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-79","Holon Circle","79","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-79","Holon Circle (Reverse)","79","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-80","Memory Berry","80","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-80","Memory Berry (Reverse)","80","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-81","Mysterious Shard","81","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-81","Mysterious Shard (Reverse)","81","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-82","Poké Ball","82","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-82","Poké Ball (Reverse)","82","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-83","PokéNav","83","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-83","PokéNav (Reverse)","83","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-84","Warp Point","84","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-84","Warp Point (Reverse)","84","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-85","Windstorm","85","100","Crystal Guardians","ex14","Uncommon","Uncommon",0],
+["ex14-85","Windstorm (Reverse)","85","100","Crystal Guardians","ex14","Uncommon","Reverse Holo",1],
+["ex14-86","Energy Search","86","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-86","Energy Search (Reverse)","86","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-87","Potion","87","100","Crystal Guardians","ex14","Common","Common",0],
+["ex14-87","Potion (Reverse)","87","100","Crystal Guardians","ex14","Common","Reverse Holo",1],
+["ex14-88","Double Rainbow Energy","88","100","Crystal Guardians","ex14","Rare","Rare",0],
+["ex14-88","Double Rainbow Energy (Reverse)","88","100","Crystal Guardians","ex14","Rare","Reverse Holo",1],
+["ex14-89","Aggron ex","89","100","Crystal Guardians","ex14","Rare Holo EX","pokémon-ex",0],
+["ex14-90","Blaziken ex","90","100","Crystal Guardians","ex14","Rare Holo EX","pokémon-ex",0],
+["ex14-91","Delcatty ex","91","100","Crystal Guardians","ex14","Rare Holo EX","pokémon-ex",0],
+["ex14-92","Exploud ex","92","100","Crystal Guardians","ex14","Rare Holo EX","pokémon-ex",0],
+["ex14-93","Groudon ex","93","100","Crystal Guardians","ex14","Rare Holo EX","pokémon-ex",0],
+["ex14-94","Jirachi ex","94","100","Crystal Guardians","ex14","Rare Holo EX","pokémon-ex",0],
+["ex14-95","Kyogre ex","95","100","Crystal Guardians","ex14","Rare Holo EX","pokémon-ex",0],
+["ex14-96","Sceptile ex δ","96","100","Crystal Guardians","ex14","Rare Holo EX","pokémon-ex",0],
+["ex14-97","Shiftry ex","97","100","Crystal Guardians","ex14","Rare Holo EX","pokémon-ex",0],
+["ex14-98","Swampert ex","98","100","Crystal Guardians","ex14","Rare Holo EX","pokémon-ex",0],
+["ex14-99","Alakazam ★","99","100","Crystal Guardians","ex14","Rare Holo Star","Gold Star",0],
+["ex14-100","Celebi ★","100","100","Crystal Guardians","ex14","Rare Holo Star","Gold Star",0],
+["ex11-1","Beedrill δ","1","113","Delta Species","ex11","Rare Holo","Holo Rare",0],
+["ex11-1","Beedrill δ (Reverse)","1","113","Delta Species","ex11","Rare Holo","Reverse Holo",1],
+["ex11-2","Crobat δ","2","113","Delta Species","ex11","Rare Holo","Holo Rare",0],
+["ex11-2","Crobat δ (Reverse)","2","113","Delta Species","ex11","Rare Holo","Reverse Holo",1],
+["ex11-3","Dragonite δ","3","113","Delta Species","ex11","Rare Holo","Holo Rare",0],
+["ex11-3","Dragonite δ (Reverse)","3","113","Delta Species","ex11","Rare Holo","Reverse Holo",1],
+["ex11-4","Espeon δ","4","113","Delta Species","ex11","Rare Holo","Holo Rare",0],
+["ex11-4","Espeon δ (Reverse)","4","113","Delta Species","ex11","Rare Holo","Reverse Holo",1],
+["ex11-5","Flareon δ","5","113","Delta Species","ex11","Rare Holo","Holo Rare",0],
+["ex11-5","Flareon δ (Reverse)","5","113","Delta Species","ex11","Rare Holo","Reverse Holo",1],
+["ex11-6","Gardevoir δ","6","113","Delta Species","ex11","Rare Holo","Holo Rare",0],
+["ex11-6","Gardevoir δ (Reverse)","6","113","Delta Species","ex11","Rare Holo","Reverse Holo",1],
+["ex11-7","Jolteon δ","7","113","Delta Species","ex11","Rare Holo","Holo Rare",0],
+["ex11-7","Jolteon δ (Reverse)","7","113","Delta Species","ex11","Rare Holo","Reverse Holo",1],
+["ex11-8","Latias δ","8","113","Delta Species","ex11","Rare Holo","Holo Rare",0],
+["ex11-8","Latias δ (Reverse)","8","113","Delta Species","ex11","Rare Holo","Reverse Holo",1],
+["ex11-9","Latios δ","9","113","Delta Species","ex11","Rare Holo","Holo Rare",0],
+["ex11-9","Latios δ (Reverse)","9","113","Delta Species","ex11","Rare Holo","Reverse Holo",1],
+["ex11-10","Marowak δ","10","113","Delta Species","ex11","Rare Holo","Holo Rare",0],
+["ex11-10","Marowak δ (Reverse)","10","113","Delta Species","ex11","Rare Holo","Reverse Holo",1],
+["ex11-11","Metagross δ","11","113","Delta Species","ex11","Rare Holo","Holo Rare",0],
+["ex11-11","Metagross δ (Reverse)","11","113","Delta Species","ex11","Rare Holo","Reverse Holo",1],
+["ex11-12","Mewtwo δ","12","113","Delta Species","ex11","Rare Holo","Holo Rare",0],
+["ex11-12","Mewtwo δ (Reverse)","12","113","Delta Species","ex11","Rare Holo","Reverse Holo",1],
+["ex11-13","Rayquaza δ","13","113","Delta Species","ex11","Rare Holo","Holo Rare",0],
+["ex11-13","Rayquaza δ (Reverse)","13","113","Delta Species","ex11","Rare Holo","Reverse Holo",1],
+["ex11-14","Salamence δ","14","113","Delta Species","ex11","Rare Holo","Holo Rare",0],
+["ex11-14","Salamence δ (Reverse)","14","113","Delta Species","ex11","Rare Holo","Reverse Holo",1],
+["ex11-15","Starmie δ","15","113","Delta Species","ex11","Rare Holo","Holo Rare",0],
+["ex11-15","Starmie δ (Reverse)","15","113","Delta Species","ex11","Rare Holo","Reverse Holo",1],
+["ex11-16","Tyranitar δ","16","113","Delta Species","ex11","Rare Holo","Holo Rare",0],
+["ex11-16","Tyranitar δ (Reverse)","16","113","Delta Species","ex11","Rare Holo","Reverse Holo",1],
+["ex11-17","Umbreon δ","17","113","Delta Species","ex11","Rare Holo","Holo Rare",0],
+["ex11-17","Umbreon δ (Reverse)","17","113","Delta Species","ex11","Rare Holo","Reverse Holo",1],
+["ex11-18","Vaporeon δ","18","113","Delta Species","ex11","Rare Holo","Holo Rare",0],
+["ex11-18","Vaporeon δ (Reverse)","18","113","Delta Species","ex11","Rare Holo","Reverse Holo",1],
+["ex11-19","Azumarill δ","19","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-19","Azumarill δ (Reverse)","19","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-20","Azurill","20","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-20","Azurill (Reverse)","20","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-21","Holon's Electrode","21","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-21","Holon's Electrode (Reverse)","21","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-22","Holon's Magneton","22","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-22","Holon's Magneton (Reverse)","22","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-23","Hypno","23","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-23","Hypno (Reverse)","23","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-24","Mightyena δ","24","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-24","Mightyena δ (Reverse)","24","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-25","Porygon2","25","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-25","Porygon2 (Reverse)","25","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-26","Rain Castform","26","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-26","Rain Castform (Reverse)","26","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-27","Sandslash δ","27","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-27","Sandslash δ (Reverse)","27","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-28","Slowking","28","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-28","Slowking (Reverse)","28","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-29","Snow-cloud Castform","29","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-29","Snow-cloud Castform (Reverse)","29","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-30","Starmie δ","30","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-30","Starmie δ (Reverse)","30","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-31","Sunny Castform","31","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-31","Sunny Castform (Reverse)","31","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-32","Swellow","32","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-32","Swellow (Reverse)","32","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-33","Weezing","33","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-33","Weezing (Reverse)","33","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-34","Castform","34","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-34","Castform (Reverse)","34","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-35","Ditto","35","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-35","Ditto (Reverse)","35","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-36","Ditto","36","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-36","Ditto (Reverse)","36","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-37","Ditto","37","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-37","Ditto (Reverse)","37","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-38","Ditto","38","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-38","Ditto (Reverse)","38","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-39","Ditto","39","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-39","Ditto (Reverse)","39","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-40","Ditto","40","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-40","Ditto (Reverse)","40","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-41","Dragonair δ","41","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-41","Dragonair δ (Reverse)","41","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-42","Dragonair δ","42","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-42","Dragonair δ (Reverse)","42","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-43","Golbat","43","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-43","Golbat (Reverse)","43","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-44","Hariyama","44","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-44","Hariyama (Reverse)","44","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-45","Illumise","45","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-45","Illumise (Reverse)","45","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-46","Kakuna","46","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-46","Kakuna (Reverse)","46","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-47","Kirlia","47","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-47","Kirlia (Reverse)","47","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-48","Magneton","48","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-48","Magneton (Reverse)","48","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-49","Metang δ","49","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-49","Metang δ (Reverse)","49","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-50","Persian","50","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-50","Persian (Reverse)","50","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-51","Pupitar δ","51","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-51","Pupitar δ (Reverse)","51","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-52","Rapidash","52","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-52","Rapidash (Reverse)","52","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-53","Shelgon δ","53","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-53","Shelgon δ (Reverse)","53","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-54","Shelgon δ","54","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-54","Shelgon δ (Reverse)","54","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-55","Skarmory","55","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-55","Skarmory (Reverse)","55","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-56","Volbeat","56","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-56","Volbeat (Reverse)","56","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-57","Bagon δ","57","113","Delta Species","ex11","Common","Common",0],
+["ex11-57","Bagon δ (Reverse)","57","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-58","Bagon δ","58","113","Delta Species","ex11","Common","Common",0],
+["ex11-58","Bagon δ (Reverse)","58","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-59","Beldum δ","59","113","Delta Species","ex11","Common","Common",0],
+["ex11-59","Beldum δ (Reverse)","59","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-60","Cubone","60","113","Delta Species","ex11","Common","Common",0],
+["ex11-60","Cubone (Reverse)","60","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-61","Ditto","61","113","Delta Species","ex11","Common","Common",0],
+["ex11-61","Ditto (Reverse)","61","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-62","Ditto","62","113","Delta Species","ex11","Common","Common",0],
+["ex11-62","Ditto (Reverse)","62","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-63","Ditto","63","113","Delta Species","ex11","Common","Common",0],
+["ex11-63","Ditto (Reverse)","63","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-64","Ditto","64","113","Delta Species","ex11","Common","Common",0],
+["ex11-64","Ditto (Reverse)","64","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-65","Dratini δ","65","113","Delta Species","ex11","Common","Common",0],
+["ex11-65","Dratini δ (Reverse)","65","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-66","Dratini δ","66","113","Delta Species","ex11","Common","Common",0],
+["ex11-66","Dratini δ (Reverse)","66","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-67","Drowzee","67","113","Delta Species","ex11","Common","Common",0],
+["ex11-67","Drowzee (Reverse)","67","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-68","Eevee δ","68","113","Delta Species","ex11","Common","Common",0],
+["ex11-68","Eevee δ (Reverse)","68","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-69","Eevee","69","113","Delta Species","ex11","Common","Common",0],
+["ex11-69","Eevee (Reverse)","69","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-70","Holon's Magnemite","70","113","Delta Species","ex11","Common","Common",0],
+["ex11-70","Holon's Magnemite (Reverse)","70","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-71","Holon's Voltorb","71","113","Delta Species","ex11","Common","Common",0],
+["ex11-71","Holon's Voltorb (Reverse)","71","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-72","Koffing","72","113","Delta Species","ex11","Common","Common",0],
+["ex11-72","Koffing (Reverse)","72","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-73","Larvitar δ","73","113","Delta Species","ex11","Common","Common",0],
+["ex11-73","Larvitar δ (Reverse)","73","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-74","Magnemite","74","113","Delta Species","ex11","Common","Common",0],
+["ex11-74","Magnemite (Reverse)","74","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-75","Makuhita","75","113","Delta Species","ex11","Common","Common",0],
+["ex11-75","Makuhita (Reverse)","75","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-76","Marill","76","113","Delta Species","ex11","Common","Common",0],
+["ex11-76","Marill (Reverse)","76","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-77","Meowth","77","113","Delta Species","ex11","Common","Common",0],
+["ex11-77","Meowth (Reverse)","77","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-78","Ponyta","78","113","Delta Species","ex11","Common","Common",0],
+["ex11-78","Ponyta (Reverse)","78","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-79","Poochyena","79","113","Delta Species","ex11","Common","Common",0],
+["ex11-79","Poochyena (Reverse)","79","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-80","Porygon","80","113","Delta Species","ex11","Common","Common",0],
+["ex11-80","Porygon (Reverse)","80","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-81","Ralts","81","113","Delta Species","ex11","Common","Common",0],
+["ex11-81","Ralts (Reverse)","81","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-82","Sandshrew","82","113","Delta Species","ex11","Common","Common",0],
+["ex11-82","Sandshrew (Reverse)","82","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-83","Slowpoke","83","113","Delta Species","ex11","Common","Common",0],
+["ex11-83","Slowpoke (Reverse)","83","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-84","Staryu","84","113","Delta Species","ex11","Common","Common",0],
+["ex11-84","Staryu (Reverse)","84","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-85","Staryu","85","113","Delta Species","ex11","Common","Common",0],
+["ex11-85","Staryu (Reverse)","85","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-86","Taillow","86","113","Delta Species","ex11","Common","Common",0],
+["ex11-86","Taillow (Reverse)","86","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-87","Weedle","87","113","Delta Species","ex11","Common","Common",0],
+["ex11-87","Weedle (Reverse)","87","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-88","Zubat","88","113","Delta Species","ex11","Common","Common",0],
+["ex11-88","Zubat (Reverse)","88","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-89","Dual Ball","89","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-89","Dual Ball (Reverse)","89","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-90","Great Ball","90","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-90","Great Ball (Reverse)","90","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-91","Holon Farmer","91","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-91","Holon Farmer (Reverse)","91","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-92","Holon Lass","92","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-92","Holon Lass (Reverse)","92","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-93","Holon Mentor","93","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-93","Holon Mentor (Reverse)","93","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-94","Holon Research Tower","94","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-94","Holon Research Tower (Reverse)","94","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-95","Holon Researcher","95","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-95","Holon Researcher (Reverse)","95","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-96","Holon Ruins","96","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-96","Holon Ruins (Reverse)","96","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-97","Holon Scientist","97","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-97","Holon Scientist (Reverse)","97","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-98","Holon Transceiver","98","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-98","Holon Transceiver (Reverse)","98","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-99","Master Ball","99","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-99","Master Ball (Reverse)","99","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-100","Super Scoop Up","100","113","Delta Species","ex11","Uncommon","Uncommon",0],
+["ex11-100","Super Scoop Up (Reverse)","100","113","Delta Species","ex11","Uncommon","Reverse Holo",1],
+["ex11-101","Potion","101","113","Delta Species","ex11","Common","Common",0],
+["ex11-101","Potion (Reverse)","101","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-102","Switch","102","113","Delta Species","ex11","Common","Common",0],
+["ex11-102","Switch (Reverse)","102","113","Delta Species","ex11","Common","Reverse Holo",1],
+["ex11-103","Darkness Energy","103","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-103","Darkness Energy (Reverse)","103","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-104","Holon Energy FF","104","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-104","Holon Energy FF (Reverse)","104","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-105","Holon Energy GL","105","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-105","Holon Energy GL (Reverse)","105","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-106","Holon Energy WP","106","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-106","Holon Energy WP (Reverse)","106","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-107","Metal Energy","107","113","Delta Species","ex11","Rare","Rare",0],
+["ex11-107","Metal Energy (Reverse)","107","113","Delta Species","ex11","Rare","Reverse Holo",1],
+["ex11-108","Flareon ex","108","113","Delta Species","ex11","Rare Holo EX","pokémon-ex",0],
+["ex11-109","Jolteon ex","109","113","Delta Species","ex11","Rare Holo EX","pokémon-ex",0],
+["ex11-110","Vaporeon ex","110","113","Delta Species","ex11","Rare Holo EX","pokémon-ex",0],
+["ex11-111","Groudon ★","111","113","Delta Species","ex11","Rare Holo Star","Gold Star",0],
+["ex11-112","Kyogre ★","112","113","Delta Species","ex11","Rare Holo Star","Gold Star",0],
+["ex11-113","Metagross ★","113","113","Delta Species","ex11","Rare Holo Star","Gold Star",0],
+["ex11-114","Azumarill","114","113","Delta Species","ex11","Rare Secret","Rare Secret",0],
+["ex15-1","Ampharos δ","1","101","Dragon Frontiers","ex15","Rare Holo","Holo Rare",0],
+["ex15-1","Ampharos δ (Reverse)","1","101","Dragon Frontiers","ex15","Rare Holo","Reverse Holo",1],
+["ex15-2","Feraligatr δ","2","101","Dragon Frontiers","ex15","Rare Holo","Holo Rare",0],
+["ex15-2","Feraligatr δ (Reverse)","2","101","Dragon Frontiers","ex15","Rare Holo","Reverse Holo",1],
+["ex15-3","Heracross δ","3","101","Dragon Frontiers","ex15","Rare Holo","Holo Rare",0],
+["ex15-3","Heracross δ (Reverse)","3","101","Dragon Frontiers","ex15","Rare Holo","Reverse Holo",1],
+["ex15-4","Meganium δ","4","101","Dragon Frontiers","ex15","Rare Holo","Holo Rare",0],
+["ex15-4","Meganium δ (Reverse)","4","101","Dragon Frontiers","ex15","Rare Holo","Reverse Holo",1],
+["ex15-5","Milotic δ","5","101","Dragon Frontiers","ex15","Rare Holo","Holo Rare",0],
+["ex15-5","Milotic δ (Reverse)","5","101","Dragon Frontiers","ex15","Rare Holo","Reverse Holo",1],
+["ex15-6","Nidoking δ","6","101","Dragon Frontiers","ex15","Rare Holo","Holo Rare",0],
+["ex15-6","Nidoking δ (Reverse)","6","101","Dragon Frontiers","ex15","Rare Holo","Reverse Holo",1],
+["ex15-7","Nidoqueen δ","7","101","Dragon Frontiers","ex15","Rare Holo","Holo Rare",0],
+["ex15-7","Nidoqueen δ (Reverse)","7","101","Dragon Frontiers","ex15","Rare Holo","Reverse Holo",1],
+["ex15-8","Ninetales δ","8","101","Dragon Frontiers","ex15","Rare Holo","Holo Rare",0],
+["ex15-8","Ninetales δ (Reverse)","8","101","Dragon Frontiers","ex15","Rare Holo","Reverse Holo",1],
+["ex15-9","Pinsir δ","9","101","Dragon Frontiers","ex15","Rare Holo","Holo Rare",0],
+["ex15-9","Pinsir δ (Reverse)","9","101","Dragon Frontiers","ex15","Rare Holo","Reverse Holo",1],
+["ex15-10","Snorlax δ","10","101","Dragon Frontiers","ex15","Rare Holo","Holo Rare",0],
+["ex15-10","Snorlax δ (Reverse)","10","101","Dragon Frontiers","ex15","Rare Holo","Reverse Holo",1],
+["ex15-11","Togetic δ","11","101","Dragon Frontiers","ex15","Rare Holo","Holo Rare",0],
+["ex15-11","Togetic δ (Reverse)","11","101","Dragon Frontiers","ex15","Rare Holo","Reverse Holo",1],
+["ex15-12","Typhlosion δ","12","101","Dragon Frontiers","ex15","Rare Holo","Holo Rare",0],
+["ex15-12","Typhlosion δ (Reverse)","12","101","Dragon Frontiers","ex15","Rare Holo","Reverse Holo",1],
+["ex15-13","Arbok δ","13","101","Dragon Frontiers","ex15","Rare","Rare",0],
+["ex15-13","Arbok δ (Reverse)","13","101","Dragon Frontiers","ex15","Rare","Reverse Holo",1],
+["ex15-14","Cloyster δ","14","101","Dragon Frontiers","ex15","Rare","Rare",0],
+["ex15-14","Cloyster δ (Reverse)","14","101","Dragon Frontiers","ex15","Rare","Reverse Holo",1],
+["ex15-15","Dewgong δ","15","101","Dragon Frontiers","ex15","Rare","Rare",0],
+["ex15-15","Dewgong δ (Reverse)","15","101","Dragon Frontiers","ex15","Rare","Reverse Holo",1],
+["ex15-16","Gligar δ","16","101","Dragon Frontiers","ex15","Rare","Rare",0],
+["ex15-16","Gligar δ (Reverse)","16","101","Dragon Frontiers","ex15","Rare","Reverse Holo",1],
+["ex15-17","Jynx δ","17","101","Dragon Frontiers","ex15","Rare","Rare",0],
+["ex15-17","Jynx δ (Reverse)","17","101","Dragon Frontiers","ex15","Rare","Reverse Holo",1],
+["ex15-18","Ledian δ","18","101","Dragon Frontiers","ex15","Rare","Rare",0],
+["ex15-18","Ledian δ (Reverse)","18","101","Dragon Frontiers","ex15","Rare","Reverse Holo",1],
+["ex15-19","Lickitung δ","19","101","Dragon Frontiers","ex15","Rare","Rare",0],
+["ex15-19","Lickitung δ (Reverse)","19","101","Dragon Frontiers","ex15","Rare","Reverse Holo",1],
+["ex15-20","Mantine δ","20","101","Dragon Frontiers","ex15","Rare","Rare",0],
+["ex15-20","Mantine δ (Reverse)","20","101","Dragon Frontiers","ex15","Rare","Reverse Holo",1],
+["ex15-21","Quagsire δ","21","101","Dragon Frontiers","ex15","Rare","Rare",0],
+["ex15-21","Quagsire δ (Reverse)","21","101","Dragon Frontiers","ex15","Rare","Reverse Holo",1],
+["ex15-22","Seadra δ","22","101","Dragon Frontiers","ex15","Rare","Rare",0],
+["ex15-22","Seadra δ (Reverse)","22","101","Dragon Frontiers","ex15","Rare","Reverse Holo",1],
+["ex15-23","Tropius δ","23","101","Dragon Frontiers","ex15","Rare","Rare",0],
+["ex15-23","Tropius δ (Reverse)","23","101","Dragon Frontiers","ex15","Rare","Reverse Holo",1],
+["ex15-24","Vibrava δ","24","101","Dragon Frontiers","ex15","Rare","Rare",0],
+["ex15-24","Vibrava δ (Reverse)","24","101","Dragon Frontiers","ex15","Rare","Reverse Holo",1],
+["ex15-25","Xatu δ","25","101","Dragon Frontiers","ex15","Rare","Rare",0],
+["ex15-25","Xatu δ (Reverse)","25","101","Dragon Frontiers","ex15","Rare","Reverse Holo",1],
+["ex15-26","Bayleef δ","26","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-26","Bayleef δ (Reverse)","26","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-27","Croconaw δ","27","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-27","Croconaw δ (Reverse)","27","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-28","Dragonair δ","28","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-28","Dragonair δ (Reverse)","28","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-29","Electabuzz δ","29","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-29","Electabuzz δ (Reverse)","29","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-30","Flaaffy δ","30","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-30","Flaaffy δ (Reverse)","30","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-31","Horsea δ","31","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-31","Horsea δ (Reverse)","31","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-32","Kirlia","32","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-32","Kirlia (Reverse)","32","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-33","Kirlia δ","33","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-33","Kirlia δ (Reverse)","33","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-34","Nidorina δ","34","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-34","Nidorina δ (Reverse)","34","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-35","Nidorino δ","35","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-35","Nidorino δ (Reverse)","35","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-36","Quilava δ","36","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-36","Quilava δ (Reverse)","36","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-37","Seadra δ","37","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-37","Seadra δ (Reverse)","37","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-38","Shelgon δ","38","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-38","Shelgon δ (Reverse)","38","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-39","Smeargle δ","39","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-39","Smeargle δ (Reverse)","39","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-40","Swellow δ","40","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-40","Swellow δ (Reverse)","40","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-41","Togepi δ","41","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-41","Togepi δ (Reverse)","41","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-42","Vibrava δ","42","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-42","Vibrava δ (Reverse)","42","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-43","Bagon δ","43","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-43","Bagon δ (Reverse)","43","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-44","Chikorita δ","44","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-44","Chikorita δ (Reverse)","44","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-45","Cyndaquil δ","45","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-45","Cyndaquil δ (Reverse)","45","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-46","Dratini δ","46","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-46","Dratini δ (Reverse)","46","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-47","Ekans δ","47","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-47","Ekans δ (Reverse)","47","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-48","Elekid δ","48","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-48","Elekid δ (Reverse)","48","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-49","Feebas δ","49","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-49","Feebas δ (Reverse)","49","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-50","Horsea δ","50","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-50","Horsea δ (Reverse)","50","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-51","Larvitar","51","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-51","Larvitar (Reverse)","51","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-52","Larvitar δ","52","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-52","Larvitar δ (Reverse)","52","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-53","Ledyba δ","53","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-53","Ledyba δ (Reverse)","53","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-54","Mareep δ","54","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-54","Mareep δ (Reverse)","54","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-55","Natu δ","55","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-55","Natu δ (Reverse)","55","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-56","Nidoran ♀ δ","56","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-56","Nidoran ♀ δ (Reverse)","56","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-57","Nidoran ♂ δ","57","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-57","Nidoran ♂ δ (Reverse)","57","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-58","Pupitar","58","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-58","Pupitar (Reverse)","58","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-59","Pupitar δ","59","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-59","Pupitar δ (Reverse)","59","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-60","Ralts","60","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-60","Ralts (Reverse)","60","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-61","Ralts δ","61","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-61","Ralts δ (Reverse)","61","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-62","Seel δ","62","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-62","Seel δ (Reverse)","62","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-63","Shellder δ","63","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-63","Shellder δ (Reverse)","63","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-64","Smoochum δ","64","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-64","Smoochum δ (Reverse)","64","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-65","Swablu δ","65","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-65","Swablu δ (Reverse)","65","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-66","Taillow δ","66","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-66","Taillow δ (Reverse)","66","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-67","Totodile δ","67","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-67","Totodile δ (Reverse)","67","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-68","Trapinch δ","68","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-68","Trapinch δ (Reverse)","68","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-69","Trapinch δ","69","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-69","Trapinch δ (Reverse)","69","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-70","Vulpix δ","70","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-70","Vulpix δ (Reverse)","70","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-71","Wooper δ","71","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-71","Wooper δ (Reverse)","71","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-72","Buffer Piece","72","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-72","Buffer Piece (Reverse)","72","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-73","Copycat","73","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-73","Copycat (Reverse)","73","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-74","Holon Legacy","74","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-74","Holon Legacy (Reverse)","74","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-75","Holon Mentor","75","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-75","Holon Mentor (Reverse)","75","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-76","Island Hermit","76","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-76","Island Hermit (Reverse)","76","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-77","Mr. Stone's Project","77","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-77","Mr. Stone's Project (Reverse)","77","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-78","Old Rod","78","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-78","Old Rod (Reverse)","78","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-79","Professor Elm's Training Method","79","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-79","Professor Elm's Training Method (Reverse)","79","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-80","Professor Oak's Research","80","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-80","Professor Oak's Research (Reverse)","80","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-81","Strength Charm","81","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-81","Strength Charm (Reverse)","81","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-82","TV Reporter","82","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-82","TV Reporter (Reverse)","82","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-83","Switch","83","101","Dragon Frontiers","ex15","Common","Common",0],
+["ex15-83","Switch (Reverse)","83","101","Dragon Frontiers","ex15","Common","Reverse Holo",1],
+["ex15-84","Holon Energy FF","84","101","Dragon Frontiers","ex15","Rare","Rare",0],
+["ex15-84","Holon Energy FF (Reverse)","84","101","Dragon Frontiers","ex15","Rare","Reverse Holo",1],
+["ex15-85","Holon Energy GL","85","101","Dragon Frontiers","ex15","Rare","Rare",0],
+["ex15-85","Holon Energy GL (Reverse)","85","101","Dragon Frontiers","ex15","Rare","Reverse Holo",1],
+["ex15-86","Holon Energy WP","86","101","Dragon Frontiers","ex15","Rare","Rare",0],
+["ex15-86","Holon Energy WP (Reverse)","86","101","Dragon Frontiers","ex15","Rare","Reverse Holo",1],
+["ex15-87","Boost Energy","87","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-87","Boost Energy (Reverse)","87","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-88","δ Rainbow Energy","88","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-88","δ Rainbow Energy (Reverse)","88","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-89","Scramble Energy","89","101","Dragon Frontiers","ex15","Uncommon","Uncommon",0],
+["ex15-89","Scramble Energy (Reverse)","89","101","Dragon Frontiers","ex15","Uncommon","Reverse Holo",1],
+["ex15-90","Altaria ex δ","90","101","Dragon Frontiers","ex15","Rare Holo EX","pokémon-ex",0],
+["ex15-91","Dragonite ex δ","91","101","Dragon Frontiers","ex15","Rare Holo EX","pokémon-ex",0],
+["ex15-92","Flygon ex δ","92","101","Dragon Frontiers","ex15","Rare Holo EX","pokémon-ex",0],
+["ex15-93","Gardevoir ex δ","93","101","Dragon Frontiers","ex15","Rare Holo EX","pokémon-ex",0],
+["ex15-94","Kingdra ex δ","94","101","Dragon Frontiers","ex15","Rare Holo EX","pokémon-ex",0],
+["ex15-95","Latias ex δ","95","101","Dragon Frontiers","ex15","Rare Holo EX","pokémon-ex",0],
+["ex15-96","Latios ex δ","96","101","Dragon Frontiers","ex15","Rare Holo EX","pokémon-ex",0],
+["ex15-97","Rayquaza ex δ","97","101","Dragon Frontiers","ex15","Rare Holo EX","pokémon-ex",0],
+["ex15-98","Salamence ex δ","98","101","Dragon Frontiers","ex15","Rare Holo EX","pokémon-ex",0],
+["ex15-99","Tyranitar ex δ","99","101","Dragon Frontiers","ex15","Rare Holo EX","pokémon-ex",0],
+["ex15-100","Charizard ★ δ","100","101","Dragon Frontiers","ex15","Rare Holo Star","Gold Star",0],
+["ex15-101","Mew ★ δ","101","101","Dragon Frontiers","ex15","Rare Holo Star","Gold Star",0]
 ];
 
-const SET_ORDER = ["Holon Phantoms", "Crystal Guardians", "Delta Species", "Dragon Frontiers"];
-const PER_PAGE = 8;
-const CONDITIONS = [
-  { label: "NM — Near Mint",         mult: 1.00, color: "#4ade80" },
-  { label: "LP — Lightly Played",    mult: 0.80, color: "#a3e635" },
-  { label: "MP — Moderately Played", mult: 0.57, color: "#facc15" },
-  { label: "HP — Heavily Played",    mult: 0.40, color: "#f87171" },
+// Columns: [api_id, label, number, total, set, setId, rarity, variant, isReverse]
+const CARDS = R.map(r => ({id:r[0],label:r[1],num:r[2],tot:r[3],set:r[4],sid:r[5],rar:r[6],var:r[7],rev:r[8]}));
+
+const SETS = [
+  {name:"Holon Phantoms",    id:"ex13"},
+  {name:"Crystal Guardians", id:"ex14"},
+  {name:"Delta Species",     id:"ex11"},
+  {name:"Dragon Frontiers",  id:"ex15"},
+];
+const PER_PAGE  = 25;
+const API_BASE  = "https://api.pokemontcg.io/v2/cards/";
+const COND = [
+  {label:"NM \u2014 Near Mint",         mult:1.00, color:"#4ade80"},
+  {label:"LP \u2014 Lightly Played",    mult:0.80, color:"#a3e635"},
+  {label:"MP \u2014 Moderately Played", mult:0.57, color:"#facc15"},
+  {label:"HP \u2014 Heavily Played",    mult:0.40, color:"#f87171"},
 ];
 
-const cache = {};
-let currentSet = null;
-let currentPage = 1;
-let expandedIndex = null;
+let currentSet    = null;
+let currentPage   = 1;
+let currentFilter = "all";
+let searchQuery   = "";
+let expandedKey   = null;
+const priceCache  = {};
+const fetching    = new Set();
 
-// ── API ──
-async function fetchCard(card) {
-  const key = `${card.pokemon}-${card.setId}`;
-  if (cache[key]) return cache[key];
-  const q = `name:"${card.pokemon}" set.id:${card.setId}`;
-  const url = `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(q)}&select=name,number,set,tcgplayer,images`;
-  const res = await fetch(url);
-  const data = await res.json();
-  cache[key] = data.data?.[0] ?? null;
-  return cache[key];
-}
-
-function getPrices(apiCard, isReverse) {
-  const prices = apiCard?.tcgplayer?.prices ?? {};
-  if (isReverse && prices.reverseHolofoil) return [prices.reverseHolofoil, "Reverse Holo"];
-  if (prices.holofoil)  return [prices.holofoil, "Holofoil"];
-  if (prices.normal)    return [prices.normal, "Normal"];
-  const first = Object.keys(prices)[0];
-  return first ? [prices[first], first] : [null, null];
+function varBadge(v) {
+  const map = {
+    "Holo Rare":    ["v-holo",  "Holo"],
+    "Reverse Holo": ["v-rev",   "Rev Holo"],
+    "pok\u00e9mon-ex": ["v-ex", "Pok\u00e9mon-ex"],
+    "Gold Star":    ["v-star",  "\u2605 Gold Star"],
+    "Rare":         ["v-rare",  "Rare"],
+    "Rare Secret":  ["v-secret","Secret Rare"],
+    "Uncommon":     ["v-unc",   "Uncommon"],
+    "Common":       ["v-com",   "Common"],
+  };
+  const [cls, lbl] = map[v] || ["v-com", v];
+  return `<span class="vbadge ${cls}">${lbl}</span>`;
 }
 
 function fmt(val) { return val != null ? `$${parseFloat(val).toFixed(2)}` : "N/A"; }
+function ekey(c)  { return `${c.id}|${c.rev}`; }
 
-// ── Sidebar ──
-async function buildSidebar() {
-  const list = document.getElementById("card-list");
-  const groups = {};
-  SET_ORDER.forEach(s => groups[s] = []);
-  CARDS.forEach((card, i) => { if (groups[card.set]) groups[card.set].push({ card, i }); });
+// ── Sidebar ────────────────────────────────────────────────────────────────
+function buildSidebar() {
+  const nav = document.getElementById("sb-sets");
+  SETS.forEach(s => {
+    const count = CARDS.filter(c => c.sid === s.id).length;
+    const el = document.createElement("div");
+    el.className = "sb-set";
+    el.dataset.sid = s.id;
+    el.innerHTML = `<span class="sb-set-name">${s.name}</span><span class="sb-set-count">${count}</span>`;
+    el.addEventListener("click", () => showSet(s.id));
+    nav.appendChild(el);
+  });
+}
 
-  SET_ORDER.forEach(setName => {
-    const entries = groups[setName];
-    if (!entries.length) return;
+// ── Filtered list ─────────────────────────────────────────────────────────
+function getVisible() {
+  return CARDS.filter(c => {
+    if (c.sid !== currentSet) return false;
+    if (currentFilter === "regular" && c.rev) return false;
+    if (currentFilter === "reverse" && !c.rev) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      if (!c.label.toLowerCase().includes(q) && !c.num.includes(q)) return false;
+    }
+    return true;
+  });
+}
 
-    const header = document.createElement("div");
-    header.className = "set-header";
-    header.dataset.set = setName;
-    header.innerHTML = `
-      <span class="set-name">${setName}</span>
-      <span class="set-right">
-        <span class="set-count">${entries.length}</span>
-        <span class="chevron">▾</span>
-      </span>`;
+// ── Show set ──────────────────────────────────────────────────────────────
+function showSet(sid) {
+  document.querySelector('.sb-watchlist').classList.remove('active');
+  document.getElementById('watchlist-area').style.display = 'none';
+  currentSet    = sid;
+  currentPage   = 1;
+  expandedKey   = null;
+  searchQuery   = "";
+  currentFilter = "all";
+  document.getElementById("search").value = "";
+  document.querySelectorAll(".ftab").forEach(b => b.classList.toggle("active", b.dataset.filter === "all"));
+  document.querySelectorAll(".sb-set").forEach(el => el.classList.toggle("active", el.dataset.sid === sid));
+  const s   = SETS.find(x => x.id === sid);
+  const all = CARDS.filter(c => c.sid === sid);
+  const reg = all.filter(c => !c.rev).length;
+  const rev = all.filter(c => c.rev).length;
+  document.getElementById("set-title").textContent    = s.name;
+  document.getElementById("set-subtitle").textContent = `${reg} cards \u00b7 ${rev} with reverse holo \u00b7 ${all.length} total entries`;
+  document.getElementById("top-bar").style.display    = "";
+  document.getElementById("empty").style.display      = "none";
+  document.getElementById("table-area").style.display = "flex";
+  renderTable();
+}
 
-    const cardsEl = document.createElement("div");
-    cardsEl.className = "set-cards";
+// ── Render table ──────────────────────────────────────────────────────────
+function renderTable() {
+  const vis   = getVisible();
+  const total = Math.max(1, Math.ceil(vis.length / PER_PAGE));
+  if (currentPage > total) currentPage = total;
+  const page  = vis.slice((currentPage-1)*PER_PAGE, currentPage*PER_PAGE);
 
-    header.addEventListener("click", (e) => {
-      // Toggle collapse on chevron click, navigate on name click
-      const collapsed = header.classList.toggle("collapsed");
-      cardsEl.classList.toggle("collapsed", collapsed);
-      showSet(setName);
+  document.getElementById("no-results").style.display = vis.length ? "none" : "block";
+  document.getElementById("pag-info").textContent =
+    `${vis.length} entr${vis.length !== 1 ? "ies" : "y"} \u00b7 showing ${
+      (currentPage-1)*PER_PAGE+1}\u2013${Math.min(currentPage*PER_PAGE, vis.length)}`;
+  document.getElementById("pag-label").textContent  = `${currentPage} / ${total}`;
+  document.getElementById("btn-prev").disabled      = currentPage <= 1;
+  document.getElementById("btn-next").disabled      = currentPage >= total;
+
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = "";
+
+  page.forEach(c => {
+    const key    = ekey(c);
+    const cached = priceCache[c.id];
+    let priceHtml;
+    if (!cached || cached === "loading") {
+      priceHtml = `<span class="price-loading">${cached === "loading" ? "\u2026" : "\u2014"}</span>`;
+    } else if (cached === "error") {
+      priceHtml = `<span class="price-loading">N/A</span>`;
+    } else {
+      const p = getPrice(cached, c.rev);
+      priceHtml = p && p.market != null ? fmt(p.market) : `<span class="price-loading">N/A</span>`;
+    }
+
+    const tr = document.createElement("tr");
+    tr.className   = "card-row" + (expandedKey === key ? " selected" : "");
+    tr.dataset.key = key;
+    tr.innerHTML   = `
+      <td class="td-num">${c.num}/${c.tot}</td>
+      <td class="td-name">${c.label}</td>
+      <td class="td-var">${varBadge(c.var)}</td>
+      <td class="td-rar th-rar">${c.rar}</td>
+      <td class="td-price">${priceHtml}</td>`;
+    tr.addEventListener("click", () => toggleDetail(c, tr, tbody));
+    tbody.appendChild(tr);
+
+    if (expandedKey === key) {
+      tbody.appendChild(buildDetailRow(c));
+    }
+  });
+
+  // Background-load prices for unique card IDs on this page
+  const uids = [...new Set(page.map(c => c.id))];
+  uids.forEach(id => schedFetch(id, tbody));
+}
+
+function schedFetch(id, tbody) {
+  if (priceCache[id] && priceCache[id] !== "loading") return;
+  if (fetching.has(id)) return;
+  fetching.add(id);
+  fetchPrice(id).then(() => {
+    fetching.delete(id);
+    if (!tbody.isConnected) return;
+    // Patch price cells for this ID
+    tbody.querySelectorAll("tr.card-row").forEach(row => {
+      const k = row.dataset.key;
+      if (!k || !k.startsWith(id + "|")) return;
+      const rev  = k.endsWith("|1");
+      const data = priceCache[id];
+      const p    = data && data !== "error" ? getPrice(data, rev) : null;
+      const cell = row.querySelector(".td-price");
+      if (cell) cell.innerHTML = p && p.market != null ? fmt(p.market) : `<span class="price-loading">N/A</span>`;
     });
-
-    entries.forEach(({ card, i }) => {
-      const item = document.createElement("div");
-      item.className = "card-item";
-      item.dataset.index = i;
-      item.innerHTML = `
-        <div class="thumb-placeholder">🃏</div>
-        <div>
-          <div class="ci-name">${card.label}</div>
-          <div class="ci-price">—</div>
-        </div>`;
-      item.addEventListener("click", (e) => {
-        e.stopPropagation();
-        showSet(card.set, i);
-      });
-      cardsEl.appendChild(item);
-    });
-
-    list.appendChild(header);
-    list.appendChild(cardsEl);
-  });
-
-  // Background: load thumbs + prices into sidebar
-  CARDS.forEach(async (card, i) => {
-    try {
-      const data = await fetchCard(card);
-      if (!data) return;
-      const item = list.querySelector(`.card-item[data-index="${i}"]`);
-      if (!item) return;
-      const [prices] = getPrices(data, card.isReverse);
-      const img = document.createElement("img");
-      img.className = "thumb"; img.src = data.images?.small; img.alt = card.label;
-      item.replaceChild(img, item.querySelector(".thumb-placeholder"));
-      if (prices?.market) item.querySelector(".ci-price").textContent = fmt(prices.market);
-    } catch (e) {}
+    // Refresh open detail panel if it belongs to this card
+    if (expandedKey && expandedKey.startsWith(id + "|")) {
+      const inner = tbody.querySelector(".detail-row .detail-inner");
+      const card  = CARDS.find(c => ekey(c) === expandedKey);
+      if (inner && card) renderDetailInner(inner, card);
+    }
   });
 }
 
-// ── Set view ──
-function getSetCards(setName) {
-  return CARDS.map((card, i) => ({ card, i })).filter(({ card }) => card.set === setName);
+// ── Price helpers ─────────────────────────────────────────────────────────
+function getPrice(apiCard, isReverse) {
+  const p = apiCard?.tcgplayer?.prices ?? {};
+  if (isReverse && p.reverseHolofoil) return p.reverseHolofoil;
+  if (p.holofoil)  return p.holofoil;
+  if (p.normal)    return p.normal;
+  const k = Object.keys(p)[0];
+  return k ? p[k] : null;
+}
+function getPriceType(apiCard, isReverse) {
+  const p = apiCard?.tcgplayer?.prices ?? {};
+  if (isReverse && p.reverseHolofoil) return "Reverse Holofoil";
+  if (p.holofoil)  return "Holofoil";
+  if (p.normal)    return "Normal";
+  const k = Object.keys(p)[0];
+  return k || "\u2014";
 }
 
-function showSet(setName, jumpToIndex = null) {
-  currentSet = setName;
-  expandedIndex = null;
-
-  // Sidebar active states
-  document.querySelectorAll(".set-header").forEach(el => {
-    el.classList.toggle("active", el.dataset.set === setName);
-  });
-  document.querySelectorAll(".card-item").forEach(el => el.classList.remove("active"));
-
-  const entries = getSetCards(setName);
-
-  // If jumping to a specific card, calculate which page it's on
-  if (jumpToIndex !== null) {
-    const posInSet = entries.findIndex(e => e.i === jumpToIndex);
-    if (posInSet >= 0) currentPage = Math.floor(posInSet / PER_PAGE) + 1;
-    expandedIndex = jumpToIndex;
-  } else {
-    currentPage = 1;
+async function fetchPrice(id) {
+  if (priceCache[id] && priceCache[id] !== "loading") return;
+  priceCache[id] = "loading";
+  try {
+    const res = await fetch(`${API_BASE}${id}?select=name,number,set,tcgplayer,images`);
+    const d   = await res.json();
+    priceCache[id] = d.data ?? "error";
+  } catch(e) {
+    priceCache[id] = "error";
   }
-
-  document.getElementById("empty-state").style.display = "none";
-  const setView = document.getElementById("set-view");
-  setView.classList.add("visible");
-  document.getElementById("set-title").textContent = setName;
-
-  renderGrid();
 }
 
-function renderGrid() {
-  const entries = getSetCards(currentSet);
-  const totalPages = Math.ceil(entries.length / PER_PAGE);
-  const pageEntries = entries.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
-
-  document.getElementById("page-info").textContent =
-    totalPages > 1 ? `Page ${currentPage} of ${totalPages}` : "";
-  document.getElementById("page-label").textContent = `${currentPage} / ${totalPages}`;
-  document.getElementById("btn-prev").disabled = currentPage <= 1;
-  document.getElementById("btn-next").disabled = currentPage >= totalPages;
-
-  // Show/hide pagination row
-  const paginationEl = document.querySelector(".pagination");
-  paginationEl.style.display = totalPages > 1 ? "flex" : "none";
-
-  const grid = document.getElementById("card-grid");
-  grid.innerHTML = "";
-
-  pageEntries.forEach(({ card, i }) => {
-    const gc = document.createElement("div");
-    gc.className = "grid-card" + (expandedIndex === i ? " selected" : "");
-    gc.dataset.index = i;
-
-    const cached = cache[`${card.pokemon}-${card.setId}`];
-    const [prices] = cached ? getPrices(cached, card.isReverse) : [null];
-    const imgSrc = cached?.images?.small;
-
-    gc.innerHTML = `
-      ${imgSrc
-        ? `<img src="${imgSrc}" alt="${card.label}" />`
-        : `<div class="gc-placeholder">🃏</div>`}
-      <div class="gc-name">${card.label}</div>
-      <div class="gc-price">${prices?.market ? fmt(prices.market) : "—"}</div>`;
-
-    gc.addEventListener("click", () => toggleDetail(i));
-    grid.appendChild(gc);
-  });
-
-  // If a card is expanded and on this page, render its detail
-  if (expandedIndex !== null && pageEntries.some(e => e.i === expandedIndex)) {
-    renderDetail(expandedIndex);
-  } else {
-    document.getElementById("detail-panel").className = "";
-    document.getElementById("detail-panel").innerHTML = "";
+// ── Detail panel ──────────────────────────────────────────────────────────
+async function toggleDetail(card, tr, tbody) {
+  const key = ekey(card);
+  const existing = tbody.querySelector(".detail-row");
+  if (existing) {
+    existing.remove();
+    if (expandedKey === key) {
+      expandedKey = null;
+      tr.classList.remove("selected");
+      return;
+    }
   }
+  tbody.querySelectorAll(".card-row").forEach(r => r.classList.remove("selected"));
+  expandedKey = key;
+  tr.classList.add("selected");
 
-  // Fill in any missing thumbnails/prices async
-  pageEntries.forEach(async ({ card, i }) => {
-    if (cache[`${card.pokemon}-${card.setId}`]) return;
-    try {
-      const data = await fetchCard(card);
-      if (!data) return;
-      const gc = grid.querySelector(`.grid-card[data-index="${i}"]`);
-      if (!gc) return;
-      const [prices] = getPrices(data, card.isReverse);
-      gc.querySelector(".gc-placeholder")?.replaceWith(Object.assign(document.createElement("img"), { src: data.images.small, alt: card.label }));
-      if (prices?.market) gc.querySelector(".gc-price").textContent = fmt(prices.market);
-      // Also update sidebar
-      const sideItem = document.querySelector(`.card-item[data-index="${i}"]`);
-      if (sideItem) {
-        const img = document.createElement("img");
-        img.className = "thumb"; img.src = data.images?.small; img.alt = card.label;
-        sideItem.querySelector(".thumb-placeholder") && sideItem.replaceChild(img, sideItem.querySelector(".thumb-placeholder"));
-        if (prices?.market) sideItem.querySelector(".ci-price").textContent = fmt(prices.market);
-      }
-    } catch (e) {}
-  });
+  const detailTr = buildDetailRow(card);
+  tr.insertAdjacentElement("afterend", detailTr);
+  detailTr.scrollIntoView({behavior:"smooth", block:"nearest"});
+
+  if (!priceCache[card.id] || priceCache[card.id] === "loading") {
+    await fetchPrice(card.id);
+    const inner = detailTr.querySelector(".detail-inner");
+    if (inner) renderDetailInner(inner, card);
+  }
 }
 
-async function toggleDetail(index) {
-  if (expandedIndex === index) {
-    // Collapse
-    expandedIndex = null;
-    document.querySelectorAll(".grid-card").forEach(el => el.classList.remove("selected"));
-    const panel = document.getElementById("detail-panel");
-    panel.className = "";
-    panel.innerHTML = "";
-    document.querySelectorAll(".card-item").forEach(el => el.classList.remove("active"));
-    return;
-  }
-
-  expandedIndex = index;
-  document.querySelectorAll(".grid-card").forEach(el =>
-    el.classList.toggle("selected", parseInt(el.dataset.index) === index));
-  document.querySelectorAll(".card-item").forEach(el =>
-    el.classList.toggle("active", parseInt(el.dataset.index) === index));
-
-  const panel = document.getElementById("detail-panel");
-  panel.className = "visible";
-  panel.innerHTML = `<div class="spinner"></div>`;
-
-  await renderDetail(index);
-  panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+function buildDetailRow(card) {
+  const tr = document.createElement("tr");
+  tr.className = "detail-row";
+  const td = document.createElement("td");
+  td.colSpan = 5;
+  const inner = document.createElement("div");
+  inner.className = "detail-inner";
+  renderDetailInner(inner, card);
+  td.appendChild(inner);
+  tr.appendChild(td);
+  return tr;
 }
 
-async function renderDetail(index) {
-  const card = CARDS[index];
-  const panel = document.getElementById("detail-panel");
+function renderDetailInner(el, card) {
+  const api = priceCache[card.id];
+  if (!api || api === "loading") { el.innerHTML = `<div class="dp-spin"></div>`; return; }
+  if (api === "error")            { el.innerHTML = `<div class="dp-err">Failed to load price data.</div>`; return; }
 
-  let apiCard;
-  try { apiCard = await fetchCard(card); } catch (e) {
-    panel.innerHTML = `<p style="color:var(--muted)">Failed to load.</p>`; return;
-  }
+  const prices   = getPrice(api, card.rev);
+  const pType    = getPriceType(api, card.rev);
+  const tcgUrl   = api.tcgplayer?.url ?? "";
+  const updated  = api.tcgplayer?.updatedAt ?? "";
+  const imgLg    = api.images?.large ?? api.images?.small ?? "";
 
-  if (!apiCard) { panel.innerHTML = `<p style="color:var(--muted)">No data found.</p>`; return; }
-
-  const [prices, priceType] = getPrices(apiCard, card.isReverse);
-  const setInfo = apiCard.set ?? {};
-  const number = apiCard.number ?? "?";
-  const total = setInfo.printedTotal ?? "?";
-  const updatedAt = apiCard.tcgplayer?.updatedAt ?? "";
-  const tcgUrl = apiCard.tcgplayer?.url ?? "#";
-
-  const condRows = CONDITIONS.map(c => {
-    const est = prices?.market ? fmt(prices.market * c.mult) : "N/A";
-    return `<tr>
-      <td><span class="cond-dot" style="background:${c.color}"></span>${c.label}</td>
-      <td><span class="est-note">est.</span> ${est}</td>
-    </tr>`;
+  const condRows = COND.map(c => {
+    const est = prices?.market != null ? fmt(prices.market * c.mult) : "N/A";
+    return `<tr><td><span class="cond-dot" style="background:${c.color}"></span>${c.label}</td><td><span class="est-note">est.</span> ${est}</td></tr>`;
   }).join("");
 
-  panel.className = "visible";
-  panel.innerHTML = `
-    <div class="dp-image-wrap">
-      <img src="${apiCard.images?.large ?? apiCard.images?.small}" alt="${apiCard.name}" />
-      <a class="tcg-link" href="${tcgUrl}" target="_blank">TCGPlayer ↗</a>
+  el.innerHTML = `
+    <div class="dp-img-wrap">
+      ${imgLg ? `<img src="${imgLg}" alt="${card.label}" loading="lazy"/>` : `<div class="dp-img-ph">\ud83c\udccf</div>`}
+      ${tcgUrl ? `<a class="tcg-btn" href="${tcgUrl}" target="_blank">TCGPlayer \u2197</a>` : ""}
     </div>
     <div class="dp-info">
-      <h3>${apiCard.name}</h3>
+      <h3>${card.label}</h3>
       <div class="dp-tags">
-        <span class="tag tag-set">${setInfo.name ?? card.set}</span>
-        <span class="tag tag-num">#${number}/${total}</span>
-        ${card.isReverse ? '<span class="tag tag-rev">Reverse Holo</span>' : '<span class="tag tag-holo">Holo</span>'}
+        <span class="tag tag-set">${card.set}</span>
+        <span class="tag tag-num">#${card.num}/${card.tot}</span>
+        ${varBadge(card.var)}
       </div>
-      <div class="dp-section-label">Condition Estimates</div>
-      <table class="price-table">
-        <thead><tr><th>Condition</th><th>Price</th></tr></thead>
+      <div class="dp-sec">Condition Estimates</div>
+      <table class="price-tbl">
+        <thead><tr><th>Condition</th><th>Estimate</th></tr></thead>
         <tbody>${condRows}</tbody>
       </table>
-      <hr class="divider" />
-      <div class="dp-section-label">TCGPlayer Market</div>
-      <div class="market-row">
-        <div class="market-stat">
-          <div class="stat-label">Market</div>
-          <div class="stat-val" style="color:#4ade80">${fmt(prices?.market)}</div>
-        </div>
-        <div class="market-stat">
-          <div class="stat-label">Low</div>
-          <div class="stat-val">${fmt(prices?.low)}</div>
-        </div>
-        <div class="market-stat">
-          <div class="stat-label">Mid</div>
-          <div class="stat-val">${fmt(prices?.mid)}</div>
-        </div>
-        <div class="market-stat">
-          <div class="stat-label">High</div>
-          <div class="stat-val">${fmt(prices?.high)}</div>
-        </div>
+      <div class="dp-sec" style="margin-top:16px">TCGPlayer Market
+        <span style="color:var(--muted2);font-weight:400;text-transform:none;letter-spacing:0;font-size:10px"> \u2014 ${pType}</span>
       </div>
-      ${updatedAt ? `<div class="updated">Last updated: ${updatedAt}</div>` : ""}
+      <div class="mkt-row">
+        <div class="mkt-stat"><div class="mkt-lbl">Market</div><div class="mkt-val" style="color:var(--green)">${fmt(prices?.market)}</div></div>
+        <div class="mkt-stat"><div class="mkt-lbl">Low</div><div class="mkt-val">${fmt(prices?.low)}</div></div>
+        <div class="mkt-stat"><div class="mkt-lbl">Mid</div><div class="mkt-val">${fmt(prices?.mid)}</div></div>
+        <div class="mkt-stat"><div class="mkt-lbl">High</div><div class="mkt-val">${fmt(prices?.high)}</div></div>
+      </div>
+      ${updated ? `<div class="dp-upd">TCGPlayer data: ${updated}</div>` : ""}
     </div>`;
 }
 
+// ── Search & filter ───────────────────────────────────────────────────────
+document.getElementById("search").addEventListener("input", e => {
+  searchQuery = e.target.value.trim();
+  currentPage = 1;
+  expandedKey = null;
+  renderTable();
+});
+document.querySelectorAll(".ftab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    currentFilter = btn.dataset.filter;
+    currentPage   = 1;
+    expandedKey   = null;
+    document.querySelectorAll(".ftab").forEach(b => b.classList.toggle("active", b === btn));
+    renderTable();
+  });
+});
+
+// ── Pagination ────────────────────────────────────────────────────────────
 function changePage(delta) {
-  const entries = getSetCards(currentSet);
-  const totalPages = Math.ceil(entries.length / PER_PAGE);
-  const next = currentPage + delta;
-  if (next < 1 || next > totalPages) return;
+  const total = Math.ceil(getVisible().length / PER_PAGE);
+  const next  = currentPage + delta;
+  if (next < 1 || next > total) return;
   currentPage = next;
-  expandedIndex = null;
-  renderGrid();
+  expandedKey = null;
+  document.getElementById("table-wrap").scrollTop = 0;
+  renderTable();
+}
+
+// ── Watchlist ──────────────────────────────────────────────────────────────
+let wlData = null;
+
+function showWatchlist() {
+  document.querySelectorAll('.sb-set').forEach(e => e.classList.remove('active'));
+  document.querySelector('.sb-watchlist').classList.add('active');
+  document.getElementById('top-bar').style.display    = 'none';
+  document.getElementById('empty').style.display      = 'none';
+  document.getElementById('table-area').style.display = 'none';
+  document.getElementById('watchlist-area').style.display = 'flex';
+  if (!wlData) loadWatchlistData();
+}
+
+async function loadWatchlistData() {
+  const content = document.getElementById('wl-content');
+  content.innerHTML = '<div class="wl-spin"></div>';
+  document.getElementById('wl-meta').textContent = '';
+  try {
+    const r = await fetch('watchlist_data.json');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    wlData = await r.json();
+    renderWatchlist();
+  } catch(e) {
+    content.innerHTML = `
+      <div class="wl-empty">
+        <div class="wl-empty-ico">📋</div>
+        <div class="wl-empty-msg">No watchlist data yet. Run this to fetch prices:</div>
+        <div class="wl-empty-cmd">python fetch_watchlist_prices.py</div>
+      </div>`;
+    document.getElementById('wl-meta').textContent = 'no data';
+  }
+}
+
+function renderWatchlist() {
+  const updated = wlData.last_updated
+    ? new Date(wlData.last_updated).toLocaleString()
+    : '—';
+  document.getElementById('wl-meta').textContent =
+    `${wlData.cards.length} cards · data from ${updated}`;
+
+  const content = document.getElementById('wl-content');
+  content.innerHTML = '';
+
+  wlData.cards.forEach((card, idx) => {
+    const div = document.createElement('div');
+    div.className = 'wl-card';
+    div.dataset.idx = idx;
+
+    const tcgHtml = card.tcgplayer_market != null
+      ? `<span class="wl-hdr-tcg-lbl">TCGPlayer</span><span class="wl-hdr-tcg">$${parseFloat(card.tcgplayer_market).toFixed(2)}</span>`
+      : `<span class="wl-hdr-tcg-lbl">TCGPlayer</span><span class="wl-hdr-tcg" style="color:var(--muted)">N/A</span>`;
+    const tcgLink = card.tcgplayer_url
+      ? ` <a href="${card.tcgplayer_url}" target="_blank" class="tcg-btn" style="font-size:10px;padding:3px 10px" onclick="event.stopPropagation()">TCGPlayer ↗</a>`
+      : '';
+
+    div.innerHTML = `
+      <div class="wl-hdr" onclick="wlToggle(${idx},this)">
+        <span class="wl-hdr-name">${card.name}</span>
+        ${tcgHtml}${tcgLink}
+        <span class="wl-hdr-arrow">▶</span>
+      </div>
+      <div class="wl-body">
+        <div class="wl-grade-tabs" id="wl-tabs-${idx}">
+          ${[['psa9','PSA 9'],['psa10','PSA 10'],['psa8','PSA 8'],['raw','Raw eBay']].map(([g,lbl],i) =>
+            `<button class="wl-gtab${i===0?' wl-gactive':''}" data-grade="${g}"
+              onclick="wlGrade(${idx},'${g}',event)">${lbl}</button>`
+          ).join('')}
+        </div>
+        <div class="wl-listings" id="wl-ls-${idx}"></div>
+      </div>`;
+    content.appendChild(div);
+  });
+}
+
+function wlToggle(idx, hdrEl) {
+  const card = hdrEl.closest('.wl-card');
+  const opening = !card.classList.contains('wl-open');
+  card.classList.toggle('wl-open', opening);
+  if (opening) {
+    const ls = document.getElementById(`wl-ls-${idx}`);
+    if (!ls.innerHTML) wlRenderListings(idx, 'psa9');
+  }
+}
+
+function wlGrade(idx, grade, event) {
+  event.stopPropagation();
+  document.querySelectorAll(`#wl-tabs-${idx} .wl-gtab`).forEach(b =>
+    b.classList.toggle('wl-gactive', b.dataset.grade === grade));
+  wlRenderListings(idx, grade);
+}
+
+function wlRenderListings(idx, grade) {
+  const card  = wlData.cards[idx];
+  const items = card.ebay && card.ebay[grade];
+  const ls    = document.getElementById(`wl-ls-${idx}`);
+
+  if (!items || items.length === 0) {
+    const label = grade === 'raw' ? 'raw' : grade.replace('psa', 'PSA ');
+    ls.innerHTML = `<div class="wl-none">No ${label} listings found on eBay right now.</div>`;
+    return;
+  }
+
+  ls.innerHTML = `
+    <table class="wl-listing-tbl">
+      <thead><tr>
+        <th style="width:80px">Price</th>
+        <th style="width:80px">Type</th>
+        <th>Listing</th>
+      </tr></thead>
+      <tbody>
+        ${items.map(it => `
+          <tr>
+            <td><span class="wl-price">$${parseFloat(it.price).toFixed(2)}</span></td>
+            <td><span class="${it.type === 'AUCTION' ? 'wl-auc' : 'wl-bin'}">
+              ${it.type === 'AUCTION' ? 'Auction' : 'BIN' + (it.best_offer ? '+BO' : '')}
+            </span></td>
+            <td><a href="${it.url}" target="_blank" class="wl-link">${it.title}</a></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
 }
 
 buildSidebar();
+
 </script>
 </body>
 </html>
