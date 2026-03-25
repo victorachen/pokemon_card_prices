@@ -11,6 +11,7 @@ Usage:
 """
 
 import os, sys, json, sqlite3, base64
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 from datetime import datetime, timezone, timedelta
 from statistics import median
 
