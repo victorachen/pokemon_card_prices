@@ -79,12 +79,12 @@ All 4 sets are now fully catalogued in the site. `index.html` now tracks ALL car
 
 ---
 
-## Current State (end of session 2026-03-26)
+## Current State (end of session 2026-03-26 — updated)
 
 Everything is live and working on GitHub Pages. deal_finder.py runs automatically every 4 hours via GitHub Actions — no PC required.
 
 ### What's done
-- [x] All credentials in `.env` — EBAY_APP_ID, EBAY_CERT_ID, DISCORD_WEBHOOK_URL
+- [x] All credentials in `.env` — EBAY_APP_ID, EBAY_CERT_ID, DISCORD_WEBHOOK_URL, DISCORD_BOT_TOKEN, ANTHROPIC_API_KEY
 - [x] `fetch_watchlist_prices.py` — fetches **15 cards** (was 12), saves `watchlist_data.json`
 - [x] `deal_finder.py` — pings Discord when PSA 8/9/10 listing is 25%+ below median; deduplicates via `prices.db`
 - [x] GitHub Actions workflow — `deal_finder.py` runs every 4 hours, secrets stored in repo, `prices.db` persisted via Actions cache
@@ -93,24 +93,43 @@ Everything is live and working on GitHub Pages. deal_finder.py runs automaticall
 - [x] Unicode crash fixed in `deal_finder.py` (δ symbol on Windows)
 - [x] `ebay_auction_searches.html` — browser page with all 15 cards × PSA 8/9/10 auction links (covers eBay Live which Browse API can't see)
 - [x] Site watchlist tab: PSA 8/9/10/NM-LP/Raw/TCGPlayer tabs, delta badge, language badges
+- [x] **Card Search tab** — searches entire Pokémon TCG via pokemontcg.io API; thumbnails + live TCGPlayer prices + eBay Active/Sold links for PSA 8/9/10/NM/Raw; Regular/Rev Holo toggle
+- [x] **PriceCharting Last Sold tab** — paste any PriceCharting URL → fetches last 5 sold prices
+- [x] **Discord bot** (`discord_bot.py`) — live and working! Uses Claude Haiku via Anthropic API. Run `python discord_bot.py` to start. Bot name: "Delta Species Bot" on server "delta_species".
+
+### Discord Bot Details
+- `discord_bot.py` — Claude Haiku bot, responds to `!claude <msg>` or @mention
+- Commands: `!claude`, `!status` (watchlist summary), `!clear` (reset history), `!help`
+- Uses model `claude-haiku-4-5-20251001` (~$0.001/msg)
+- Bot runs **locally** — must have `python discord_bot.py` running on PC
+- **Next step**: deploy to Railway so it runs 24/7 without PC (see remote_instructions.txt)
+- Anthropic API: console.anthropic.com — $10 credits loaded, spend limit set to $10
+- Discord Developer Portal: discord.com/developers → "Delta Species Bot" app
+- `remote_instructions.txt` — full setup guide for replicating this bot in any future project
 
 ### eBay Live blind spot
 The Browse API does NOT index eBay Live auctions — they're a separate platform. Use `ebay_auction_searches.html` to manually check for live auction deals.
 
 ### Next session TODO (in order)
 
-**#1 — Re-fetch watchlist data (new cards need data)**
+**#1 — Deploy Discord bot to Railway (so it runs 24/7 without PC)**
+- railway.app → New Project → Deploy from GitHub repo
+- Add env vars in Railway: DISCORD_BOT_TOKEN, ANTHROPIC_API_KEY, EBAY_APP_ID, EBAY_CERT_ID, DISCORD_WEBHOOK_URL
+- Procfile already created: `worker: python discord_bot.py`
+- See `remote_instructions.txt` Step 7 for full Railway walkthrough
+
+**#2 — Re-fetch watchlist data (new cards need data)**
 ```bash
 python fetch_watchlist_prices.py
 git add watchlist_data.json && git commit -m "Refresh watchlist data (15 cards)" && git push
 ```
 
-**#2 — Verify GitHub Actions is running**
+**#3 — Verify GitHub Actions is running**
 - Go to: github.com/victorachen/pokemon_card_prices/actions
 - Should see runs every 4 hours under "Pokemon Deal Finder"
 - Can trigger manually with "Run workflow" button
 
-**#3 — PSA population data (optional)**
+**#4 — PSA population data (optional)**
 - Endpoint `api.psacard.com/publicapi/pop/GetPSASetItems/{setId}` works without auth
 - Need PSA set IDs for Crystal Guardians, Holon Phantoms, Delta Species, Dragon Frontiers
 - Would show PSA 8/9/10 pop counts in each card's tab on the site
@@ -125,12 +144,16 @@ git add watchlist_data.json && git commit -m "Refresh watchlist data (15 cards)"
 - `.github/workflows/deal_finder.yml` — GitHub Actions schedule config
 - `prices.db` — SQLite: `alerts_sent` table deduplicates Discord pings by eBay item_id
 - `ebay_auction_searches.html` — browser page: all 15 cards × PSA 8/9/10 auction search links
+- `discord_bot.py` — Claude Haiku Discord bot; run locally or deploy to Railway
+- `remote_instructions.txt` — full guide for setting up Discord bot in any project
+- `Procfile` — Railway deployment config (`worker: python discord_bot.py`)
+- `requirements.txt` — all Python dependencies
 - `Cards_I_Care_About.txt` — 15-card personal watchlist
 - `all_set_cards.json` — full card database (426 cards) from pokemontcg.io API
 - `generate_card_list.py` — re-fetches all set cards from API → updates all_set_cards.json
 - `build_site.py` — re-generates index.html from all_set_cards.json
 - `next_time.txt` — session handoff notes
-- `.env` — credentials (not committed): EBAY_APP_ID, EBAY_CERT_ID, DISCORD_WEBHOOK_URL
+- `.env` — credentials (not committed): EBAY_APP_ID, EBAY_CERT_ID, DISCORD_WEBHOOK_URL, DISCORD_BOT_TOKEN, ANTHROPIC_API_KEY
 - `github_secrets.txt` — GitHub secret values for reference (not committed)
 - `ebay_prices.py` — OLD/DEAD: used retired Finding API, ignore
 - `ebay_tracker.py` — OLD/SUPERSEDED by deal_finder.py
