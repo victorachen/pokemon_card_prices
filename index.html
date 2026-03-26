@@ -316,6 +316,7 @@
     .pc-err{font-size:12px;color:var(--muted);padding:10px 2px;line-height:1.7}
     .pc-idle{font-size:12px;color:var(--muted);padding:10px 2px}
     .pc-spin{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:20px auto}
+    .pc-debug{font-size:10.5px;color:var(--muted2);font-family:'Consolas',monospace;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-top:10px;line-height:1.9}
 </style>
 </head>
 <body>
@@ -2045,7 +2046,12 @@ function csEsc(s) {
 buildSidebar();
 
 // ── PriceCharting Last Sold ────────────────────────────────────────────────
-const PC_PROXY = 'https://api.allorigins.win/get?url=';
+// Tried in order until one succeeds
+const PC_PROXIES = [
+  { label: 'corsproxy.io',   url: 'https://corsproxy.io/?',                   type: 'raw'  },
+  { label: 'allorigins.win', url: 'https://api.allorigins.win/get?url=',       type: 'json' },
+  { label: 'codetabs.com',   url: 'https://api.codetabs.com/v1/proxy/?quest=', type: 'raw'  },
+];
 let pcLookups  = [];
 
 function pcLoadSaved() {
@@ -2108,23 +2114,63 @@ function pcFetchAll() {
 async function pcFetchOne(id) {
   const entry = pcLookups.find(e => e.id === id);
   if (!entry) return;
-  entry.state = 'loading';
+  entry.state    = 'loading';
+  entry.debugLog = [];
   pcRender();
 
-  try {
-    const proxyUrl = PC_PROXY + encodeURIComponent(entry.url) + '&noCache=' + Date.now();
-    const resp = await fetch(proxyUrl);
-    if (!resp.ok) throw new Error('Proxy returned HTTP ' + resp.status);
-    const json = await resp.json();
-    if (!json.contents) throw new Error('Proxy returned empty content');
-    const rows = pcParseHtml(json.contents);
+  let html = null;
+  for (const proxy of PC_PROXIES) {
+    try {
+      const proxyUrl = proxy.url + encodeURIComponent(entry.url);
+      console.log('[PC] Trying', proxy.label, '→', proxyUrl);
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 12000);
+      const resp = await fetch(proxyUrl, { signal: ctrl.signal });
+      clearTimeout(timer);
+      console.log('[PC]', proxy.label, 'HTTP', resp.status);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      let raw;
+      if (proxy.type === 'json') {
+        const json = await resp.json();
+        raw = json.contents;
+        console.log('[PC]', proxy.label, 'json.contents length:', raw?.length ?? 'null');
+      } else {
+        raw = await resp.text();
+        console.log('[PC]', proxy.label, 'text length:', raw?.length ?? 'null');
+      }
+      if (!raw || raw.length < 200) throw new Error('Empty/tiny response (' + (raw?.length || 0) + ' bytes)');
+      html = raw;
+      entry.debugLog.push('✓ ' + proxy.label + ' — ' + raw.length.toLocaleString() + ' bytes received');
+      break;
+    } catch(err) {
+      const msg = err.name === 'AbortError' ? 'Timed out after 12s' : err.message;
+      console.warn('[PC]', proxy.label, 'failed:', msg);
+      entry.debugLog.push('✗ ' + proxy.label + ': ' + msg);
+    }
+  }
+
+  if (!html) {
+    entry.state = 'error';
+    entry.error = 'All 3 proxies failed — see debug log below or press F12 → Console for details';
+  } else {
+    const rows = pcParseHtml(html);
+    console.log('[PC] Parsed rows:', rows);
     entry.rows    = rows;
     entry.state   = rows && rows.length ? 'done' : 'nodata';
     entry.fetched = new Date().toLocaleString();
     entry.error   = null;
-  } catch(err) {
-    entry.state = 'error';
-    entry.error = err.message;
+    if (!rows || !rows.length) {
+      // Diagnostic: show what tables exist in the page
+      try {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const title    = doc.querySelector('title')?.textContent?.trim() || '?';
+        const tableIds = [...doc.querySelectorAll('table')].map(t => t.id ? '#'+t.id : '(no id)').join(', ') || 'none';
+        console.log('[PC] Page title:', title);
+        console.log('[PC] Tables found:', tableIds);
+        entry.debugLog.push('Page: "' + title + '"');
+        entry.debugLog.push('Tables: ' + tableIds);
+      } catch(e) { /* ignore */ }
+    }
   }
   pcPersist();
   pcRender();
@@ -2202,15 +2248,19 @@ function pcRender() {
   list.innerHTML = pcLookups.map(e => pcCardHtml(e)).join('');
 }
 
+function pcDebugHtml(e) {
+  if (!e.debugLog || !e.debugLog.length) return '';
+  return '<div class="pc-debug">' + e.debugLog.map(l => pcEsc(l)).join('<br>') + '</div>';
+}
+
 function pcCardHtml(e) {
   let body = '';
   if (e.state === 'loading') {
-    body = '<div class="pc-spin"></div>';
+    body = '<div class="pc-spin"></div>' + pcDebugHtml(e);
   } else if (e.state === 'error') {
-    body = `<div class="pc-err"><b>Fetch failed:</b> ${pcEsc(e.error)}<br>
-      <small>The CORS proxy may be rate-limited — wait a moment and hit Refresh, or try again later.</small></div>`;
+    body = `<div class="pc-err"><b>Fetch failed:</b> ${pcEsc(e.error)}</div>` + pcDebugHtml(e);
   } else if (e.state === 'nodata') {
-    body = `<div class="pc-err">Page loaded but no sales table found. Make sure this is a specific card page on PriceCharting (not a search result).</div>`;
+    body = `<div class="pc-err">Page loaded but no sales table found.<br><small>Check the debug log below — if page title looks wrong, PriceCharting may have blocked the proxy.</small></div>` + pcDebugHtml(e);
   } else if (e.state === 'done' && e.rows && e.rows.length) {
     const hasGrade = e.rows.some(r => r.grade);
     const rowsHtml = e.rows.map(r => `<tr>
