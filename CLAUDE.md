@@ -79,7 +79,7 @@ All 4 sets are now fully catalogued in the site. `index.html` now tracks ALL car
 
 ---
 
-## Current State (end of session 2026-03-26 — updated)
+## Current State (end of session 2026-03-27)
 
 Everything is live and working on GitHub Pages. deal_finder.py runs automatically every 4 hours via GitHub Actions — no PC required.
 
@@ -94,7 +94,7 @@ Everything is live and working on GitHub Pages. deal_finder.py runs automaticall
 - [x] `ebay_auction_searches.html` — browser page with all 15 cards × PSA 8/9/10 auction links (covers eBay Live which Browse API can't see)
 - [x] Site watchlist tab: PSA 8/9/10/NM-LP/Raw/TCGPlayer tabs, delta badge, language badges
 - [x] **Card Search tab** — searches entire Pokémon TCG via pokemontcg.io API; thumbnails + live TCGPlayer prices + eBay Active/Sold links for PSA 8/9/10/NM/Raw; Regular/Rev Holo toggle
-- [x] **PriceCharting Last Sold tab** — paste any PriceCharting URL → fetches last 5 sold prices
+- [x] **PriceCharting Last Sold tab** — paste any PriceCharting URL → fetches last 5 sold prices via CORS proxy; lookups saved in browser localStorage; multi-proxy fallback (corsproxy.io → allorigins.win → codetabs.com); visible debug log in card UI; `pc_last_sold.py` also exists as CLI fallback
 - [x] **Discord bot** (`discord_bot.py`) — live and working! Uses Claude Haiku via Anthropic API. Run `python discord_bot.py` to start. Bot name: "Delta Species Bot" on server "delta_species".
 
 ### Discord Bot Details
@@ -110,26 +110,35 @@ Everything is live and working on GitHub Pages. deal_finder.py runs automaticall
 ### eBay Live blind spot
 The Browse API does NOT index eBay Live auctions — they're a separate platform. Use `ebay_auction_searches.html` to manually check for live auction deals.
 
+### PC Last Sold tab — proxy status (end of 2026-03-27 session)
+Built and pushed but **NOT yet confirmed working** — got "Failed to fetch" with allorigins.win (single proxy). Fixed by adding 3-proxy fallback (corsproxy.io → allorigins.win → codetabs.com) with visible debug log in each card. User went to sleep before re-testing. **Next session: open the site, click PC Last Sold, paste a URL and see what the debug log says.** If all 3 still fail, we may need a small serverless function (Netlify/Vercel) as proxy instead.
+
 ### Next session TODO (in order)
 
-**#1 — Deploy Discord bot to Railway (so it runs 24/7 without PC)**
+**#1 — Test PC Last Sold tab**
+- Open site → PC Last Sold → paste `https://www.pricecharting.com/game/pokemon-crystal-guardians/charizard-4`
+- Should show a debug log per proxy attempt (✓/✗)
+- If all fail: screenshot the debug log and tell Claude — we'll build a serverless proxy or use a different approach
+- If "no sales table found": debug log shows page title + table IDs — paste those to Claude to fix parser
+
+**#2 — Deploy Discord bot to Railway (so it runs 24/7 without PC)**
 - railway.app → New Project → Deploy from GitHub repo
 - Add env vars in Railway: DISCORD_BOT_TOKEN, ANTHROPIC_API_KEY, EBAY_APP_ID, EBAY_CERT_ID, DISCORD_WEBHOOK_URL
 - Procfile already created: `worker: python discord_bot.py`
 - See `remote_instructions.txt` Step 7 for full Railway walkthrough
 
-**#2 — Re-fetch watchlist data (new cards need data)**
+**#3 — Re-fetch watchlist data (new cards need data)**
 ```bash
 python fetch_watchlist_prices.py
 git add watchlist_data.json && git commit -m "Refresh watchlist data (15 cards)" && git push
 ```
 
-**#3 — Verify GitHub Actions is running**
+**#4 — Verify GitHub Actions is running**
 - Go to: github.com/victorachen/pokemon_card_prices/actions
 - Should see runs every 4 hours under "Pokemon Deal Finder"
 - Can trigger manually with "Run workflow" button
 
-**#4 — PSA population data (optional)**
+**#5 — PSA population data (optional)**
 - Endpoint `api.psacard.com/publicapi/pop/GetPSASetItems/{setId}` works without auth
 - Need PSA set IDs for Crystal Guardians, Holon Phantoms, Delta Species, Dragon Frontiers
 - Would show PSA 8/9/10 pop counts in each card's tab on the site
@@ -147,6 +156,7 @@ git add watchlist_data.json && git commit -m "Refresh watchlist data (15 cards)"
 - `discord_bot.py` — Claude Haiku Discord bot; run locally or deploy to Railway
 - `remote_instructions.txt` — full guide for setting up Discord bot in any project
 - `Procfile` — Railway deployment config (`worker: python discord_bot.py`)
+- `pc_last_sold.py` — CLI fallback for PriceCharting scraping (if browser proxy fails)
 - `requirements.txt` — all Python dependencies
 - `Cards_I_Care_About.txt` — 15-card personal watchlist
 - `all_set_cards.json` — full card database (426 cards) from pokemontcg.io API
