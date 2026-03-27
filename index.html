@@ -1736,6 +1736,7 @@ function renderWatchlist() {
         <div class="wl-mode-row">
           <button class="wl-mode-btn wl-mode-active" id="wl-mbtn-l-${idx}" onclick="wlSetMode(${idx},'listings',event)">Listings</button>
           <button class="wl-mode-btn" id="wl-mbtn-s-${idx}" onclick="wlSetMode(${idx},'sold',event)">Sold</button>
+          <button class="wl-mode-btn" id="wl-mbtn-d-${idx}" onclick="wlSetMode(${idx},'delta',event)">Delta</button>
         </div>
         <div id="wl-grade-wrap-${idx}">
           <div class="wl-grade-tabs" id="wl-tabs-${idx}">
@@ -1747,6 +1748,7 @@ function renderWatchlist() {
           <div class="wl-listings" id="wl-ls-${idx}"></div>
         </div>
         <div id="wl-sold-${idx}" style="display:none"></div>
+        <div id="wl-delta-${idx}" style="display:none"></div>
       </div>`;
     content.appendChild(div);
   });
@@ -1824,19 +1826,23 @@ function wlRenderListings(idx, grade) {
 
 function wlSetMode(idx, mode, event) {
   if (event) event.stopPropagation();
-  const grapeWrap = document.getElementById(`wl-grade-wrap-${idx}`);
+  const gradeWrap = document.getElementById(`wl-grade-wrap-${idx}`);
   const soldWrap  = document.getElementById(`wl-sold-${idx}`);
+  const deltaWrap = document.getElementById(`wl-delta-${idx}`);
   const btnL = document.getElementById(`wl-mbtn-l-${idx}`);
   const btnS = document.getElementById(`wl-mbtn-s-${idx}`);
-  if (!grapeWrap || !soldWrap) return;
+  const btnD = document.getElementById(`wl-mbtn-d-${idx}`);
+  if (!gradeWrap || !soldWrap || !deltaWrap) return;
 
-  const showSold = mode === 'sold';
-  grapeWrap.style.display = showSold ? 'none' : '';
-  soldWrap.style.display  = showSold ? '' : 'none';
-  btnL.classList.toggle('wl-mode-active', !showSold);
-  btnS.classList.toggle('wl-mode-active', showSold);
+  gradeWrap.style.display = mode === 'listings' ? '' : 'none';
+  soldWrap.style.display  = mode === 'sold'     ? '' : 'none';
+  deltaWrap.style.display = mode === 'delta'    ? '' : 'none';
+  btnL.classList.toggle('wl-mode-active', mode === 'listings');
+  btnS.classList.toggle('wl-mode-active', mode === 'sold');
+  btnD.classList.toggle('wl-mode-active', mode === 'delta');
 
-  if (showSold) wlSoldRender(idx);
+  if (mode === 'sold')  wlSoldRender(idx);
+  if (mode === 'delta') wlDeltaRender(idx);
 }
 
 function wlSoldKey(idx) {
@@ -2021,6 +2027,183 @@ async function wlSoldFetch(idx, urlOverride) {
   const data = { url, rows, fetched: new Date().toLocaleString(), debug: { proxy: debugLog.join(' · '), rowCount: rows.length } };
   wlSoldSave(idx, data);
   wlSoldRender(idx);
+}
+
+// ── Delta tab (trend analysis + outlier detection) ───────────────────────────
+
+function wlDeltaRender(idx) {
+  const wrap = document.getElementById(`wl-delta-${idx}`);
+  if (!wrap) return;
+  const card = wlData?.cards?.[idx];
+  const saved = wlSoldLoad(idx);
+
+  if (!saved || !saved.rows || !saved.rows.length) {
+    wrap.innerHTML = `
+      <div class="wl-sold-wrap" style="padding:30px;text-align:center">
+        <div style="font-size:32px;margin-bottom:12px">📊</div>
+        <div style="color:var(--muted);font-size:14px;line-height:1.6">
+          Please drop in PriceCharting link for further detailed analysis
+        </div>
+        <div style="margin-top:8px;font-size:12px;color:var(--muted2)">
+          Go to the <b>Sold</b> tab first and paste a PriceCharting URL.
+        </div>
+      </div>`;
+    return;
+  }
+
+  // Group sold data by grade
+  const graded = { psa8: [], psa9: [], psa10: [] };
+  for (const r of saved.rows) {
+    const g = r.grade || pcDetectGrade(r.title);
+    if (graded[g]) graded[g].push(r);
+  }
+
+  // Parse price helper
+  function parsePrice(p) {
+    if (typeof p === 'number') return p;
+    const m = String(p).replace(/,/g, '').match(/([\d.]+)/);
+    return m ? parseFloat(m[1]) : NaN;
+  }
+
+  // Parse date helper
+  function parseDate(d) {
+    if (!d) return null;
+    const t = new Date(d);
+    return isNaN(t) ? null : t;
+  }
+
+  // Build trend data for each grade
+  const now = new Date();
+  const oneMonthAgo  = new Date(now); oneMonthAgo.setDate(now.getDate() - 30);
+  const threeMonthsAgo = new Date(now); threeMonthsAgo.setDate(now.getDate() - 90);
+
+  function calcTrend(rows, since) {
+    const recent = rows.filter(r => { const d = parseDate(r.date); return d && d >= since; })
+      .map(r => parsePrice(r.price)).filter(p => !isNaN(p));
+    const older = rows.filter(r => { const d = parseDate(r.date); return d && d < since; })
+      .map(r => parsePrice(r.price)).filter(p => !isNaN(p));
+    if (!recent.length || !older.length) return null;
+    const avgRecent = recent.reduce((a, b) => a + b, 0) / recent.length;
+    const avgOlder  = older.reduce((a, b) => a + b, 0) / older.length;
+    return ((avgRecent - avgOlder) / avgOlder * 100);
+  }
+
+  // Trend table
+  const gradeLabels = [['psa8','PSA 8'],['psa9','PSA 9'],['psa10','PSA 10']];
+  let trendRows = '';
+  for (const [g, lbl] of gradeLabels) {
+    const rows = graded[g];
+    if (!rows.length) continue;
+    const prices = rows.map(r => parsePrice(r.price)).filter(p => !isNaN(p));
+    const median = prices.length ? prices.sort((a,b) => a - b)[Math.floor(prices.length / 2)] : null;
+    const t1m = calcTrend(rows, oneMonthAgo);
+    const t3m = calcTrend(rows, threeMonthsAgo);
+    const fmtTrend = (t) => t == null ? '<span style="color:var(--muted)">—</span>'
+      : t >= 0 ? `<span style="color:var(--green);font-weight:600">+${t.toFixed(1)}%</span>`
+      : `<span style="color:var(--red);font-weight:600">${t.toFixed(1)}%</span>`;
+    trendRows += `<tr>
+      <td style="font-weight:600">${lbl}</td>
+      <td>${median != null ? '$' + median.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : '—'}</td>
+      <td style="text-align:center">${rows.length}</td>
+      <td style="text-align:center">${fmtTrend(t1m)}</td>
+      <td style="text-align:center">${fmtTrend(t3m)}</td>
+    </tr>`;
+  }
+
+  // Price chart (simple ASCII-style bar chart using CSS)
+  const chartGrade = graded.psa9.length ? 'psa9' : graded.psa10.length ? 'psa10' : 'psa8';
+  const chartLabel = chartGrade === 'psa9' ? 'PSA 9' : chartGrade === 'psa10' ? 'PSA 10' : 'PSA 8';
+  const chartRows  = graded[chartGrade]
+    .map(r => ({ price: parsePrice(r.price), date: r.date }))
+    .filter(r => !isNaN(r.price) && r.date)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  let chartHtml = '';
+  if (chartRows.length >= 2) {
+    const maxP = Math.max(...chartRows.map(r => r.price));
+    const last10 = chartRows.slice(-15);
+    chartHtml = `
+      <div style="margin:16px 0 8px;font-size:13px;font-weight:600;color:var(--text)">${chartLabel} — Last ${last10.length} Sales</div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:120px;border-bottom:1px solid var(--border);padding-bottom:4px">
+        ${last10.map(r => {
+          const pct = (r.price / maxP * 100).toFixed(0);
+          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%"
+            title="$${r.price.toLocaleString()} — ${r.date}">
+            <div style="font-size:8px;color:var(--muted);margin-bottom:2px;white-space:nowrap">$${r.price >= 1000 ? (r.price/1000).toFixed(1)+'k' : Math.round(r.price)}</div>
+            <div style="width:100%;max-width:28px;background:var(--accent);border-radius:3px 3px 0 0;min-height:4px;height:${pct}%"></div>
+            <div style="font-size:7px;color:var(--muted2);margin-top:2px;white-space:nowrap">${r.date.slice(5)}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  // Outlier detection: active listings priced near or below last sold
+  let outlierHtml = '';
+  if (card) {
+    const ebayGrade = chartGrade;
+    const activeItems = card.ebay && card.ebay[ebayGrade];
+    const soldPrices  = graded[ebayGrade].map(r => parsePrice(r.price)).filter(p => !isNaN(p));
+    if (activeItems && activeItems.length && soldPrices.length) {
+      const sortedSold = soldPrices.sort((a, b) => a - b);
+      const median = sortedSold[Math.floor(sortedSold.length / 2)];
+      // Recent sold (last 3) to get current "tide" level
+      const recentSold = graded[ebayGrade]
+        .map(r => ({ price: parsePrice(r.price), date: r.date }))
+        .filter(r => !isNaN(r.price) && r.date)
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 3);
+      const recentAvg = recentSold.length
+        ? recentSold.reduce((s, r) => s + r.price, 0) / recentSold.length : median;
+
+      // Find listings at or below recent avg (sellers not recognizing the rising tide)
+      const deals = activeItems
+        .map(it => ({ ...it, price: parseFloat(it.price) }))
+        .filter(it => it.price <= recentAvg * 1.05)
+        .sort((a, b) => a.price - b.price);
+
+      if (deals.length) {
+        outlierHtml = `
+          <div style="margin:16px 0 8px;font-size:13px;font-weight:600;color:var(--text)">
+            Outlier Listings — ${chartLabel} at/below recent sold avg ($${recentAvg.toLocaleString(undefined,{maximumFractionDigits:0})})
+          </div>
+          <table class="wl-listing-tbl"><thead><tr>
+            <th style="width:80px">Price</th>
+            <th style="width:80px">vs Avg</th>
+            <th>Listing</th>
+          </tr></thead><tbody>
+          ${deals.map(it => {
+            const diff = ((it.price - recentAvg) / recentAvg * 100).toFixed(0);
+            const diffColor = diff <= -10 ? 'var(--green)' : diff <= 0 ? 'var(--accent)' : 'var(--muted)';
+            return `<tr>
+              <td><span class="wl-price">$${it.price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</span></td>
+              <td><span style="color:${diffColor};font-weight:600;font-size:12px">${diff}%</span></td>
+              <td><a href="${it.url}" target="_blank" class="wl-link">${it.title || '(no title)'}</a></td>
+            </tr>`;
+          }).join('')}
+          </tbody></table>`;
+      } else {
+        outlierHtml = `<div class="wl-none" style="margin-top:14px">No outlier listings found — all ${chartLabel} listings are above recent sold average ($${recentAvg.toLocaleString(undefined,{maximumFractionDigits:0})}).</div>`;
+      }
+    }
+  }
+
+  wrap.innerHTML = `
+    <div style="padding:4px 0">
+      <div style="font-size:15px;font-weight:700;margin-bottom:12px;color:var(--text)">Trend Analysis</div>
+      ${trendRows ? `
+        <table class="wl-listing-tbl">
+          <thead><tr>
+            <th>Grade</th>
+            <th>Median</th>
+            <th style="text-align:center">Sales</th>
+            <th style="text-align:center">1 Mo</th>
+            <th style="text-align:center">3 Mo</th>
+          </tr></thead>
+          <tbody>${trendRows}</tbody>
+        </table>` : '<div class="wl-none">Not enough graded data for trends.</div>'}
+      ${chartHtml}
+      ${outlierHtml}
+    </div>`;
 }
 
 // ── Card Search (Universal — entire Pokémon TCG via pokemontcg.io) ───────────
