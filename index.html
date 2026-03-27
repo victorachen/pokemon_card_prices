@@ -1661,7 +1661,7 @@ function renderWatchlist() {
       </div>
       <div class="wl-body">
         <div class="wl-grade-tabs" id="wl-tabs-${idx}">
-          ${[['psa8','PSA 8'],['psa9','PSA 9'],['psa10','PSA 10'],['raw_nm','NM/LP'],['raw','Raw eBay'],['tcgplayer','TCGPlayer']].map(([g,lbl]) =>
+          ${[['psa8','PSA 8'],['psa9','PSA 9'],['psa10','PSA 10'],['cgc9','CGC 9'],['cgc10','CGC 10'],['raw_nm','NM/LP'],['raw','Raw eBay'],['tcgplayer','TCGPlayer']].map(([g,lbl]) =>
             `<button class="wl-gtab${g==='psa9'?' wl-gactive':''}" data-grade="${g}"
               onclick="wlGrade(${idx},'${g}',event)">${lbl}</button>`
           ).join('')}
@@ -1715,7 +1715,7 @@ function wlRenderListings(idx, grade) {
 
   const items = card.ebay && card.ebay[grade];
   if (!items || items.length === 0) {
-    const labels = {psa8:'PSA 8',psa9:'PSA 9',psa10:'PSA 10',raw_nm:'NM/LP',raw:'Raw eBay'};
+    const labels = {psa8:'PSA 8',psa9:'PSA 9',psa10:'PSA 10',cgc9:'CGC 9',cgc10:'CGC 10',raw_nm:'NM/LP',raw:'Raw eBay'};
     ls.innerHTML = `<div class="wl-none">No ${labels[grade]||grade} listings found on eBay right now.</div>`;
     return;
   }

@@ -155,6 +155,14 @@ WATCHLIST = [
         "skip_tcg": True,   # Japanese exclusive set, not in pokemontcg.io
         "tcg_name": None, "tcg_set": None, "tcg_rev": False,
     },
+    {
+        "label":    "Zapdos ex FireRed LeafGreen",
+        "language": "English",
+        "raw_q":    "Zapdos ex FireRed LeafGreen -PSA -BGS -SGC -CGC -lot -proxy -japanese -keychain -pin",
+        "graded_q": "Zapdos ex FireRed LeafGreen -japanese -keychain -pin -lot -proxy",
+        "required_in_title": ["zapdos"],
+        "tcg_name": "Zapdos", "tcg_set": "ex6", "tcg_rev": False,
+    },
 ]
 
 
@@ -297,9 +305,12 @@ def main():
 
         # eBay: graded
         ebay_data: dict[str, list] = {}
-        for grade_key, grade_num in [("psa9", "9"), ("psa10", "10"), ("psa8", "8")]:
-            q = f"{card['graded_q']} PSA {grade_num}"
-            print(f"  PSA {grade_num}...", end=" ", flush=True)
+        for grade_key, grader, grade_num in [
+            ("psa9", "PSA", "9"), ("psa10", "PSA", "10"), ("psa8", "PSA", "8"),
+            ("cgc9", "CGC", "9"), ("cgc10", "CGC", "10"),
+        ]:
+            q = f"{card['graded_q']} {grader} {grade_num}"
+            print(f"  {grader} {grade_num}...", end=" ", flush=True)
             listings = search_ebay(token, q, required_in_title=req)
             n = len(listings)
             low = f" · from ${listings[0]['price']:.2f}" if listings else ""
@@ -339,7 +350,7 @@ def main():
 
         # Compute market medians per grade (used by deal_finder.py)
         market_medians = {}
-        for g in ["psa8", "psa9", "psa10"]:
+        for g in ["psa8", "psa9", "psa10", "cgc9", "cgc10"]:
             prices = [l["price"] for l in ebay_data.get(g, [])]
             market_medians[g] = round(_median(prices), 2) if prices else None
 
