@@ -318,6 +318,8 @@
     .cs-ebay-gate-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
     .cs-tcg-ref{margin-top:14px;font-size:11.5px;color:var(--muted2)}
     .cs-tcg-ref strong{color:var(--green)}
+    .cs-pc-btn{background:#fef3c7;color:var(--gold);border:1px solid #fcd34d}
+    .cs-pc-btn:hover{background:#fde68a}
 
     /* ── PriceCharting Last Sold ──────────────────────────────────── */
     .sb-pclastsold{display:flex;align-items:center;gap:9px;padding:11px 14px;cursor:pointer;background:linear-gradient(135deg,rgba(180,83,9,.06),rgba(91,77,232,.04));border-left:3px solid transparent;border-bottom:1px solid var(--border);transition:background .12s,border-color .12s}
@@ -2268,6 +2270,7 @@ function csStatsBodyHtml(card, api) {
   const q         = csEbayQueryUniv(card, gradeStr, nm, isRev);
   const activeUrl = csEbayUrl(q, false);
   const soldUrl   = csEbayUrl(q, true);
+  const pcUrl     = csPriceChartingUrl(card);
 
   // TCGPlayer market price as context below eBay links
   let tcgCtx = '';
@@ -2289,8 +2292,9 @@ function csStatsBodyHtml(card, api) {
   return `
     ${varToggle}
     <div class="cs-ebay-gate-row">
-      <a href="${activeUrl}" target="_blank" class="cs-ebay-btn cs-ebay-active" style="font-size:12px;padding:7px 20px">Active Listings \u2197</a>
-      <a href="${soldUrl}"   target="_blank" class="cs-ebay-btn cs-ebay-sold"   style="font-size:12px;padding:7px 20px">Sold / Completed \u2197</a>
+      <a href="${activeUrl}" target="_blank" class="cs-ebay-btn cs-ebay-active" style="font-size:12px;padding:7px 20px">eBay Active \u2197</a>
+      <a href="${soldUrl}"   target="_blank" class="cs-ebay-btn cs-ebay-sold"   style="font-size:12px;padding:7px 20px">eBay Sold \u2197</a>
+      <a href="${pcUrl}"     target="_blank" class="cs-ebay-btn cs-pc-btn"      style="font-size:12px;padding:7px 20px">PriceCharting \u2197</a>
     </div>
     ${tcgCtx}`;
 }
@@ -2327,6 +2331,23 @@ function csEbayUrl(query, sold) {
   const p = new URLSearchParams({_nkw: query, _sacat: '0'});
   if (sold) { p.set('LH_Sold', '1'); p.set('LH_Complete', '1'); }
   return 'https://www.ebay.com/sch/i.html?' + p.toString();
+}
+
+function csPriceChartingUrl(card) {
+  // Build best-guess PriceCharting URL from card metadata
+  // Pattern: pricecharting.com/game/pokemon-{set-slug}/{name-slug}-{number}
+  const setSlug = 'pokemon-' + card.set.name
+    .toLowerCase()
+    .replace(/\bex\b/gi, '')       // strip leading/trailing "EX" (e.g. "EX Crystal Guardians" → "Crystal Guardians")
+    .replace(/[^a-z0-9\s]/g, '')   // strip δ, ★, punctuation
+    .trim()
+    .replace(/\s+/g, '-');
+  const nameSlug = card.name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')   // strip δ, ★, etc.
+    .trim()
+    .replace(/\s+/g, '-');
+  return `https://www.pricecharting.com/game/${setSlug}/${nameSlug}-${card.number}`;
 }
 
 function csEsc(s) {
