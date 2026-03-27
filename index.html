@@ -2125,7 +2125,21 @@ async function csLoadStats() {
   csStatsGrade = 'psa9';
   csRenderResults(); // initial render — shows eBay buttons + loading indicator
   const id = csSelectedCard.id;
-  await fetchPrice(id); // always await; returns immediately if data already cached
+
+  // Fetch TCGPlayer data inline with a timeout — don't rely on _fetchPromise chain
+  if (!priceCache[id] || priceCache[id] === 'loading') {
+    try {
+      const ctrl = new AbortController();
+      const tout = setTimeout(() => ctrl.abort(), 10000);
+      const res  = await fetch(`${API_BASE}${id}?select=name,number,set,tcgplayer,images`, {signal: ctrl.signal});
+      clearTimeout(tout);
+      const d = await res.json();
+      priceCache[id] = d.data ?? 'error';
+    } catch(e) {
+      if (!priceCache[id] || priceCache[id] === 'loading') priceCache[id] = 'error';
+    }
+  }
+
   if (csGate === 'stats' && csSelectedCard?.id === id) {
     const bodyEl = document.getElementById('cs-stats-body');
     if (bodyEl) bodyEl.innerHTML = csStatsBodyHtml(csSelectedCard, priceCache[id]);
@@ -2236,7 +2250,9 @@ function csStatsBodyHtml(card, api) {
   let tcgCtx = '';
   if (!api || api === 'loading') {
     tcgCtx = `<div class="cs-tcg-ref" style="color:var(--muted)">⏳ Fetching TCGPlayer prices\u2026</div>`;
-  } else if (api !== 'error') {
+  } else if (api === 'error') {
+    tcgCtx = `<div class="cs-tcg-ref" style="color:var(--muted)">Could not load TCGPlayer price data.</div>`;
+  } else {
     const tcgPrices = api.tcgplayer?.prices ?? {};
     const priceKeys = ['holofoil','1stEditionHolofoil','unlimitedHolofoil','normal','reverseHolofoil'];
     let bestPrice = null;
