@@ -17,7 +17,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests beautifulsoup4 python-dotenv
+        run: pip install requests python-dotenv
 
       - name: Restore alert flag (prevents duplicate pings)
         uses: actions/cache@v4
@@ -30,6 +30,8 @@ jobs:
       - name: Check seller status
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          EBAY_APP_ID: ${{ secrets.EBAY_APP_ID }}
+          EBAY_CERT_ID: ${{ secrets.EBAY_CERT_ID }}
         run: python monitor_seller.py
 
       - name: Save alert flag
