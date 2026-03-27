@@ -315,6 +315,8 @@
     .cs-stab.cs-sactive{background:var(--surface);border-color:var(--border2) var(--border2) var(--surface);color:var(--accent)}
     .cs-stats-body{padding:18px 22px}
     .cs-ebay-gate-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+    .cs-tcg-ref{margin-top:14px;font-size:11.5px;color:var(--muted2)}
+    .cs-tcg-ref strong{color:var(--green)}
 
     /* ── PriceCharting Last Sold ──────────────────────────────────── */
     .sb-pclastsold{display:flex;align-items:center;gap:9px;padding:11px 14px;cursor:pointer;background:linear-gradient(135deg,rgba(180,83,9,.06),rgba(91,77,232,.04));border-left:3px solid transparent;border-bottom:1px solid var(--border);transition:background .12s,border-color .12s}
@@ -1332,6 +1334,7 @@ let searchQuery   = "";
 let expandedKey   = null;
 const priceCache  = {};
 const fetching    = new Set();
+const _fetchPromise = {};
 
 function varBadge(v) {
   const map = {
@@ -1506,14 +1509,19 @@ function getPriceType(apiCard, isReverse) {
 
 async function fetchPrice(id) {
   if (priceCache[id] && priceCache[id] !== "loading") return;
+  if (_fetchPromise[id]) return _fetchPromise[id];
   priceCache[id] = "loading";
-  try {
-    const res = await fetch(`${API_BASE}${id}?select=name,number,set,tcgplayer,images`);
-    const d   = await res.json();
-    priceCache[id] = d.data ?? "error";
-  } catch(e) {
-    priceCache[id] = "error";
-  }
+  _fetchPromise[id] = (async () => {
+    try {
+      const res = await fetch(`${API_BASE}${id}?select=name,number,set,tcgplayer,images`);
+      const d   = await res.json();
+      priceCache[id] = d.data ?? "error";
+    } catch(e) {
+      priceCache[id] = "error";
+    }
+    delete _fetchPromise[id];
+  })();
+  return _fetchPromise[id];
 }
 
 // ── Detail panel ──────────────────────────────────────────────────────────
@@ -2112,18 +2120,15 @@ function csBackToSearch() {
   csRenderResults();
 }
 
-function csLoadStats() {
+async function csLoadStats() {
   csGate = 'stats';
   csStatsGrade = 'psa9';
-  csRenderResults();
+  csRenderResults(); // initial render — shows eBay buttons + loading indicator
   const id = csSelectedCard.id;
-  if (!priceCache[id] || priceCache[id] === 'error') {
-    fetchPrice(id).then(() => {
-      if (csGate === 'stats' && csSelectedCard?.id === id) {
-        const bodyEl = document.getElementById('cs-stats-body');
-        if (bodyEl) bodyEl.innerHTML = csStatsBodyHtml(csSelectedCard, priceCache[id]);
-      }
-    });
+  await fetchPrice(id); // always await; returns immediately if data already cached
+  if (csGate === 'stats' && csSelectedCard?.id === id) {
+    const bodyEl = document.getElementById('cs-stats-body');
+    if (bodyEl) bodyEl.innerHTML = csStatsBodyHtml(csSelectedCard, priceCache[id]);
   }
 }
 
@@ -2227,12 +2232,28 @@ function csStatsBodyHtml(card, api) {
   const activeUrl = csEbayUrl(q, false);
   const soldUrl   = csEbayUrl(q, true);
 
+  // TCGPlayer market price as context below eBay links
+  let tcgCtx = '';
+  if (!api || api === 'loading') {
+    tcgCtx = `<div class="cs-tcg-ref" style="color:var(--muted)">⏳ Fetching TCGPlayer prices\u2026</div>`;
+  } else if (api !== 'error') {
+    const tcgPrices = api.tcgplayer?.prices ?? {};
+    const priceKeys = ['holofoil','1stEditionHolofoil','unlimitedHolofoil','normal','reverseHolofoil'];
+    let bestPrice = null;
+    for (const k of priceKeys) { if (tcgPrices[k]?.market != null) { bestPrice = tcgPrices[k].market; break; } }
+    if (bestPrice == null) { const v = Object.values(tcgPrices)[0]; if (v?.market != null) bestPrice = v.market; }
+    tcgCtx = bestPrice != null
+      ? `<div class="cs-tcg-ref">TCGPlayer market (raw/NM): <strong>$${bestPrice.toFixed(2)}</strong></div>`
+      : `<div class="cs-tcg-ref" style="color:var(--muted)">No TCGPlayer price data for this card.</div>`;
+  }
+
   return `
     ${varToggle}
     <div class="cs-ebay-gate-row">
       <a href="${activeUrl}" target="_blank" class="cs-ebay-btn cs-ebay-active" style="font-size:12px;padding:7px 20px">Active Listings \u2197</a>
       <a href="${soldUrl}"   target="_blank" class="cs-ebay-btn cs-ebay-sold"   style="font-size:12px;padding:7px 20px">Sold / Completed \u2197</a>
-    </div>`;
+    </div>
+    ${tcgCtx}`;
 }
 
 function csEbayQueryUniv(card, gradeStr, rawNm, isReverse) {
