@@ -1870,6 +1870,8 @@ function wlSoldRender(idx) {
     </tr>`;
   }).join('');
 
+  const dbg = saved.debug || {};
+  const rawJson = JSON.stringify(saved.rows, null, 2).replace(/</g,'&lt;').replace(/>/g,'&gt;');
   wrap.innerHTML = `
     <div class="wl-listings">
       <div class="wl-sold-meta">
@@ -1885,6 +1887,15 @@ function wlSoldRender(idx) {
         </tr></thead>
         <tbody>${rowsHtml}</tbody>
       </table>
+      <details style="margin-top:10px;font-size:11px;color:var(--muted)">
+        <summary style="cursor:pointer;user-select:none">▶ Debug (v2 — ${new Date().toLocaleTimeString()})</summary>
+        <div style="margin-top:6px">
+          <b>Proxy:</b> ${dbg.proxy || '(cached)'}<br>
+          <b>Rows parsed:</b> ${dbg.rowCount ?? saved.rows.length}<br>
+          <b>Raw data:</b><br>
+          <pre style="font-size:10px;overflow:auto;max-height:200px;background:var(--surface2);padding:8px;border-radius:4px">${rawJson}</pre>
+        </div>
+      </details>
     </div>`;
 }
 
@@ -1960,7 +1971,9 @@ async function wlSoldFetch(idx, urlOverride) {
     return;
   }
 
-  const data = { url, rows, fetched: new Date().toLocaleString() };
+  // DEBUG: log raw parsed rows to console
+  console.log('[wlSoldFetch] parsed rows:', JSON.stringify(rows, null, 2));
+  const data = { url, rows, fetched: new Date().toLocaleString(), debug: { proxy: debugLog.join(' · '), rowCount: rows.length } };
   wlSoldSave(idx, data);
   wlSoldRender(idx);
 }
