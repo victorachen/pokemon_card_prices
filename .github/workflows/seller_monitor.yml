@@ -1,0 +1,39 @@
+name: Seller Status Monitor
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # every hour
+  workflow_dispatch:      # manual trigger from GitHub UI
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 python-dotenv
+
+      - name: Restore alert flag (prevents duplicate pings)
+        uses: actions/cache@v4
+        with:
+          path: seller_alerted.flag
+          key: seller-alerted-flag
+          restore-keys: |
+            seller-alerted-flag
+
+      - name: Check seller status
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python monitor_seller.py
+
+      - name: Save alert flag
+        uses: actions/cache@v4
+        with:
+          path: seller_alerted.flag
+          key: seller-alerted-flag
