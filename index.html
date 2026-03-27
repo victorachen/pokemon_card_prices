@@ -2450,9 +2450,13 @@ async function csTriggerEbayFetch() {
     } catch(e) { /* try next proxy */ }
   }
 
-  csEbayCache[cacheKey] = html
-    ? { status: 'ok', items: csEbayParseHtml(html) }
-    : { status: 'error' };
+  if (html) {
+    const items = csEbayParseHtml(html);
+    csEbayCache[cacheKey] = { status: 'ok', items, fetchUrl: searchUrl,
+      rawExcerpt: html.substring(0, 1200) };
+  } else {
+    csEbayCache[cacheKey] = { status: 'error', fetchUrl: searchUrl };
+  }
 
   if (csGate === 'stats' && csSelectedCard?.id === card.id && csMode === 'listings' && csStatsGrade === grade) {
     const b = document.getElementById('cs-stats-body');
@@ -2512,11 +2516,23 @@ function csListingsBodyHtml(card, api) {
     </table>`;
   }
 
+  const dbgSection = ebayState ? `
+    <details style="margin-top:10px;font-size:11px;color:var(--muted)">
+      <summary style="cursor:pointer;user-select:none">▶ Debug (eBay fetch)</summary>
+      <div style="margin-top:6px">
+        <b>Status:</b> ${ebayState.status} · <b>Items parsed:</b> ${ebayState.items?.length ?? 'N/A'}<br>
+        <b>URL tried:</b> <a href="${ebayState.fetchUrl||''}" target="_blank" style="color:var(--accent);word-break:break-all">${ebayState.fetchUrl||'N/A'}</a><br>
+        ${ebayState.rawExcerpt ? `<b>Raw response (first 1200 chars):</b>
+        <pre style="font-size:10px;overflow:auto;max-height:200px;background:var(--surface2);padding:8px;border-radius:4px;white-space:pre-wrap;word-break:break-all">${csEsc(ebayState.rawExcerpt)}</pre>` : ''}
+      </div>
+    </details>` : '';
+
   return `${varToggle}${bodyHtml}
     <div class="cs-ebay-gate-row" style="margin-top:14px">
       <a href="${activeUrl}" target="_blank" class="cs-ebay-btn cs-ebay-active" style="font-size:12px;padding:7px 20px">eBay Active \u2197</a>
       <a href="${soldUrl}"   target="_blank" class="cs-ebay-btn cs-ebay-sold"   style="font-size:12px;padding:7px 20px">eBay Sold \u2197</a>
-    </div>`;
+    </div>
+    ${dbgSection}`;
 }
 
 // ── Card Search Sold mode (PriceCharting paste, mirrors watchlist sold) ───────
