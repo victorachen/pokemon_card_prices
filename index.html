@@ -2403,6 +2403,46 @@ function csEbayParseHtml(html) {
   return items;
 }
 
+function csEbayParseRss(xml) {
+  // eBay RSS feed (?_rss=1) returns real server-side XML — not JS-rendered
+  const doc = new DOMParser().parseFromString(xml, 'text/xml');
+  if (doc.querySelector('parsererror')) {
+    // Might be HTML (eBay redirect/error) — return empty
+    return [];
+  }
+  const items = [];
+  for (const el of doc.querySelectorAll('item')) {
+    // Title format: "Card Name - $XX.XX" or just "Card Name"
+    const rawTitle = el.querySelector('title')?.textContent?.trim() || '';
+    const link     = el.querySelector('link')?.textContent?.trim() ||
+                     el.getElementsByTagName('link')[0]?.nextSibling?.textContent?.trim() || '';
+    const desc     = el.querySelector('description')?.textContent || '';
+
+    // Skip the channel-level <title>
+    if (!rawTitle || /eBay|results for/i.test(rawTitle) && rawTitle.length < 60) continue;
+
+    // Price: try title suffix first ("Title - $XX.XX"), then description
+    let price = 0;
+    const tpm = rawTitle.match(/\$([\d,]+(?:\.\d{2})?)\s*$/);
+    if (tpm) {
+      price = parseFloat(tpm[1].replace(/,/g, ''));
+    } else {
+      const dpm = desc.match(/\$([\d,]+(?:\.\d{2})?)/);
+      if (dpm) price = parseFloat(dpm[1].replace(/,/g, ''));
+    }
+    if (!price) continue;
+
+    const combined   = rawTitle + ' ' + desc;
+    const isAuction  = /\bbid|\bauction|\d+\s*bid/i.test(combined);
+    const hasBestOffer = /best offer/i.test(combined);
+    const cleanTitle = rawTitle.replace(/\s*[-–]\s*\$[\d,]+(?:\.\d{2})?$/, '').trim();
+
+    items.push({ title: cleanTitle || rawTitle, price, url: link,
+                 type: isAuction ? 'AUCTION' : 'BIN', best_offer: hasBestOffer });
+  }
+  return items;
+}
+
 async function csTriggerEbayFetch() {
   if (!csSelectedCard || csStatsGrade === 'tcgplayer') return;
   const card     = csSelectedCard;
@@ -2432,35 +2472,34 @@ async function csTriggerEbayFetch() {
   else if (grade === 'nm')    nm = true;
 
   const q          = csEbayQueryUniv(card, gradeStr, nm, isRev);
-  const searchUrl  = csEbayUrl(q, false);
+  const rssUrl     = csEbayUrl(q, false) + '&_rss=1'; // RSS endpoint — real XML, not JS-rendered
 
-  let html = null;
+  let raw = null;
+  let usedProxy = '';
   for (const proxy of PC_PROXIES) {
     try {
       const ctrl  = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 15000);
-      const resp  = await fetch(proxy.url + encodeURIComponent(searchUrl), { signal: ctrl.signal });
+      const resp  = await fetch(proxy.url + encodeURIComponent(rssUrl), { signal: ctrl.signal });
       clearTimeout(timer);
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      let raw;
-      if (proxy.type === 'json') { const j = await resp.json(); raw = j.contents; }
-      else { raw = await resp.text(); }
-      if (!raw || raw.length < 1000) throw new Error('Empty');
-      html = raw; break;
+      let r;
+      if (proxy.type === 'json') { const j = await resp.json(); r = j.contents; }
+      else { r = await resp.text(); }
+      if (!r || r.length < 200) throw new Error('Empty');
+      raw = r; usedProxy = proxy.label; break;
     } catch(e) { /* try next proxy */ }
   }
 
-  if (html) {
-    const items = csEbayParseHtml(html);
-    const bodyMatch = html.match(/<body[^>]*>([\s\S]{0,400})/i);
+  if (raw) {
+    const items = csEbayParseRss(raw);
     csEbayCache[cacheKey] = {
-      status: 'ok', items, fetchUrl: searchUrl,
-      htmlLen: html.length,
-      hasSItem: html.includes('s-item'),
-      bodyStart: bodyMatch ? bodyMatch[1] : '(no <body> found)',
+      status: 'ok', items, fetchUrl: rssUrl,
+      rawLen: raw.length, proxy: usedProxy,
+      rawExcerpt: raw.substring(0, 600),
     };
   } else {
-    csEbayCache[cacheKey] = { status: 'error', fetchUrl: searchUrl };
+    csEbayCache[cacheKey] = { status: 'error', fetchUrl: rssUrl };
   }
 
   if (csGate === 'stats' && csSelectedCard?.id === card.id && csMode === 'listings' && csStatsGrade === grade) {
@@ -2523,14 +2562,13 @@ function csListingsBodyHtml(card, api) {
 
   const dbgSection = ebayState ? `
     <details style="margin-top:10px;font-size:11px;color:var(--muted)">
-      <summary style="cursor:pointer;user-select:none">▶ Debug (eBay fetch)</summary>
+      <summary style="cursor:pointer;user-select:none">▶ Debug (eBay RSS fetch)</summary>
       <div style="margin-top:6px">
         <b>Status:</b> ${ebayState.status} · <b>Items parsed:</b> ${ebayState.items?.length ?? 'N/A'}
-        · <b>HTML length:</b> ${ebayState.htmlLen ?? 'N/A'} chars
-        · <b>"s-item" in HTML:</b> ${ebayState.hasSItem ?? 'N/A'}<br>
-        <b>URL tried:</b> <a href="${ebayState.fetchUrl||''}" target="_blank" style="color:var(--accent);word-break:break-all">${ebayState.fetchUrl||'N/A'}</a><br>
-        ${ebayState.bodyStart ? `<b>Body start (400 chars):</b>
-        <pre style="font-size:10px;overflow:auto;max-height:160px;background:var(--surface2);padding:8px;border-radius:4px;white-space:pre-wrap;word-break:break-all">${csEsc(ebayState.bodyStart)}</pre>` : ''}
+        · <b>RSS length:</b> ${ebayState.rawLen ?? 'N/A'} chars · <b>Proxy:</b> ${ebayState.proxy||'N/A'}<br>
+        <b>URL:</b> <a href="${ebayState.fetchUrl||''}" target="_blank" style="color:var(--accent);word-break:break-all">${ebayState.fetchUrl||'N/A'}</a><br>
+        ${ebayState.rawExcerpt ? `<b>RSS excerpt:</b>
+        <pre style="font-size:10px;overflow:auto;max-height:160px;background:var(--surface2);padding:8px;border-radius:4px;white-space:pre-wrap;word-break:break-all">${csEsc(ebayState.rawExcerpt)}</pre>` : ''}
       </div>
     </details>` : '';
 
