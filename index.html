@@ -2276,7 +2276,7 @@ function csRenderStatsPanel(out) {
       <div class="cs-stats-hdr">
         ${imgSrc ? `<img class="cs-stats-hdr-img" src="${imgSrc}" alt=""/>` : ''}
         <div class="cs-stats-hdr-info">
-          <div class="cs-stats-hdr-name">${csEsc(card.name)} -debug</div>
+          <div class="cs-stats-hdr-name">${csEsc(card.name)}</div>
           <div class="cs-stats-hdr-sub">${sub}</div>
         </div>
         <button class="cs-back-btn" onclick="csBackToSearch()">\u2190 Back</button>
@@ -2472,34 +2472,21 @@ async function csTriggerEbayFetch() {
   else if (grade === 'nm')    nm = true;
 
   const q          = csEbayQueryUniv(card, gradeStr, nm, isRev);
-  const rssUrl     = csEbayUrl(q, false) + '&_rss=1'; // RSS endpoint — real XML, not JS-rendered
+  const workerUrl  = `https://deltaspecies.vchen2120.workers.dev/?q=${encodeURIComponent(q)}`;
 
-  let raw = null;
-  let usedProxy = '';
-  for (const proxy of PC_PROXIES) {
-    try {
-      const ctrl  = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 15000);
-      const resp  = await fetch(proxy.url + encodeURIComponent(rssUrl), { signal: ctrl.signal });
-      clearTimeout(timer);
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      let r;
-      if (proxy.type === 'json') { const j = await resp.json(); r = j.contents; }
-      else { r = await resp.text(); }
-      if (!r || r.length < 200) throw new Error('Empty');
-      raw = r; usedProxy = proxy.label; break;
-    } catch(e) { /* try next proxy */ }
-  }
-
-  if (raw) {
-    const items = csEbayParseRss(raw);
+  try {
+    const ctrl  = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 15000);
+    const resp  = await fetch(workerUrl, { signal: ctrl.signal });
+    clearTimeout(timer);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
     csEbayCache[cacheKey] = {
-      status: 'ok', items, fetchUrl: rssUrl,
-      rawLen: raw.length, proxy: usedProxy,
-      rawExcerpt: raw.substring(0, 600),
+      status: 'ok', items: data.items || [], fetchUrl: workerUrl,
     };
-  } else {
-    csEbayCache[cacheKey] = { status: 'error', fetchUrl: rssUrl };
+  } catch(e) {
+    csEbayCache[cacheKey] = { status: 'error', fetchUrl: workerUrl };
   }
 
   if (csGate === 'stats' && csSelectedCard?.id === card.id && csMode === 'listings' && csStatsGrade === grade) {
@@ -2562,13 +2549,10 @@ function csListingsBodyHtml(card, api) {
 
   const dbgSection = ebayState ? `
     <details style="margin-top:10px;font-size:11px;color:var(--muted)">
-      <summary style="cursor:pointer;user-select:none">▶ Debug (eBay RSS fetch)</summary>
+      <summary style="cursor:pointer;user-select:none">▶ Debug (eBay Worker fetch)</summary>
       <div style="margin-top:6px">
-        <b>Status:</b> ${ebayState.status} · <b>Items parsed:</b> ${ebayState.items?.length ?? 'N/A'}
-        · <b>RSS length:</b> ${ebayState.rawLen ?? 'N/A'} chars · <b>Proxy:</b> ${ebayState.proxy||'N/A'}<br>
-        <b>URL:</b> <a href="${ebayState.fetchUrl||''}" target="_blank" style="color:var(--accent);word-break:break-all">${ebayState.fetchUrl||'N/A'}</a><br>
-        ${ebayState.rawExcerpt ? `<b>RSS excerpt:</b>
-        <pre style="font-size:10px;overflow:auto;max-height:160px;background:var(--surface2);padding:8px;border-radius:4px;white-space:pre-wrap;word-break:break-all">${csEsc(ebayState.rawExcerpt)}</pre>` : ''}
+        <b>Status:</b> ${ebayState.status} · <b>Items:</b> ${ebayState.items?.length ?? 'N/A'}<br>
+        <b>URL:</b> <a href="${ebayState.fetchUrl||''}" target="_blank" style="color:var(--accent);word-break:break-all">${ebayState.fetchUrl||'N/A'}</a>
       </div>
     </details>` : '';
 
