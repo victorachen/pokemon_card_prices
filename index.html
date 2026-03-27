@@ -185,6 +185,7 @@
     .wl-price{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--green);white-space:nowrap}
     .wl-bin{font-size:10px;font-weight:600;background:#dbeafe;color:var(--blue);border:1px solid #93c5fd;border-radius:5px;padding:2px 6px;white-space:nowrap}
     .wl-auc{font-size:10px;font-weight:600;background:#ede9fe;color:var(--purple);border:1px solid #c4b5fd;border-radius:5px;padding:2px 6px;white-space:nowrap}
+    .wl-sold-badge{font-size:10px;font-weight:600;background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;border-radius:5px;padding:2px 6px;white-space:nowrap;font-variant-numeric:tabular-nums}
     .wl-link{color:var(--text);text-decoration:none;font-size:12px;line-height:1.4}
     .wl-link:hover{color:var(--accent);text-decoration:underline}
     .wl-none{padding:20px;text-align:center;color:var(--muted);font-size:12px}
@@ -1858,25 +1859,29 @@ function wlSoldRender(idx) {
     return;
   }
 
-  const hasGrade = saved.rows.some(r => r.grade);
-  const rowsHtml = saved.rows.map(r => `
+  const rowsHtml = saved.rows.map(r => {
+    const priceMatch = (r.price || '').match(/\$[\d,]+(?:\.\d+)?/);
+    const priceStr = priceMatch ? priceMatch[0] : (r.price || '—');
+    return `
     <tr>
-      <td class="pc-td-price">${r.price}</td>
-      <td class="pc-td-date">${r.date}</td>
-      ${hasGrade ? `<td class="pc-td-grade">${r.grade || '—'}</td>` : ''}
-      <td class="pc-td-title">${r.title || ''}</td>
-    </tr>`).join('');
+      <td><span class="wl-price">${priceStr}</span></td>
+      <td><span class="wl-sold-badge">${r.date || '—'}</span></td>
+      <td class="wl-link" style="color:var(--text)">${r.title || ''}</td>
+    </tr>`;
+  }).join('');
 
   wrap.innerHTML = `
-    <div class="wl-sold-wrap">
+    <div class="wl-listings">
       <div class="wl-sold-meta">
         Last fetched: ${saved.fetched}
         <button class="wl-sold-refetch" onclick="wlSoldClear(${idx})">Change URL</button>
         <button class="wl-sold-refetch" onclick="wlSoldRefetch(${idx})">Refresh</button>
       </div>
-      <table class="pc-sold-tbl">
+      <table class="wl-listing-tbl">
         <thead><tr>
-          <th>Price</th><th>Date</th>${hasGrade ? '<th>Grade</th>' : ''}<th>Listing</th>
+          <th style="width:90px">Price</th>
+          <th style="width:108px">Date Sold</th>
+          <th>Listing</th>
         </tr></thead>
         <tbody>${rowsHtml}</tbody>
       </table>
