@@ -2029,7 +2029,7 @@ async function wlSoldFetch(idx, urlOverride) {
   wlSoldRender(idx);
 }
 
-// ── Delta tab (trend analysis + outlier detection) ───────────────────────────
+// ── Delta tab (trend analysis + buy signals + grade arbitrage) ────────────────
 
 function wlDeltaRender(idx) {
   const wrap = document.getElementById(`wl-delta-${idx}`);
@@ -2051,30 +2051,42 @@ function wlDeltaRender(idx) {
     return;
   }
 
-  // Group sold data by grade
-  const graded = { psa8: [], psa9: [], psa10: [] };
-  for (const r of saved.rows) {
-    const g = r.grade || pcDetectGrade(r.title);
-    if (graded[g]) graded[g].push(r);
-  }
-
-  // Parse price helper
+  // ── Helpers ──
   function parsePrice(p) {
     if (typeof p === 'number') return p;
     const m = String(p).replace(/,/g, '').match(/([\d.]+)/);
     return m ? parseFloat(m[1]) : NaN;
   }
-
-  // Parse date helper
   function parseDate(d) {
     if (!d) return null;
     const t = new Date(d);
     return isNaN(t) ? null : t;
   }
+  function median(arr) {
+    if (!arr.length) return null;
+    const s = [...arr].sort((a, b) => a - b);
+    return s[Math.floor(s.length / 2)];
+  }
+  function fmtPrice(v) {
+    if (v == null || isNaN(v)) return '—';
+    return '$' + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function fmtTrend(t) {
+    if (t == null) return '<span style="color:var(--muted)">—</span>';
+    return t >= 0
+      ? `<span style="color:var(--green);font-weight:600">+${t.toFixed(1)}%</span>`
+      : `<span style="color:var(--red);font-weight:600">${t.toFixed(1)}%</span>`;
+  }
 
-  // Build trend data for each grade
+  // ── Group sold data by grade (now includes CGC) ──
+  const graded = { psa8: [], psa9: [], psa10: [], cgc9: [], cgc10: [] };
+  for (const r of saved.rows) {
+    const g = r.grade || pcDetectGrade(r.title);
+    if (graded[g]) graded[g].push(r);
+  }
+
   const now = new Date();
-  const oneMonthAgo  = new Date(now); oneMonthAgo.setDate(now.getDate() - 30);
+  const oneMonthAgo    = new Date(now); oneMonthAgo.setDate(now.getDate() - 30);
   const threeMonthsAgo = new Date(now); threeMonthsAgo.setDate(now.getDate() - 90);
 
   function calcTrend(rows, since) {
@@ -2088,114 +2100,279 @@ function wlDeltaRender(idx) {
     return ((avgRecent - avgOlder) / avgOlder * 100);
   }
 
-  // Trend table
-  const gradeLabels = [['psa8','PSA 8'],['psa9','PSA 9'],['psa10','PSA 10']];
-  let trendRows = '';
-  for (const [g, lbl] of gradeLabels) {
+  // ── Per-grade stats (used by signals, trends, arbitrage) ──
+  const allGrades = [['psa8','PSA 8'],['psa9','PSA 9'],['psa10','PSA 10'],['cgc9','CGC 9'],['cgc10','CGC 10']];
+  const gStats = {};
+  for (const [g] of allGrades) {
     const rows = graded[g];
     if (!rows.length) continue;
     const prices = rows.map(r => parsePrice(r.price)).filter(p => !isNaN(p));
-    const median = prices.length ? prices.sort((a,b) => a - b)[Math.floor(prices.length / 2)] : null;
-    const t1m = calcTrend(rows, oneMonthAgo);
-    const t3m = calcTrend(rows, threeMonthsAgo);
-    const fmtTrend = (t) => t == null ? '<span style="color:var(--muted)">—</span>'
-      : t >= 0 ? `<span style="color:var(--green);font-weight:600">+${t.toFixed(1)}%</span>`
-      : `<span style="color:var(--red);font-weight:600">${t.toFixed(1)}%</span>`;
+    const dated  = rows.map(r => ({ price: parsePrice(r.price), date: parseDate(r.date) }))
+      .filter(r => !isNaN(r.price) && r.date)
+      .sort((a, b) => a.date - b.date);
+    const med   = median(prices);
+    const t1m   = calcTrend(rows, oneMonthAgo);
+    const t3m   = calcTrend(rows, threeMonthsAgo);
+    // Sale velocity: avg days between consecutive sales
+    let velocity = null;
+    if (dated.length >= 2) {
+      const gaps = [];
+      for (let i = 1; i < dated.length; i++) {
+        const diffDays = (dated[i].date - dated[i - 1].date) / 86400000;
+        if (diffDays > 0) gaps.push(diffDays);
+      }
+      velocity = gaps.length ? gaps.reduce((a, b) => a + b, 0) / gaps.length : null;
+    }
+    // Recent avg (last 3 sold)
+    const recentSold = dated.slice(-3);
+    const recentAvg  = recentSold.length
+      ? recentSold.reduce((s, r) => s + r.price, 0) / recentSold.length : med;
+    // Outlier count
+    const activeItems = card?.ebay?.[g] || [];
+    const outliers = activeItems.filter(it => parseFloat(it.price) <= recentAvg * 1.05);
+
+    gStats[g] = { rows, prices, med, t1m, t3m, velocity, recentAvg, recentSold, activeItems, outliers, dated };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 1. BUY SIGNAL SCORE
+  // ═══════════════════════════════════════════════════════════════════════════
+  let signalHtml = '';
+  const signalGrades = allGrades.filter(([g]) => gStats[g]);
+  if (signalGrades.length) {
+    const signalCards = signalGrades.map(([g, lbl]) => {
+      const s = gStats[g];
+      // Score components (each 0-1, then weighted)
+      let score = 0;
+      const reasons = [];
+
+      // Trend score (weight: 35%)
+      const trend = s.t1m ?? s.t3m;
+      if (trend != null) {
+        if (trend >= 15)      { score += 0.35; reasons.push('strong uptrend'); }
+        else if (trend >= 5)  { score += 0.25; reasons.push('rising'); }
+        else if (trend >= 0)  { score += 0.15; reasons.push('stable'); }
+        else if (trend >= -10){ score += 0.05; reasons.push('slight dip'); }
+        else                  { score += 0;    reasons.push('declining'); }
+      }
+
+      // Outlier availability (weight: 30%)
+      if (s.outliers.length >= 3)     { score += 0.30; reasons.push(s.outliers.length + ' deals available'); }
+      else if (s.outliers.length >= 1){ score += 0.20; reasons.push(s.outliers.length + ' deal' + (s.outliers.length > 1 ? 's' : '') + ' available'); }
+      else if (s.activeItems.length)  { score += 0.05; reasons.push('no deals below avg'); }
+      else                            { score += 0;    reasons.push('no listings'); }
+
+      // Velocity (weight: 20%) — faster sales = more urgency
+      if (s.velocity != null) {
+        if (s.velocity <= 7)       { score += 0.20; reasons.push('sells every ' + Math.round(s.velocity) + 'd'); }
+        else if (s.velocity <= 14) { score += 0.15; reasons.push('sells every ~' + Math.round(s.velocity) + 'd'); }
+        else if (s.velocity <= 30) { score += 0.10; reasons.push('sells monthly'); }
+        else                       { score += 0.03; reasons.push('slow mover'); }
+      }
+
+      // Data confidence (weight: 15%) — more sales = more reliable signal
+      if (s.rows.length >= 15)     { score += 0.15; }
+      else if (s.rows.length >= 8) { score += 0.10; }
+      else if (s.rows.length >= 3) { score += 0.05; }
+      else                         { reasons.push('low data'); }
+
+      // Signal level
+      let signal, sigColor, sigBg, sigLabel;
+      if (score >= 0.65)      { signal = 'buy';  sigColor = '#15803d'; sigBg = '#dcfce7'; sigLabel = 'BUY'; }
+      else if (score >= 0.40) { signal = 'wait'; sigColor = '#a16207'; sigBg = '#fef9c3'; sigLabel = 'WAIT'; }
+      else                    { signal = 'pass'; sigColor = '#b91c1c'; sigBg = '#fee2e2'; sigLabel = 'PASS'; }
+
+      const bestDeal = s.outliers.length
+        ? '$' + Math.min(...s.outliers.map(o => parseFloat(o.price))).toLocaleString(undefined,{maximumFractionDigits:0})
+        : null;
+
+      return `
+        <div style="border:1px solid var(--border);border-radius:8px;padding:12px;flex:1;min-width:140px;background:var(--surface)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span style="font-weight:700;font-size:13px">${lbl}</span>
+            <span style="background:${sigBg};color:${sigColor};font-weight:800;font-size:11px;padding:3px 10px;border-radius:4px;letter-spacing:0.5px">${sigLabel}</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6">
+            ${reasons.slice(0, 3).join(' · ')}
+          </div>
+          ${bestDeal ? `<div style="margin-top:6px;font-size:12px;font-weight:600;color:var(--green)">Best deal: ${bestDeal}</div>` : ''}
+          ${s.velocity != null ? `<div style="font-size:11px;color:var(--muted2);margin-top:2px">Median: ${fmtPrice(s.med)}</div>` : ''}
+        </div>`;
+    }).join('');
+
+    signalHtml = `
+      <div style="font-size:15px;font-weight:700;margin-bottom:10px;color:var(--text)">Buy Signals</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">${signalCards}</div>`;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 2. GRADE ARBITRAGE
+  // ═══════════════════════════════════════════════════════════════════════════
+  let arbHtml = '';
+  // Build multiplier pairs: every grade vs every other grade that has data
+  const arbGrades = allGrades.filter(([g]) => gStats[g] && gStats[g].med > 0);
+  if (arbGrades.length >= 2) {
+    // For each adjacent pair, show ratio
+    const pairs = [];
+    // PSA chain: 8→9, 9→10
+    if (gStats.psa8?.med && gStats.psa9?.med) pairs.push(['psa8','psa9','PSA 8','PSA 9']);
+    if (gStats.psa9?.med && gStats.psa10?.med) pairs.push(['psa9','psa10','PSA 9','PSA 10']);
+    if (gStats.psa8?.med && gStats.psa10?.med) pairs.push(['psa8','psa10','PSA 8','PSA 10']);
+    // CGC chain
+    if (gStats.cgc9?.med && gStats.cgc10?.med) pairs.push(['cgc9','cgc10','CGC 9','CGC 10']);
+    // Cross-company: PSA 9 vs CGC 9, PSA 10 vs CGC 10
+    if (gStats.psa9?.med && gStats.cgc9?.med) pairs.push(['cgc9','psa9','CGC 9','PSA 9']);
+    if (gStats.psa10?.med && gStats.cgc10?.med) pairs.push(['cgc10','psa10','CGC 10','PSA 10']);
+
+    if (pairs.length) {
+      const pairRows = pairs.map(([lo, hi, loLbl, hiLbl]) => {
+        const loMed = gStats[lo].med;
+        const hiMed = gStats[hi].med;
+        const ratio = hiMed / loMed;
+        return { lo, hi, loLbl, hiLbl, loMed, hiMed, ratio };
+      });
+
+      // Find best value: lowest grade with an uptrend + deals available
+      let bestValue = null;
+      let bestScore = -1;
+      for (const [g, lbl] of arbGrades) {
+        const s = gStats[g];
+        // Score: cheap relative to higher grade + rising trend + deals exist
+        let vs = 0;
+        if (s.t1m != null && s.t1m > 0) vs += 1;
+        if (s.t3m != null && s.t3m > 0) vs += 1;
+        if (s.outliers.length > 0) vs += 2;
+        // Lower median = more accessible
+        if (s.med < 1000) vs += 1;
+        else if (s.med < 3000) vs += 0.5;
+        if (vs > bestScore) { bestScore = vs; bestValue = { g, lbl }; }
+      }
+
+      const arbRows = pairRows.map(p => `
+        <tr>
+          <td style="font-weight:600;white-space:nowrap">${p.loLbl} → ${p.hiLbl}</td>
+          <td style="text-align:right">${fmtPrice(p.loMed)}</td>
+          <td style="text-align:right">${fmtPrice(p.hiMed)}</td>
+          <td style="text-align:center;font-weight:700;color:var(--accent)">${p.ratio.toFixed(1)}x</td>
+          <td style="text-align:right;font-size:12px;color:var(--muted)">${fmtPrice(p.hiMed - p.loMed)}</td>
+        </tr>`).join('');
+
+      arbHtml = `
+        <div style="font-size:15px;font-weight:700;margin:18px 0 10px;color:var(--text)">Grade Arbitrage</div>
+        ${bestValue ? `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin-bottom:10px;font-size:13px;line-height:1.5">
+          <span style="font-weight:700;color:var(--green)">Best value:</span> <b>${bestValue.lbl}</b>
+          — median ${fmtPrice(gStats[bestValue.g].med)},
+          ${gStats[bestValue.g].outliers.length ? gStats[bestValue.g].outliers.length + ' deal' + (gStats[bestValue.g].outliers.length > 1 ? 's' : '') + ' below avg' : 'no outlier deals'}${gStats[bestValue.g].t1m != null ? ', ' + fmtTrend(gStats[bestValue.g].t1m) + ' 1mo' : ''}
+        </div>` : ''}
+        <table class="wl-listing-tbl">
+          <thead><tr>
+            <th>Pair</th>
+            <th style="text-align:right">Lower</th>
+            <th style="text-align:right">Higher</th>
+            <th style="text-align:center">Ratio</th>
+            <th style="text-align:right">Gap</th>
+          </tr></thead>
+          <tbody>${arbRows}</tbody>
+        </table>
+        <div style="font-size:11px;color:var(--muted2);margin-top:6px;line-height:1.5">
+          High ratio = large premium for the higher grade. If a ratio is unusually high, the lower grade may be undervalued.
+          Cross-company pairs (CGC vs PSA) show the "PSA premium" — a high ratio means CGC is a cheaper way to own a graded copy.
+        </div>`;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 3. TREND TABLE (existing, now with CGC + velocity)
+  // ═══════════════════════════════════════════════════════════════════════════
+  let trendRows = '';
+  for (const [g, lbl] of allGrades) {
+    const s = gStats[g];
+    if (!s) continue;
+    const velStr = s.velocity != null ? Math.round(s.velocity) + 'd' : '—';
     trendRows += `<tr>
       <td style="font-weight:600">${lbl}</td>
-      <td>${median != null ? '$' + median.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : '—'}</td>
-      <td style="text-align:center">${rows.length}</td>
-      <td style="text-align:center">${fmtTrend(t1m)}</td>
-      <td style="text-align:center">${fmtTrend(t3m)}</td>
+      <td>${fmtPrice(s.med)}</td>
+      <td style="text-align:center">${s.rows.length}</td>
+      <td style="text-align:center">${velStr}</td>
+      <td style="text-align:center">${fmtTrend(s.t1m)}</td>
+      <td style="text-align:center">${fmtTrend(s.t3m)}</td>
     </tr>`;
   }
 
-  // Price chart (simple ASCII-style bar chart using CSS)
-  const chartGrade = graded.psa9.length ? 'psa9' : graded.psa10.length ? 'psa10' : 'psa8';
-  const chartLabel = chartGrade === 'psa9' ? 'PSA 9' : chartGrade === 'psa10' ? 'PSA 10' : 'PSA 8';
-  const chartRows  = graded[chartGrade]
-    .map(r => ({ price: parsePrice(r.price), date: r.date }))
-    .filter(r => !isNaN(r.price) && r.date)
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
-
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 4. PRICE CHART (bar chart of recent sales)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const chartGrade = gStats.psa9 ? 'psa9' : gStats.psa10 ? 'psa10' : gStats.psa8 ? 'psa8' : null;
+  const chartLabelMap = { psa8:'PSA 8', psa9:'PSA 9', psa10:'PSA 10', cgc9:'CGC 9', cgc10:'CGC 10' };
+  const chartLabel = chartLabelMap[chartGrade] || '';
   let chartHtml = '';
-  if (chartRows.length >= 2) {
+  if (chartGrade && gStats[chartGrade].dated.length >= 2) {
+    const chartRows = gStats[chartGrade].dated;
     const maxP = Math.max(...chartRows.map(r => r.price));
-    const last10 = chartRows.slice(-15);
+    const last15 = chartRows.slice(-15);
     chartHtml = `
-      <div style="margin:16px 0 8px;font-size:13px;font-weight:600;color:var(--text)">${chartLabel} — Last ${last10.length} Sales</div>
+      <div style="margin:16px 0 8px;font-size:13px;font-weight:600;color:var(--text)">${chartLabel} — Last ${last15.length} Sales</div>
       <div style="display:flex;align-items:flex-end;gap:3px;height:120px;border-bottom:1px solid var(--border);padding-bottom:4px">
-        ${last10.map(r => {
+        ${last15.map(r => {
           const pct = (r.price / maxP * 100).toFixed(0);
+          const dStr = r.date.toISOString().slice(5, 10);
           return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%"
-            title="$${r.price.toLocaleString()} — ${r.date}">
+            title="$${r.price.toLocaleString()} — ${r.date.toISOString().slice(0,10)}">
             <div style="font-size:8px;color:var(--muted);margin-bottom:2px;white-space:nowrap">$${r.price >= 1000 ? (r.price/1000).toFixed(1)+'k' : Math.round(r.price)}</div>
             <div style="width:100%;max-width:28px;background:var(--accent);border-radius:3px 3px 0 0;min-height:4px;height:${pct}%"></div>
-            <div style="font-size:7px;color:var(--muted2);margin-top:2px;white-space:nowrap">${r.date.slice(5)}</div>
+            <div style="font-size:7px;color:var(--muted2);margin-top:2px;white-space:nowrap">${dStr}</div>
           </div>`;
         }).join('')}
       </div>`;
   }
 
-  // Outlier detection: active listings priced near or below last sold
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 5. OUTLIER LISTINGS (existing, now uses gStats)
+  // ═══════════════════════════════════════════════════════════════════════════
   let outlierHtml = '';
-  if (card) {
-    const ebayGrade = chartGrade;
-    const activeItems = card.ebay && card.ebay[ebayGrade];
-    const soldPrices  = graded[ebayGrade].map(r => parsePrice(r.price)).filter(p => !isNaN(p));
-    if (activeItems && activeItems.length && soldPrices.length) {
-      const sortedSold = soldPrices.sort((a, b) => a - b);
-      const median = sortedSold[Math.floor(sortedSold.length / 2)];
-      // Recent sold (last 3) to get current "tide" level
-      const recentSold = graded[ebayGrade]
-        .map(r => ({ price: parsePrice(r.price), date: r.date }))
-        .filter(r => !isNaN(r.price) && r.date)
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, 3);
-      const recentAvg = recentSold.length
-        ? recentSold.reduce((s, r) => s + r.price, 0) / recentSold.length : median;
-
-      // Find listings at or below recent avg (sellers not recognizing the rising tide)
-      const deals = activeItems
-        .map(it => ({ ...it, price: parseFloat(it.price) }))
-        .filter(it => it.price <= recentAvg * 1.05)
-        .sort((a, b) => a.price - b.price);
-
-      if (deals.length) {
-        outlierHtml = `
-          <div style="margin:16px 0 8px;font-size:13px;font-weight:600;color:var(--text)">
-            Outlier Listings — ${chartLabel} at/below recent sold avg ($${recentAvg.toLocaleString(undefined,{maximumFractionDigits:0})})
-          </div>
-          <table class="wl-listing-tbl"><thead><tr>
-            <th style="width:80px">Price</th>
-            <th style="width:80px">vs Avg</th>
-            <th>Listing</th>
-          </tr></thead><tbody>
-          ${deals.map(it => {
-            const diff = ((it.price - recentAvg) / recentAvg * 100).toFixed(0);
-            const diffColor = diff <= -10 ? 'var(--green)' : diff <= 0 ? 'var(--accent)' : 'var(--muted)';
-            return `<tr>
-              <td><span class="wl-price">$${it.price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</span></td>
-              <td><span style="color:${diffColor};font-weight:600;font-size:12px">${diff}%</span></td>
-              <td><a href="${it.url}" target="_blank" class="wl-link">${it.title || '(no title)'}</a></td>
-            </tr>`;
-          }).join('')}
-          </tbody></table>`;
-      } else {
-        outlierHtml = `<div class="wl-none" style="margin-top:14px">No outlier listings found — all ${chartLabel} listings are above recent sold average ($${recentAvg.toLocaleString(undefined,{maximumFractionDigits:0})}).</div>`;
-      }
+  if (card && chartGrade && gStats[chartGrade]) {
+    const s = gStats[chartGrade];
+    if (s.outliers.length) {
+      outlierHtml = `
+        <div style="margin:16px 0 8px;font-size:13px;font-weight:600;color:var(--text)">
+          Outlier Listings — ${chartLabel} at/below recent sold avg (${fmtPrice(s.recentAvg)})
+        </div>
+        <table class="wl-listing-tbl"><thead><tr>
+          <th style="width:80px">Price</th>
+          <th style="width:80px">vs Avg</th>
+          <th>Listing</th>
+        </tr></thead><tbody>
+        ${s.outliers.sort((a,b) => parseFloat(a.price) - parseFloat(b.price)).map(it => {
+          const p = parseFloat(it.price);
+          const diff = ((p - s.recentAvg) / s.recentAvg * 100).toFixed(0);
+          const diffColor = diff <= -10 ? 'var(--green)' : diff <= 0 ? 'var(--accent)' : 'var(--muted)';
+          return `<tr>
+            <td><span class="wl-price">${fmtPrice(p)}</span></td>
+            <td><span style="color:${diffColor};font-weight:600;font-size:12px">${diff}%</span></td>
+            <td><a href="${it.url}" target="_blank" class="wl-link">${it.title || '(no title)'}</a></td>
+          </tr>`;
+        }).join('')}
+        </tbody></table>`;
+    } else if (s.activeItems.length) {
+      outlierHtml = `<div class="wl-none" style="margin-top:14px">No outlier listings — all ${chartLabel} listings are above recent sold avg (${fmtPrice(s.recentAvg)}).</div>`;
     }
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RENDER
+  // ═══════════════════════════════════════════════════════════════════════════
   wrap.innerHTML = `
     <div style="padding:4px 0">
-      <div style="font-size:15px;font-weight:700;margin-bottom:12px;color:var(--text)">Trend Analysis</div>
+      ${signalHtml}
+      ${arbHtml}
+      <div style="font-size:15px;font-weight:700;margin:18px 0 10px;color:var(--text)">Trends</div>
       ${trendRows ? `
         <table class="wl-listing-tbl">
           <thead><tr>
             <th>Grade</th>
             <th>Median</th>
             <th style="text-align:center">Sales</th>
+            <th style="text-align:center">Velocity</th>
             <th style="text-align:center">1 Mo</th>
             <th style="text-align:center">3 Mo</th>
           </tr></thead>
