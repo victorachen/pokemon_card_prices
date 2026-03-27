@@ -2452,8 +2452,13 @@ async function csTriggerEbayFetch() {
 
   if (html) {
     const items = csEbayParseHtml(html);
-    csEbayCache[cacheKey] = { status: 'ok', items, fetchUrl: searchUrl,
-      rawExcerpt: html.substring(0, 1200) };
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]{0,400})/i);
+    csEbayCache[cacheKey] = {
+      status: 'ok', items, fetchUrl: searchUrl,
+      htmlLen: html.length,
+      hasSItem: html.includes('s-item'),
+      bodyStart: bodyMatch ? bodyMatch[1] : '(no <body> found)',
+    };
   } else {
     csEbayCache[cacheKey] = { status: 'error', fetchUrl: searchUrl };
   }
@@ -2520,10 +2525,12 @@ function csListingsBodyHtml(card, api) {
     <details style="margin-top:10px;font-size:11px;color:var(--muted)">
       <summary style="cursor:pointer;user-select:none">▶ Debug (eBay fetch)</summary>
       <div style="margin-top:6px">
-        <b>Status:</b> ${ebayState.status} · <b>Items parsed:</b> ${ebayState.items?.length ?? 'N/A'}<br>
+        <b>Status:</b> ${ebayState.status} · <b>Items parsed:</b> ${ebayState.items?.length ?? 'N/A'}
+        · <b>HTML length:</b> ${ebayState.htmlLen ?? 'N/A'} chars
+        · <b>"s-item" in HTML:</b> ${ebayState.hasSItem ?? 'N/A'}<br>
         <b>URL tried:</b> <a href="${ebayState.fetchUrl||''}" target="_blank" style="color:var(--accent);word-break:break-all">${ebayState.fetchUrl||'N/A'}</a><br>
-        ${ebayState.rawExcerpt ? `<b>Raw response (first 1200 chars):</b>
-        <pre style="font-size:10px;overflow:auto;max-height:200px;background:var(--surface2);padding:8px;border-radius:4px;white-space:pre-wrap;word-break:break-all">${csEsc(ebayState.rawExcerpt)}</pre>` : ''}
+        ${ebayState.bodyStart ? `<b>Body start (400 chars):</b>
+        <pre style="font-size:10px;overflow:auto;max-height:160px;background:var(--surface2);padding:8px;border-radius:4px;white-space:pre-wrap;word-break:break-all">${csEsc(ebayState.bodyStart)}</pre>` : ''}
       </div>
     </details>` : '';
 
