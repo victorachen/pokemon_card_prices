@@ -1,5 +1,16 @@
 # Pokemon Delta Species — Project Notes
 
+## Seller Away Monitor (added 2026-03-27)
+
+- **Item**: https://www.ebay.com/itm/157626935379 — seller away until ~Mar 29
+- **Script**: `monitor_seller.py` — scrapes listing page for away/vacation text
+- **Workflow**: `.github/workflows/seller_monitor.yml` — runs hourly via GH Actions cron
+- **Discord pings**: every hour with status snippet; one-time `🟢 BACK` alert when seller returns
+- **Dedup**: `seller_alerted.flag` (cached in GH Actions) prevents repeat "back" pings
+- **After buying**: disable the workflow in GitHub Actions → Settings → Actions
+
+---
+
 ## Current Status (2026-03-25 — updated)
 
 ### Done today
