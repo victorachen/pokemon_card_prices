@@ -2206,6 +2206,61 @@ function wlDeltaRender(idx) {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // 1b. LISTING MARKUP — how much more are sellers asking vs recent sold?
+  // ═══════════════════════════════════════════════════════════════════════════
+  let markupHtml = '';
+  const markupGrades = allGrades.filter(([g]) => gStats[g] && gStats[g].activeItems.length && gStats[g].dated.length);
+  if (markupGrades.length) {
+    const mRows = markupGrades.map(([g, lbl]) => {
+      const s = gStats[g];
+      const listingPrices = s.activeItems.map(it => parseFloat(it.price)).filter(p => !isNaN(p));
+      const lowestListing = Math.min(...listingPrices);
+      const avgListing    = listingPrices.reduce((a, b) => a + b, 0) / listingPrices.length;
+
+      // Most recent sold
+      const lastSold = s.dated[s.dated.length - 1];
+      const lastSoldPrice = lastSold ? lastSold.price : null;
+
+      // Avg of this month's sold
+      const monthSold = s.dated.filter(r => r.date >= oneMonthAgo).map(r => r.price);
+      const avgMonthSold = monthSold.length ? monthSold.reduce((a, b) => a + b, 0) / monthSold.length : null;
+
+      function markupCell(listP, soldP) {
+        if (soldP == null || isNaN(soldP) || soldP === 0) return '<span style="color:var(--muted)">\u2014</span>';
+        const diff = listP - soldP;
+        const pct  = (diff / soldP * 100);
+        const color = pct <= 0 ? 'var(--green)' : pct <= 15 ? 'var(--accent)' : 'var(--red)';
+        const sign  = diff >= 0 ? '+' : '';
+        return `<span style="color:${color};font-weight:600">${sign}$${Math.round(Math.abs(diff)).toLocaleString()} (${sign}${pct.toFixed(0)}%)</span>`;
+      }
+
+      return `<tr>
+        <td style="font-weight:600">${lbl}</td>
+        <td style="text-align:right">${fmtPrice(lowestListing)}</td>
+        <td style="text-align:center">${markupCell(lowestListing, lastSoldPrice)}</td>
+        <td style="text-align:right">${fmtPrice(avgListing)}</td>
+        <td style="text-align:center">${markupCell(avgListing, avgMonthSold)}</td>
+      </tr>`;
+    }).join('');
+
+    markupHtml = `
+      <div style="font-size:15px;font-weight:700;margin:18px 0 10px;color:var(--text)">Listing Markup</div>
+      <table class="wl-listing-tbl">
+        <thead><tr>
+          <th>Grade</th>
+          <th style="text-align:right">Lowest</th>
+          <th style="text-align:center">vs Last Sold</th>
+          <th style="text-align:right">Avg List</th>
+          <th style="text-align:center">vs Month Avg</th>
+        </tr></thead>
+        <tbody>${mRows}</tbody>
+      </table>
+      <div style="font-size:11px;color:var(--muted2);margin-top:6px;line-height:1.5">
+        Green = listing at or below sold price (deal). Red = significant markup.
+      </div>`;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // 2. GRADE ARBITRAGE
   // ═══════════════════════════════════════════════════════════════════════════
   let arbHtml = '';
@@ -2364,6 +2419,7 @@ function wlDeltaRender(idx) {
   wrap.innerHTML = `
     <div style="padding:4px 0">
       ${signalHtml}
+      ${markupHtml}
       ${arbHtml}
       <div style="font-size:15px;font-weight:700;margin:18px 0 10px;color:var(--text)">Trends</div>
       ${trendRows ? `
@@ -3299,6 +3355,57 @@ function csDeltaBodyHtml() {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // 1b. LISTING MARKUP
+  // ═══════════════════════════════════════════════════════════════════════════
+  let markupHtml = '';
+  const markupGrades = allGrades.filter(([g]) => gStats[g] && gStats[g].activeItems.length && gStats[g].dated.length);
+  if (markupGrades.length) {
+    const mRows = markupGrades.map(([g, lbl]) => {
+      const s = gStats[g];
+      const listingPrices = s.activeItems.map(it => parseFloat(it.price)).filter(p => !isNaN(p));
+      const lowestListing = Math.min(...listingPrices);
+      const avgListing    = listingPrices.reduce((a, b) => a + b, 0) / listingPrices.length;
+      const lastSold      = s.dated[s.dated.length - 1];
+      const lastSoldPrice = lastSold ? lastSold.price : null;
+      const monthSold     = s.dated.filter(r => r.date >= oneMonthAgo).map(r => r.price);
+      const avgMonthSold  = monthSold.length ? monthSold.reduce((a, b) => a + b, 0) / monthSold.length : null;
+
+      function mkCell(listP, soldP) {
+        if (soldP == null || isNaN(soldP) || soldP === 0) return '<span style="color:var(--muted)">\u2014</span>';
+        const diff = listP - soldP;
+        const pct  = (diff / soldP * 100);
+        const color = pct <= 0 ? 'var(--green)' : pct <= 15 ? 'var(--accent)' : 'var(--red)';
+        const sign  = diff >= 0 ? '+' : '';
+        return `<span style="color:${color};font-weight:600">${sign}$${Math.round(Math.abs(diff)).toLocaleString()} (${sign}${pct.toFixed(0)}%)</span>`;
+      }
+
+      return `<tr>
+        <td style="font-weight:600">${lbl}</td>
+        <td style="text-align:right">${fmtP(lowestListing)}</td>
+        <td style="text-align:center">${mkCell(lowestListing, lastSoldPrice)}</td>
+        <td style="text-align:right">${fmtP(avgListing)}</td>
+        <td style="text-align:center">${mkCell(avgListing, avgMonthSold)}</td>
+      </tr>`;
+    }).join('');
+
+    markupHtml = `
+      <div style="font-size:15px;font-weight:700;margin:18px 0 10px;color:var(--text)">Listing Markup</div>
+      <table class="wl-listing-tbl">
+        <thead><tr>
+          <th>Grade</th>
+          <th style="text-align:right">Lowest</th>
+          <th style="text-align:center">vs Last Sold</th>
+          <th style="text-align:right">Avg List</th>
+          <th style="text-align:center">vs Month Avg</th>
+        </tr></thead>
+        <tbody>${mRows}</tbody>
+      </table>
+      <div style="font-size:11px;color:var(--muted2);margin-top:6px;line-height:1.5">
+        Green = listing at or below sold price (deal). Red = significant markup.
+      </div>`;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // 2. GRADE ARBITRAGE
   // ═══════════════════════════════════════════════════════════════════════════
   let arbHtml = '';
@@ -3430,6 +3537,7 @@ function csDeltaBodyHtml() {
   return `
     <div style="padding:4px 0">
       ${signalHtml}
+      ${markupHtml}
       ${arbHtml}
       <div style="font-size:15px;font-weight:700;margin:18px 0 10px;color:var(--text)">Trends</div>
       ${trendRows ? `

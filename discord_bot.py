@@ -20,11 +20,32 @@ Setup:
 """
 
 import os
+import io
+import sys
 import json
 import discord
 import anthropic
 from datetime import datetime, timezone
 from dotenv import load_dotenv
+
+# Force UTF-8 stdout/stderr so Unicode chars (arrows, symbols) don't crash on Windows
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+
+# Open the Windows console directly so output appears in the Claude Code terminal
+# regardless of stdout redirection on the background process.
+try:
+    _CONOUT = open("CONOUT$", "w", encoding="utf-8", errors="replace")
+except Exception:
+    _CONOUT = None
+
+def console_print(text: str):
+    if _CONOUT:
+        try:
+            _CONOUT.write(text + "\n")
+            _CONOUT.flush()
+        except Exception:
+            pass
 
 load_dotenv(dotenv_path=".env")
 
@@ -133,11 +154,23 @@ def append_history(channel_id: int, role: str, content: str):
         conversation_history[channel_id] = conversation_history[channel_id][-MAX_HISTORY:]
 
 
+MIRROR_LOG = os.path.expanduser("~/discord_mirror.log")
+
+def mirror_log(line: str):
+    """Write line to console + log file so it appears in the Claude Code terminal."""
+    console_print(line)
+    with open(MIRROR_LOG, "a", encoding="utf-8") as f:
+        f.write(line + "\n")
+
+def bot_print(text: str):
+    ts = datetime.now().strftime("%H:%M:%S")
+    line = f'[{ts}] Bot: "{text}"'
+    mirror_log(line)
+
+
 async def send_chunked(message: discord.Message, text: str):
     """Send text that may exceed Discord's 2000 char limit as multiple messages."""
-    ts = datetime.now().strftime("%H:%M:%S")
-    print(f"\n[{ts}] #{message.channel}  {message.author.display_name}: {message.content.strip()}")
-    print(f"[{ts}] BOT → {text[:300]}{'...' if len(text) > 300 else ''}")
+    bot_print(text)
     first = True
     while text:
         if len(text) <= 1990:
@@ -194,28 +227,37 @@ async def on_ready():
 
 @bot.event
 async def on_message(message: discord.Message):
-    if message.author == bot.user:
+    if message.author.bot or message.webhook_id:
         return
 
     content = message.content.strip()
     is_mention = bot.user in message.mentions
 
+    # Mirror every incoming message to terminal and log
+    ts = datetime.now().strftime("%H:%M")
+    line = f'Victor sent "{content}" on Discord {ts}'
+    mirror_log(line)
+
     # ── Special commands ──────────────────────────────────────────────────────
 
     if content == "!clear":
         conversation_history.pop(message.channel.id, None)
-        await message.reply("Conversation history cleared.")
+        reply_text = "Conversation history cleared."
+        bot_print(reply_text)
+        await message.reply(reply_text)
         return
 
     if content == "!help":
-        await message.reply(
+        reply_text = (
             "**Pokemon Deal Bot**\n\n"
-            "`!claude <msg>` or `@mention <msg>` — Ask Claude about the project\n"
+            "Just type anything — every message goes to Claude automatically\n"
             "`!status` — Current watchlist price summary\n"
             "`!clear` — Reset conversation history for this channel\n"
             "`!help` — This message\n\n"
             "Conversation history is kept per channel (last 20 messages) so follow-ups work naturally."
         )
+        bot_print(reply_text)
+        await message.reply(reply_text)
         return
 
     if content == "!status":
@@ -224,20 +266,18 @@ async def on_message(message: discord.Message):
         await send_chunked(message, summary)
         return
 
-    # ── Claude chat ───────────────────────────────────────────────────────────
+    # ── Claude chat (every message is treated as directed to the bot) ────────
 
-    is_claude_cmd = content.startswith("!claude")
-
-    if not is_claude_cmd and not is_mention:
-        return  # ignore unrelated messages
-
-    if is_claude_cmd:
+    prompt = content
+    if content.startswith("!claude"):
         prompt = content[len("!claude"):].strip()
-    else:
+    elif is_mention:
         prompt = content.replace(f"<@{bot.user.id}>", "").strip()
 
     if not prompt:
-        await message.reply("What do you want to know? Try `!help` for usage.")
+        reply_text = "What do you want to know? Try `!help` for usage."
+        bot_print(reply_text)
+        await message.reply(reply_text)
         return
 
     append_history(message.channel.id, "user", prompt)
@@ -255,9 +295,13 @@ async def on_message(message: discord.Message):
             await send_chunked(message, reply)
 
         except anthropic.APIError as e:
-            await message.reply(f"Claude API error: {e}")
+            err = f"Claude API error: {e}"
+            bot_print(err)
+            await message.reply(err)
         except Exception as e:
-            await message.reply(f"Unexpected error: {e}")
+            err = f"Unexpected error: {e}"
+            bot_print(err)
+            await message.reply(err)
 
 
 # ── Entry point ────────────────────────────────────────────────────────────────

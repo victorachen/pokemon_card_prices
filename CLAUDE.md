@@ -1,14 +1,15 @@
 # Pokemon Delta Species — Project Notes
 
-## Card Search Gate 3 — Cloudflare Worker needed (2026-03-27 night session)
+## Cloudflare Worker — eBay API proxy (deployed 2026-03-28)
 
-### Why Cloudflare Worker is needed
-Watchlist gets eBay listings from `watchlist_data.json` — pre-fetched server-side by `fetch_watchlist_prices.py` using real eBay API credentials. Card Search is pure browser JS — can't use API keys (they'd be exposed in HTML). Scraping eBay's search page doesn't work because **eBay's SRP is a React SPA** — listing items are JS-rendered client-side, never in the server HTML. Confirmed via debug: 626k HTML returned, `s-item` only appears inside `<script>` strings, not DOM elements. eBay RSS feed (`?_rss=1`) is also dead — returns same HTML. A Cloudflare Worker is a ~30-line serverless function that holds credentials safely and proxies the real eBay Browse API.
+### What it does
+Card Search needs eBay listings but can't use API keys in browser JS. Cloudflare Worker at `https://deltaspecies.vchen2120.workers.dev` holds eBay credentials server-side and proxies Browse API requests. Site calls `?q=QUERY` → Worker returns `{ items: [...] }`.
 
-### Status
-- Cloudflare account created ✓
-- Worker NOT yet deployed (user was on mobile)
-- `-debug` suffix still on card names in `csRenderStatsPanel` — remove after Worker is wired in
+### Status — DEPLOYED AND WORKING
+- Worker deployed via Wrangler CLI from `cf-worker/` directory
+- Secrets set: `EBAY_APP_ID`, `EBAY_CERT_ID`
+- Card Search `csTriggerEbayFetch` calls Worker instead of dead RSS/proxy approach
+- `-debug` suffix removed from card names
 
 ### Complete Worker script (paste into Cloudflare Worker editor, replacing all default code)
 ```javascript
@@ -180,11 +181,18 @@ All 4 sets are now fully catalogued in the site. `index.html` now tracks ALL car
 
 ---
 
-## Current State (end of session 2026-03-27)
+## Current State (end of session 2026-03-28 morning)
 
 Everything is live and working on GitHub Pages. deal_finder.py runs automatically every 4 hours via GitHub Actions — no PC required.
 
-### What's done
+### Done 2026-03-28 morning session
+- [x] **Cloudflare Worker deployed** — `deltaspecies.vchen2120.workers.dev`, eBay Browse API proxy with secrets. Card Search eBay listings now work.
+- [x] **Delta tab (Watchlist)** — new 3rd tab next to Listings/Sold: Buy Signals (BUY/WAIT/PASS per grade), Grade Arbitrage (PSA 8/9/10 + CGC 9/10 multiplier ratios), Trends (median + velocity + 1mo/3mo growth), bar chart, outlier listings
+- [x] **Delta tab (Card Search)** — same analysis for any card. Has inline PriceCharting URL input with "Fetch & Analyze" button that fetches and immediately shows Delta analysis.
+- [x] **Discord TLDR hook fixed** — was posting "I don't have a coding task" attitude messages. Now skips trivial messages (SKIP), never complains.
+- [x] `-debug` suffix removed from card names
+
+### Previously done
 - [x] All credentials in `.env` — EBAY_APP_ID, EBAY_CERT_ID, DISCORD_WEBHOOK_URL, DISCORD_BOT_TOKEN, ANTHROPIC_API_KEY
 - [x] `fetch_watchlist_prices.py` — fetches **15 cards** (was 12), saves `watchlist_data.json`
 - [x] `deal_finder.py` — pings Discord when PSA 8/9/10 listing is 25%+ below median; deduplicates via `prices.db`
@@ -253,7 +261,6 @@ Built and pushed but **NOT yet confirmed working** — got "Failed to fetch" wit
 - Open site → PC Last Sold → paste `https://www.pricecharting.com/game/pokemon-crystal-guardians/charizard-4`
 - Should show a debug log per proxy attempt (✓/✗)
 - If all fail: screenshot the debug log and tell Claude — we'll build a serverless proxy or use a different approach
-- If "no sales table found": debug log shows page title + table IDs — paste those to Claude to fix parser
 
 **#2 — Deploy Discord bot to Railway (so it runs 24/7 without PC)**
 - railway.app → New Project → Deploy from GitHub repo
@@ -302,5 +309,6 @@ git add watchlist_data.json && git commit -m "Refresh watchlist data (15 cards)"
 - `next_time.txt` — session handoff notes
 - `.env` — credentials (not committed): EBAY_APP_ID, EBAY_CERT_ID, DISCORD_WEBHOOK_URL, DISCORD_BOT_TOKEN, ANTHROPIC_API_KEY
 - `github_secrets.txt` — GitHub secret values for reference (not committed)
+- `cf-worker/` — Cloudflare Worker source (worker.js + wrangler.toml); deployed to `deltaspecies.vchen2120.workers.dev`
 - `ebay_prices.py` — OLD/DEAD: used retired Finding API, ignore
 - `ebay_tracker.py` — OLD/SUPERSEDED by deal_finder.py
