@@ -1942,7 +1942,12 @@ async function wlSoldFetch(idx, urlOverride) {
 
   const rows = pcParseHtml(html);
   if (!rows || !rows.length) {
-    wrap.innerHTML = `<div class="wl-sold-wrap"><div class="pc-err">Page loaded but no sales table found. Check the URL is a specific card page.</div>
+    // Debug: show page title + table IDs found in the proxied HTML
+    const tmpDoc = new DOMParser().parseFromString(html, 'text/html');
+    const pageTitle = tmpDoc.title || '(no title)';
+    const tableIds = [...tmpDoc.querySelectorAll('table[id]')].map(t => t.id).join(', ') || '(none)';
+    wrap.innerHTML = `<div class="wl-sold-wrap"><div class="pc-err">Page loaded but no sales table found.<br>
+      <small>Page title: <b>${pageTitle}</b><br>Table IDs found: <b>${tableIds}</b><br>Proxy: ${debugLog.join(' · ')}</small></div>
       <div class="wl-pc-input-row" style="margin-top:10px">
         <input class="wl-pc-url" id="wl-pc-url-${idx}" type="text" value="${url}"/>
         <button class="wl-pc-fetch-btn" onclick="wlSoldFetch(${idx})">Retry</button>
@@ -2451,10 +2456,10 @@ function pcParseHtml(html) {
     || doc.getElementById('sold_list');
 
   if (!table) {
-    // Fallback: any table whose text has both a $ price and a date like MM/DD/YYYY
+    // Fallback: any table whose text has both a $ price and a date (MM/DD/YYYY or YYYY-MM-DD)
     for (const t of doc.querySelectorAll('table')) {
       const txt = t.textContent;
-      if (/\$[\d,]+/.test(txt) && /\d{2}\/\d{2}\/\d{4}/.test(txt)) { table = t; break; }
+      if (/\$[\d,]+/.test(txt) && (/\d{2}\/\d{2}\/\d{4}/.test(txt) || /\d{4}-\d{2}-\d{2}/.test(txt))) { table = t; break; }
     }
   }
   if (!table) return null;
@@ -2481,9 +2486,9 @@ function pcParseHtml(html) {
     if (!price) price = cells.map(c => c.textContent.trim()).find(t => /^\$[\d,]+/.test(t)) || '';
     if (!price) continue; // skip rows without a price
 
-    // Smart date: use column if found, else scan for MM/DD/YYYY
+    // Smart date: use column if found, else scan for MM/DD/YYYY or YYYY-MM-DD
     let date = get(iDate);
-    if (!date) date = cells.map(c => c.textContent.trim()).find(t => /\d{2}\/\d{2}\/\d{4}/.test(t)) || '';
+    if (!date) date = cells.map(c => c.textContent.trim()).find(t => /\d{2}\/\d{2}\/\d{4}/.test(t) || /\d{4}-\d{2}-\d{2}/.test(t)) || '';
 
     rows.push({ price, date, title: get(iTitle), grade: get(iGrade) });
   }
