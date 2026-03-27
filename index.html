@@ -188,6 +188,26 @@
     .wl-link{color:var(--text);text-decoration:none;font-size:12px;line-height:1.4}
     .wl-link:hover{color:var(--accent);text-decoration:underline}
     .wl-none{padding:20px;text-align:center;color:var(--muted);font-size:12px}
+    /* Sold / Listings toggle */
+    .wl-mode-row{display:flex;align-items:center;gap:0;padding:9px 16px;border-bottom:1px solid var(--border);background:var(--surface2)}
+    .wl-mode-btn{background:var(--surface);border:1px solid var(--border2);color:var(--muted2);padding:4px 16px;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s}
+    .wl-mode-btn:first-child{border-radius:6px 0 0 6px}
+    .wl-mode-btn:last-child{border-radius:0 6px 6px 0;border-left:none}
+    .wl-mode-btn.wl-mode-active{background:var(--accent);color:#fff;border-color:var(--accent)}
+    /* Sold mode */
+    .wl-sold-wrap{padding:18px 16px;background:var(--surface)}
+    .wl-sold-empty{text-align:center;color:var(--muted);font-size:13px;padding:8px 0 16px}
+    .wl-sold-empty-ico{font-size:26px;opacity:.4;margin-bottom:8px}
+    .wl-pc-input-row{display:flex;gap:6px;max-width:540px;margin:0 auto}
+    .wl-pc-url{flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:6px 10px;font-size:12px;outline:none;transition:border-color .15s}
+    .wl-pc-url:focus{border-color:var(--accent)}
+    .wl-pc-url::placeholder{color:var(--muted)}
+    .wl-pc-fetch-btn{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .15s}
+    .wl-pc-fetch-btn:hover{opacity:.82}
+    .wl-pc-fetch-btn:disabled{opacity:.5;cursor:default}
+    .wl-sold-meta{font-size:10px;color:var(--muted);margin-bottom:10px}
+    .wl-sold-refetch{background:none;border:none;color:var(--accent);font-size:10px;font-weight:600;cursor:pointer;padding:0;margin-left:8px;text-decoration:underline}
+    .wl-sold-refetch:hover{opacity:.7}
     .wl-empty{padding:60px 28px;text-align:center;color:var(--muted)}
     .wl-empty-ico{font-size:36px;opacity:.4;margin-bottom:12px}
     .wl-empty-msg{font-size:13px}
@@ -265,6 +285,36 @@
     .cs-vtab{background:transparent;border:1px solid transparent;color:var(--muted2);border-radius:6px 6px 0 0;padding:5px 13px;cursor:pointer;font-size:11px;font-weight:600;transition:all .12s;margin-bottom:-1px}
     .cs-vtab:hover{background:var(--surface3);color:var(--text)}
     .cs-vtab.cs-vactive{background:var(--surface);border-color:var(--border2) var(--border2) var(--surface);color:var(--accent)}
+    /* Gate 1 — text rows */
+    .cs-row{display:flex;align-items:center;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;gap:12px;transition:border-color .12s}
+    .cs-row:hover{border-color:var(--border2)}
+    .cs-row-name{font-size:13px;font-weight:700}
+    .cs-row-sub{font-size:11px;color:var(--muted);margin-top:2px}
+    .cs-find-btn{background:var(--cyan);color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:opacity .15s}
+    .cs-find-btn:hover{opacity:.82}
+    /* Gate 2 — verify */
+    .cs-verify{display:flex;flex-direction:column;align-items:center;padding:32px 20px;gap:14px;text-align:center}
+    .cs-verify-img{width:180px;border-radius:10px;box-shadow:0 4px 24px rgba(0,0,0,.2)}
+    .cs-verify-name{font-size:17px;font-weight:800;margin-bottom:3px}
+    .cs-verify-sub{font-size:11px;color:var(--muted)}
+    .cs-verify-prompt{font-size:12px;color:var(--muted2);font-style:italic;margin-top:4px}
+    .cs-verify-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+    .cs-back-btn{background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:7px;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer;transition:background .12s}
+    .cs-back-btn:hover{background:var(--surface3)}
+    .cs-load-btn{background:var(--cyan);color:#fff;border:none;border-radius:7px;padding:6px 20px;font-size:12px;font-weight:700;cursor:pointer;transition:opacity .15s}
+    .cs-load-btn:hover{opacity:.82}
+    /* Gate 3 — stats panel */
+    .cs-stats-hdr{display:flex;align-items:center;gap:14px;padding:12px 20px;background:var(--surface2);border-bottom:1px solid var(--border)}
+    .cs-stats-hdr-img{width:48px;border-radius:5px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+    .cs-stats-hdr-info{flex:1;min-width:0}
+    .cs-stats-hdr-name{font-size:14px;font-weight:800}
+    .cs-stats-hdr-sub{font-size:11px;color:var(--muted)}
+    .cs-stats-tabs{display:flex;gap:3px;padding:8px 14px 0;background:var(--surface2);border-bottom:1px solid var(--border);flex-wrap:wrap}
+    .cs-stab{background:transparent;border:1px solid transparent;color:var(--muted2);border-radius:6px 6px 0 0;padding:5px 11px;cursor:pointer;font-size:11px;font-weight:600;transition:all .12s;margin-bottom:-1px;white-space:nowrap}
+    .cs-stab:hover{background:var(--surface3);color:var(--text)}
+    .cs-stab.cs-sactive{background:var(--surface);border-color:var(--border2) var(--border2) var(--surface);color:var(--accent)}
+    .cs-stats-body{padding:18px 22px}
+    .cs-ebay-gate-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
 
     /* ── PriceCharting Last Sold ──────────────────────────────────── */
     .sb-pclastsold{display:flex;align-items:center;gap:9px;padding:11px 14px;cursor:pointer;background:linear-gradient(135deg,rgba(180,83,9,.06),rgba(91,77,232,.04));border-left:3px solid transparent;border-bottom:1px solid var(--border);transition:background .12s,border-color .12s}
@@ -1660,13 +1710,20 @@ function renderWatchlist() {
         <span class="wl-hdr-arrow">▶</span>
       </div>
       <div class="wl-body">
-        <div class="wl-grade-tabs" id="wl-tabs-${idx}">
-          ${[['psa8','PSA 8'],['psa9','PSA 9'],['psa10','PSA 10'],['cgc9','CGC 9'],['cgc10','CGC 10'],['raw_nm','NM/LP'],['raw','Raw eBay'],['tcgplayer','TCGPlayer']].map(([g,lbl]) =>
-            `<button class="wl-gtab${g==='psa9'?' wl-gactive':''}" data-grade="${g}"
-              onclick="wlGrade(${idx},'${g}',event)">${lbl}</button>`
-          ).join('')}
+        <div class="wl-mode-row">
+          <button class="wl-mode-btn wl-mode-active" id="wl-mbtn-l-${idx}" onclick="wlSetMode(${idx},'listings',event)">Listings</button>
+          <button class="wl-mode-btn" id="wl-mbtn-s-${idx}" onclick="wlSetMode(${idx},'sold',event)">Sold</button>
         </div>
-        <div class="wl-listings" id="wl-ls-${idx}"></div>
+        <div id="wl-grade-wrap-${idx}">
+          <div class="wl-grade-tabs" id="wl-tabs-${idx}">
+            ${[['psa8','PSA 8'],['psa9','PSA 9'],['psa10','PSA 10'],['cgc9','CGC 9'],['cgc10','CGC 10'],['raw_nm','NM/LP'],['raw','Raw eBay'],['tcgplayer','TCGPlayer']].map(([g,lbl]) =>
+              `<button class="wl-gtab${g==='psa9'?' wl-gactive':''}" data-grade="${g}"
+                onclick="wlGrade(${idx},'${g}',event)">${lbl}</button>`
+            ).join('')}
+          </div>
+          <div class="wl-listings" id="wl-ls-${idx}"></div>
+        </div>
+        <div id="wl-sold-${idx}" style="display:none"></div>
       </div>`;
     content.appendChild(div);
   });
@@ -1740,15 +1797,167 @@ function wlRenderListings(idx, grade) {
     </table>`;
 }
 
+// ── Watchlist Sold mode (PriceCharting scrape per card) ───────────────────────
+
+function wlSetMode(idx, mode, event) {
+  if (event) event.stopPropagation();
+  const grapeWrap = document.getElementById(`wl-grade-wrap-${idx}`);
+  const soldWrap  = document.getElementById(`wl-sold-${idx}`);
+  const btnL = document.getElementById(`wl-mbtn-l-${idx}`);
+  const btnS = document.getElementById(`wl-mbtn-s-${idx}`);
+  if (!grapeWrap || !soldWrap) return;
+
+  const showSold = mode === 'sold';
+  grapeWrap.style.display = showSold ? 'none' : '';
+  soldWrap.style.display  = showSold ? '' : 'none';
+  btnL.classList.toggle('wl-mode-active', !showSold);
+  btnS.classList.toggle('wl-mode-active', showSold);
+
+  if (showSold) wlSoldRender(idx);
+}
+
+function wlSoldKey(idx) {
+  return 'wl_pc_' + (wlData?.cards?.[idx]?.name || idx);
+}
+
+function wlSoldLoad(idx) {
+  try { return JSON.parse(localStorage.getItem(wlSoldKey(idx)) || 'null'); }
+  catch(e) { return null; }
+}
+
+function wlSoldSave(idx, data) {
+  localStorage.setItem(wlSoldKey(idx), JSON.stringify(data));
+}
+
+function wlSoldRender(idx) {
+  const wrap = document.getElementById(`wl-sold-${idx}`);
+  if (!wrap) return;
+  const saved = wlSoldLoad(idx);
+
+  if (!saved || !saved.rows) {
+    wrap.innerHTML = `
+      <div class="wl-sold-wrap">
+        <div class="wl-sold-empty">
+          <div class="wl-sold-empty-ico">📈</div>
+          Paste a PriceCharting URL to see sold data for this card.
+          <div class="wl-pc-input-row" style="margin-top:12px">
+            <input class="wl-pc-url" id="wl-pc-url-${idx}" type="text"
+              placeholder="https://www.pricecharting.com/game/pokemon-…/card-name"/>
+            <button class="wl-pc-fetch-btn" onclick="wlSoldFetch(${idx})">Fetch</button>
+          </div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const hasGrade = saved.rows.some(r => r.grade);
+  const rowsHtml = saved.rows.map(r => `
+    <tr>
+      <td class="pc-td-price">${r.price}</td>
+      <td class="pc-td-date">${r.date}</td>
+      ${hasGrade ? `<td class="pc-td-grade">${r.grade || '—'}</td>` : ''}
+      <td class="pc-td-title">${r.title || ''}</td>
+    </tr>`).join('');
+
+  wrap.innerHTML = `
+    <div class="wl-sold-wrap">
+      <div class="wl-sold-meta">
+        Last fetched: ${saved.fetched}
+        <button class="wl-sold-refetch" onclick="wlSoldClear(${idx})">Change URL</button>
+        <button class="wl-sold-refetch" onclick="wlSoldRefetch(${idx})">Refresh</button>
+      </div>
+      <table class="pc-sold-tbl">
+        <thead><tr>
+          <th>Price</th><th>Date</th>${hasGrade ? '<th>Grade</th>' : ''}<th>Listing</th>
+        </tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    </div>`;
+}
+
+function wlSoldClear(idx) {
+  localStorage.removeItem(wlSoldKey(idx));
+  wlSoldRender(idx);
+}
+
+function wlSoldRefetch(idx) {
+  const saved = wlSoldLoad(idx);
+  if (saved?.url) wlSoldFetch(idx, saved.url);
+}
+
+async function wlSoldFetch(idx, urlOverride) {
+  const wrap = document.getElementById(`wl-sold-${idx}`);
+  if (!wrap) return;
+
+  let url = urlOverride;
+  if (!url) {
+    const inp = document.getElementById(`wl-pc-url-${idx}`);
+    url = inp ? inp.value.trim() : '';
+  }
+  if (!url || !url.includes('pricecharting.com')) {
+    const inp = document.getElementById(`wl-pc-url-${idx}`);
+    if (inp) { inp.style.borderColor = 'var(--red)'; setTimeout(() => inp.style.borderColor = '', 1400); }
+    return;
+  }
+
+  wrap.innerHTML = `<div class="wl-sold-wrap"><div class="pc-spin"></div></div>`;
+
+  let html = null;
+  const debugLog = [];
+  for (const proxy of PC_PROXIES) {
+    try {
+      const ctrl  = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 12000);
+      const resp  = await fetch(proxy.url + encodeURIComponent(url), { signal: ctrl.signal });
+      clearTimeout(timer);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      let raw;
+      if (proxy.type === 'json') { const j = await resp.json(); raw = j.contents; }
+      else                        { raw = await resp.text(); }
+      if (!raw || raw.length < 200) throw new Error('Empty response');
+      html = raw;
+      debugLog.push('✓ ' + proxy.label);
+      break;
+    } catch(err) {
+      debugLog.push('✗ ' + proxy.label + ': ' + (err.name === 'AbortError' ? 'timeout' : err.message));
+    }
+  }
+
+  if (!html) {
+    wrap.innerHTML = `<div class="wl-sold-wrap"><div class="pc-err">All proxies failed. Try again later.<br><small>${debugLog.join(' · ')}</small></div>
+      <div class="wl-pc-input-row" style="margin-top:10px">
+        <input class="wl-pc-url" id="wl-pc-url-${idx}" type="text" value="${url}"/>
+        <button class="wl-pc-fetch-btn" onclick="wlSoldFetch(${idx})">Retry</button>
+      </div></div>`;
+    return;
+  }
+
+  const rows = pcParseHtml(html);
+  if (!rows || !rows.length) {
+    wrap.innerHTML = `<div class="wl-sold-wrap"><div class="pc-err">Page loaded but no sales table found. Check the URL is a specific card page.</div>
+      <div class="wl-pc-input-row" style="margin-top:10px">
+        <input class="wl-pc-url" id="wl-pc-url-${idx}" type="text" value="${url}"/>
+        <button class="wl-pc-fetch-btn" onclick="wlSoldFetch(${idx})">Retry</button>
+      </div></div>`;
+    return;
+  }
+
+  const data = { url, rows, fetched: new Date().toLocaleString() };
+  wlSoldSave(idx, data);
+  wlSoldRender(idx);
+}
+
 // ── Card Search (Universal — entire Pokémon TCG via pokemontcg.io) ───────────
 
-let csExpanded   = null;     // card.id of currently-open result
-let csApiCards   = [];       // cards from last API response
-let csApiTotal   = 0;        // totalCount from API
-let csApiLoading = false;
-let csApiError   = false;
-let csSearchTimer= null;
-let csVariant    = 'regular'; // 'regular' | 'reverse' — controls eBay query variant
+let csGate        = 'search';  // 'search' | 'verify' | 'stats'
+let csSelectedCard= null;      // card chosen in Gate 1
+let csStatsGrade  = 'psa9';   // active tab in Gate 3
+let csApiCards    = [];        // cards from last API response
+let csApiTotal    = 0;         // totalCount from API
+let csApiLoading  = false;
+let csApiError    = false;
+let csSearchTimer = null;
+let csVariant     = 'regular'; // 'regular' | 'reverse' — controls eBay query variant
 // priceCache and fetchPrice are shared with the main browse view
 
 function showCardSearch() {
@@ -1762,6 +1971,7 @@ function showCardSearch() {
   document.getElementById('watchlist-area').style.display = 'none';
   document.getElementById('pc-area').style.display        = 'none';
   document.getElementById('search-area').style.display    = 'flex';
+  csGate = 'search'; csSelectedCard = null;
   document.getElementById('cs-input').focus();
   csRenderResults();
 }
@@ -1802,20 +2012,49 @@ async function csFetchCards(rawQuery) {
 }
 
 function csRenderResults() {
-  const q   = document.getElementById('cs-input').value.trim();
   const out = document.getElementById('cs-results');
 
-  if (!q || q.length < 3) {
-    document.getElementById('cs-meta').textContent = 'Search the entire Pok\u00e9mon TCG';
+  // Gate 2 — image verify
+  if (csGate === 'verify' && csSelectedCard) {
+    document.getElementById('cs-meta').textContent = 'Verify card';
+    const card = csSelectedCard;
+    const imgSrc = card.images?.small || card.images?.large || '';
+    const sub = `${csEsc(card.set.name)} \u00b7 ${card.number}/${card.set.total}${card.rarity ? ' \u00b7 ' + csEsc(card.rarity) : ''}`;
     out.innerHTML = `
-      <div class="cs-hint">
-        <div class="cs-hint-ico">🔍</div>
-        Type at least 3 characters to search every Pok\u00e9mon card ever printed.<br>
-        Click any result to see TCGPlayer prices and eBay search links.
+      <div class="cs-verify">
+        ${imgSrc ? `<img class="cs-verify-img" src="${imgSrc}" alt="${csEsc(card.name)}"/>` : '<div class="cs-img-ph" style="width:180px;height:252px">\ud83c\udccf</div>'}
+        <div>
+          <div class="cs-verify-name">${csEsc(card.name)}</div>
+          <div class="cs-verify-sub">${sub}</div>
+        </div>
+        <div class="cs-verify-prompt">Is this the right card?</div>
+        <div class="cs-verify-btns">
+          <button class="cs-back-btn" onclick="csBackToSearch()">\u2190 Back</button>
+          <button class="cs-load-btn" onclick="csLoadStats()">Load Full Stats \u2192</button>
+        </div>
       </div>`;
     return;
   }
 
+  // Gate 3 — stats panel
+  if (csGate === 'stats' && csSelectedCard) {
+    document.getElementById('cs-meta').textContent = csSelectedCard.name;
+    csRenderStatsPanel(out);
+    return;
+  }
+
+  // Gate 1 — text-only search results
+  const q = document.getElementById('cs-input').value.trim();
+  if (!q || q.length < 3) {
+    document.getElementById('cs-meta').textContent = 'Search the entire Pok\u00e9mon TCG';
+    out.innerHTML = `
+      <div class="cs-hint">
+        <div class="cs-hint-ico">\ud83d\udd0d</div>
+        Type at least 3 characters to search every Pok\u00e9mon card ever printed.<br>
+        Find a card, verify the image, then load its market stats.
+      </div>`;
+    return;
+  }
   if (csApiLoading) {
     document.getElementById('cs-meta').textContent = 'Searching\u2026';
     out.innerHTML = '<div class="cs-spin" style="margin-top:48px"></div>';
@@ -1834,37 +2073,21 @@ function csRenderResults() {
 
   const showing = csApiCards.length;
   document.getElementById('cs-meta').textContent = csApiTotal > showing
-    ? `Showing ${showing} of ${csApiTotal}`
-    : `${showing} result${showing !== 1 ? 's' : ''}`;
+    ? `Showing ${showing} of ${csApiTotal} \u2014 click Find Stats on the right card`
+    : `${showing} result${showing !== 1 ? 's' : ''} \u2014 click Find Stats on the right card`;
 
   out.innerHTML = '';
   csApiCards.forEach(card => {
-    const open = csExpanded === card.id;
-    const div  = document.createElement('div');
-    div.className = 'cs-card' + (open ? ' cs-open' : '');
-
-    const thumbHtml = card.images?.small
-      ? `<img class="cs-thumb" src="${card.images.small}" loading="lazy" alt=""/>`
-      : `<div class="cs-thumb-ph">\ud83c\udccf</div>`;
-
-    const sub = `${csEsc(card.set.name)} \u00b7 ${card.number}/${card.set.total}`
-              + (card.rarity ? ` \u00b7 ${csEsc(card.rarity)}` : '');
-
+    const div = document.createElement('div');
+    div.className = 'cs-row';
+    const sub = `${csEsc(card.set.name)} \u00b7 ${card.number}/${card.set.total}${card.rarity ? ' \u00b7 ' + csEsc(card.rarity) : ''}`;
     div.innerHTML = `
-      <div class="cs-hdr" data-cid="${csEsc(card.id)}" onclick="csToggle(this.dataset.cid)">
-        <div class="cs-hdr-thumb">${thumbHtml}</div>
-        <div class="cs-hdr-text">
-          <span class="cs-hdr-name">${csEsc(card.name)}</span>
-          <span class="cs-hdr-setnum">${sub}</span>
-        </div>
-        <span class="cs-arrow">\u25b6</span>
+      <div style="flex:1;min-width:0">
+        <div class="cs-row-name">${csEsc(card.name)}</div>
+        <div class="cs-row-sub">${sub}</div>
       </div>
-      ${open ? `<div class="cs-body">${csBodyHtml(card)}</div>` : ''}`;
+      <button class="cs-find-btn" data-cid="${csEsc(card.id)}" onclick="csSelectCard(this.dataset.cid)">Find Stats \u2192</button>`;
     out.appendChild(div);
-
-    if (open && (!priceCache[card.id] || priceCache[card.id] === 'loading')) {
-      fetchPrice(card.id).then(() => csRefreshBody(card.id));
-    }
   });
 
   if (csApiTotal > showing) {
@@ -1875,76 +2098,102 @@ function csRenderResults() {
   }
 }
 
-function csToggle(cid) {
-  csVariant  = 'regular';
-  csExpanded = csExpanded === cid ? null : cid;
+function csSelectCard(cid) {
+  csSelectedCard = csApiCards.find(c => c.id === cid) || null;
+  if (!csSelectedCard) return;
+  csGate = 'verify';
+  csVariant = 'regular';
   csRenderResults();
-  if (csExpanded) {
-    setTimeout(() => {
-      const el = document.querySelector('.cs-card.cs-open');
-      if (el) el.scrollIntoView({behavior:'smooth', block:'nearest'});
-    }, 40);
+}
+
+function csBackToSearch() {
+  csGate = 'search';
+  csSelectedCard = null;
+  csRenderResults();
+}
+
+function csLoadStats() {
+  csGate = 'stats';
+  csStatsGrade = 'psa9';
+  csRenderResults();
+  const id = csSelectedCard.id;
+  if (!priceCache[id] || priceCache[id] === 'error') {
+    fetchPrice(id).then(() => {
+      if (csGate === 'stats' && csSelectedCard?.id === id) {
+        const bodyEl = document.getElementById('cs-stats-body');
+        if (bodyEl) bodyEl.innerHTML = csStatsBodyHtml(csSelectedCard, priceCache[id]);
+      }
+    });
   }
 }
 
-function csRefreshBody(cid) {
-  if (csExpanded !== cid) return;
-  const bodyEl = document.querySelector('.cs-card.cs-open .cs-body');
-  const card   = csApiCards.find(c => c.id === cid);
-  if (bodyEl && card) bodyEl.innerHTML = csBodyHtml(card);
+function csStatsTab(grade) {
+  csStatsGrade = grade;
+  document.querySelectorAll('.cs-stab').forEach(b =>
+    b.classList.toggle('cs-sactive', b.dataset.grade === grade));
+  const bodyEl = document.getElementById('cs-stats-body');
+  if (bodyEl && csSelectedCard)
+    bodyEl.innerHTML = csStatsBodyHtml(csSelectedCard, priceCache[csSelectedCard.id]);
 }
 
 function csSetVariant(v) {
   csVariant = v;
-  const card = csApiCards.find(c => c.id === csExpanded);
-  if (card) {
-    const bodyEl = document.querySelector('.cs-card.cs-open .cs-body');
-    if (bodyEl) bodyEl.innerHTML = csBodyHtml(card);
-  }
+  const bodyEl = document.getElementById('cs-stats-body');
+  if (bodyEl && csSelectedCard)
+    bodyEl.innerHTML = csStatsBodyHtml(csSelectedCard, priceCache[csSelectedCard.id]);
 }
 
-function csBodyHtml(card) {
-  const api = priceCache[card.id];
-
-  // Show image immediately from search-result thumbnail while prices load
-  const cachedImages = (api && api !== 'loading' && api !== 'error') ? api.images : null;
-  const imgSrc = cachedImages?.large || cachedImages?.small
-              || card.images?.large  || card.images?.small || '';
-  const imgHtml = imgSrc
-    ? `<img src="${imgSrc}" alt="${csEsc(card.name)}" loading="lazy"/>`
-    : `<div class="cs-img-ph">\ud83c\udccf</div>`;
-
-  if (!api || api === 'loading') {
-    return `<div class="cs-detail">
-      <div class="cs-img-side">${imgHtml}</div>
-      <div class="cs-info"><div class="cs-spin" style="margin:20px 0 0"></div></div>
+function csRenderStatsPanel(out) {
+  const card   = csSelectedCard;
+  const imgSrc = card.images?.small || '';
+  const sub    = `${csEsc(card.set.name)} \u00b7 ${card.number}/${card.set.total}${card.rarity ? ' \u00b7 ' + csEsc(card.rarity) : ''}`;
+  const gradeKeys = [
+    ['psa8','PSA 8'],['psa9','PSA 9'],['psa10','PSA 10'],
+    ['cgc9','CGC 9'],['cgc10','CGC 10'],
+    ['nm','NM/LP'],['raw','Raw eBay'],['tcgplayer','TCGPlayer'],
+  ];
+  const tabsHtml = gradeKeys.map(([k,lbl]) =>
+    `<button class="cs-stab${csStatsGrade===k?' cs-sactive':''}" data-grade="${k}" onclick="csStatsTab('${k}')">${lbl}</button>`
+  ).join('');
+  out.innerHTML = `
+    <div>
+      <div class="cs-stats-hdr">
+        ${imgSrc ? `<img class="cs-stats-hdr-img" src="${imgSrc}" alt=""/>` : ''}
+        <div class="cs-stats-hdr-info">
+          <div class="cs-stats-hdr-name">${csEsc(card.name)}</div>
+          <div class="cs-stats-hdr-sub">${sub}</div>
+        </div>
+        <button class="cs-back-btn" onclick="csBackToSearch()">\u2190 Back</button>
+      </div>
+      <div class="cs-stats-tabs">${tabsHtml}</div>
+      <div id="cs-stats-body" class="cs-stats-body">${csStatsBodyHtml(card, priceCache[card.id])}</div>
     </div>`;
-  }
+}
 
-  const tcgPrices = api !== 'error' ? (api.tcgplayer?.prices ?? {}) : {};
-  const tcgUrl    = api !== 'error' ? (api.tcgplayer?.url    ?? '') : '';
-  const updated   = api !== 'error' ? (api.tcgplayer?.updatedAt ?? '') : '';
-  const tcgBtn    = tcgUrl ? `<a class="tcg-btn" href="${tcgUrl}" target="_blank">TCGPlayer \u2197</a>` : '';
+function csStatsBodyHtml(card, api) {
+  const isRev  = csVariant === 'reverse';
+  const rarity = card.rarity || '';
+  const noRev  = ['Rare Holo EX','Rare Holo Star','Rare Secret','Rare BREAK',
+                   'LEGEND','Rare ACE','Rare Prism Star','Rare Shiny',
+                   'Rare Shiny GX','Rare Rainbow','Rare Ultra'].includes(rarity);
 
-  // Collect all available price variants
-  const knownKeys = ['holofoil','1stEditionHolofoil','unlimitedHolofoil','normal','reverseHolofoil'];
-  const pEntries  = [];
-  const labelMap  = {
-    holofoil: 'Holofoil', '1stEditionHolofoil': '1st Edition Holo',
-    unlimitedHolofoil: 'Unlimited Holo', normal: 'Normal', reverseHolofoil: 'Reverse Holo',
-  };
-  knownKeys.forEach(k => { if (tcgPrices[k]) pEntries.push([labelMap[k], tcgPrices[k]]); });
-  Object.entries(tcgPrices).forEach(([k, p]) => {
-    if (!knownKeys.includes(k)) pEntries.push([k.replace(/([A-Z])/g,' $1').trim(), p]);
-  });
-
-  const hasReverse = !!tcgPrices.reverseHolofoil;
-
-  let tcgBlock = '';
-  if (!pEntries.length) {
-    tcgBlock = `<div class="dp-err" style="padding:6px 0">No TCGPlayer price data available.</div>`;
-  } else {
-    tcgBlock = pEntries.map(([lbl, p]) => `
+  // TCGPlayer tab — needs fetched price data
+  if (csStatsGrade === 'tcgplayer') {
+    if (!api || api === 'loading') return `<div class="cs-spin"></div>`;
+    if (api === 'error') return `<div class="dp-err">Failed to load TCGPlayer data.</div>`;
+    const tcgPrices = api.tcgplayer?.prices ?? {};
+    const tcgUrl    = api.tcgplayer?.url ?? '';
+    const updated   = api.tcgplayer?.updatedAt ?? '';
+    const knownKeys = ['holofoil','1stEditionHolofoil','unlimitedHolofoil','normal','reverseHolofoil'];
+    const labelMap  = {holofoil:'Holofoil','1stEditionHolofoil':'1st Ed Holo',
+                       unlimitedHolofoil:'Unlimited Holo',normal:'Normal',reverseHolofoil:'Reverse Holo'};
+    const pEntries  = [];
+    knownKeys.forEach(k => { if (tcgPrices[k]) pEntries.push([labelMap[k], tcgPrices[k]]); });
+    Object.entries(tcgPrices).forEach(([k,p]) => {
+      if (!knownKeys.includes(k)) pEntries.push([k.replace(/([A-Z])/g,' $1').trim(), p]);
+    });
+    if (!pEntries.length) return `<div class="dp-err">No TCGPlayer price data available.</div>`;
+    const grid = pEntries.map(([lbl,p]) => `
       <div class="cs-tcg-variant">
         ${pEntries.length > 1 ? `<div class="cs-tcg-vlbl">${csEsc(lbl)}</div>` : ''}
         <div class="mkt-row">
@@ -1954,54 +2203,35 @@ function csBodyHtml(card) {
           <div class="mkt-stat"><div class="mkt-lbl">High</div><div class="mkt-val">${fmt(p.high)}</div></div>
         </div>
       </div>`).join('');
-    if (updated) tcgBlock += `<div class="dp-upd">TCGPlayer data: ${updated}</div>`;
+    const btn = tcgUrl ? `<div style="margin-top:12px"><a class="tcg-btn" href="${tcgUrl}" target="_blank">View on TCGPlayer \u2197</a></div>` : '';
+    return `${grid}${updated ? `<div class="dp-upd">TCGPlayer data: ${updated}</div>` : ''}${btn}`;
   }
 
-  // Variant tabs: only show if reverse holo prices exist
-  const varTabsHtml = hasReverse ? `
-    <div class="cs-vtabs">
-      <button class="cs-vtab${csVariant !== 'reverse' ? ' cs-vactive' : ''}" onclick="csSetVariant('regular')">Regular</button>
-      <button class="cs-vtab${csVariant === 'reverse' ? ' cs-vactive' : ''}" onclick="csSetVariant('reverse')">Rev Holo</button>
+  // eBay tabs — variant toggle + active/sold links (no live API needed)
+  const varToggle = !noRev ? `
+    <div class="cs-vtabs" style="margin-bottom:16px">
+      <button class="cs-vtab${!isRev?' cs-vactive':''}" onclick="csSetVariant('regular')">Regular</button>
+      <button class="cs-vtab${isRev?' cs-vactive':''}" onclick="csSetVariant('reverse')">Rev Holo</button>
     </div>` : '';
 
-  // eBay search table
-  const isRev  = csVariant === 'reverse' && hasReverse;
-  const grades = [
-    ['PSA 8',  'PSA 8',  false],
-    ['PSA 9',  'PSA 9',  false],
-    ['PSA 10', 'PSA 10', false],
-    ['NM Raw', null,     true ],
-    ['Any Raw',null,     false],
-  ];
-  const ebayRows = grades.map(([lbl, g, nm]) => {
-    const q        = csEbayQueryUniv(card, g, nm, isRev);
-    const activeUrl= csEbayUrl(q, false);
-    const soldUrl  = csEbayUrl(q, true);
-    return `<tr>
-      <td class="cs-ebay-grade">${lbl}</td>
-      <td><a href="${activeUrl}" target="_blank" class="cs-ebay-btn cs-ebay-active">Active \u2197</a></td>
-      <td><a href="${soldUrl}"   target="_blank" class="cs-ebay-btn cs-ebay-sold">Sold \u2197</a></td>
-    </tr>`;
-  }).join('');
+  let gradeStr = null, nm = false;
+  if      (csStatsGrade === 'psa8')  gradeStr = 'PSA 8';
+  else if (csStatsGrade === 'psa9')  gradeStr = 'PSA 9';
+  else if (csStatsGrade === 'psa10') gradeStr = 'PSA 10';
+  else if (csStatsGrade === 'cgc9')  gradeStr = 'CGC 9';
+  else if (csStatsGrade === 'cgc10') gradeStr = 'CGC 10';
+  else if (csStatsGrade === 'nm')    { gradeStr = null; nm = true; }
+  // raw: gradeStr=null, nm=false
+
+  const q         = csEbayQueryUniv(card, gradeStr, nm, isRev);
+  const activeUrl = csEbayUrl(q, false);
+  const soldUrl   = csEbayUrl(q, true);
 
   return `
-    <div class="cs-detail">
-      <div class="cs-img-side">
-        ${imgHtml}
-        ${tcgBtn}
-      </div>
-      <div class="cs-info">
-        <div class="dp-sec">TCGPlayer Prices</div>
-        ${tcgBlock}
-        <div class="dp-sec" style="margin-top:18px">eBay Market Research
-          <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:9px;color:var(--muted)"> \u2014 opens in new tab</span>
-        </div>
-        ${varTabsHtml}
-        <table class="cs-ebay-tbl"${varTabsHtml ? ' style="margin-top:0"' : ''}>
-          <thead><tr><th>Grade</th><th>Active Listings</th><th>Sold / Completed</th></tr></thead>
-          <tbody>${ebayRows}</tbody>
-        </table>
-      </div>
+    ${varToggle}
+    <div class="cs-ebay-gate-row">
+      <a href="${activeUrl}" target="_blank" class="cs-ebay-btn cs-ebay-active" style="font-size:12px;padding:7px 20px">Active Listings \u2197</a>
+      <a href="${soldUrl}"   target="_blank" class="cs-ebay-btn cs-ebay-sold"   style="font-size:12px;padding:7px 20px">Sold / Completed \u2197</a>
     </div>`;
 }
 
