@@ -2514,12 +2514,13 @@ function csRenderResults() {
     document.getElementById('cs-meta').textContent = 'Verify card';
     const card = csSelectedCard;
     const imgSrc = card.images?.small || card.images?.large || '';
+    const varBadge = csVariant === 'reverse' ? ' <span class="v-rev" style="font-size:10px;padding:2px 6px;border-radius:3px;vertical-align:middle">Rev Holo</span>' : '';
     const sub = `${csEsc(card.set.name)} \u00b7 ${card.number}/${card.set.total}${card.rarity ? ' \u00b7 ' + csEsc(card.rarity) : ''}`;
     out.innerHTML = `
       <div class="cs-verify">
         ${imgSrc ? `<img class="cs-verify-img" src="${imgSrc}" alt="${csEsc(card.name)}"/>` : '<div class="cs-img-ph" style="width:180px;height:252px">\ud83c\udccf</div>'}
         <div>
-          <div class="cs-verify-name">${csEsc(card.name)}</div>
+          <div class="cs-verify-name">${csEsc(card.name)}${varBadge}</div>
           <div class="cs-verify-sub">${sub}</div>
         </div>
         <div class="cs-verify-prompt">Is this the right card?</div>
@@ -2571,17 +2572,29 @@ function csRenderResults() {
     ? `Showing ${showing} of ${csApiTotal} \u2014 click Find Stats on the right card`
     : `${showing} result${showing !== 1 ? 's' : ''} \u2014 click Find Stats on the right card`;
 
+  const csNoRevRarities = ['Rare Holo EX','Rare Holo Star','Rare Secret','Rare BREAK',
+    'LEGEND','Rare ACE','Rare Prism Star','Rare Shiny',
+    'Rare Shiny GX','Rare Rainbow','Rare Ultra'];
+
   out.innerHTML = '';
   csApiCards.forEach(card => {
     const div = document.createElement('div');
     div.className = 'cs-row';
     const sub = `${csEsc(card.set.name)} \u00b7 ${card.number}/${card.set.total}${card.rarity ? ' \u00b7 ' + csEsc(card.rarity) : ''}`;
+    const hasRev = !csNoRevRarities.includes(card.rarity || '');
+    const cid = csEsc(card.id);
+    const btns = hasRev
+      ? `<div style="display:flex;gap:4px;flex-shrink:0">
+           <button class="cs-find-btn" data-cid="${cid}" onclick="csSelectCard(this.dataset.cid,'regular')" style="font-size:11px;padding:6px 10px">Regular \u2192</button>
+           <button class="cs-find-btn" data-cid="${cid}" onclick="csSelectCard(this.dataset.cid,'reverse')" style="font-size:11px;padding:6px 10px;background:var(--green);border-color:var(--green)">Rev Holo \u2192</button>
+         </div>`
+      : `<button class="cs-find-btn" data-cid="${cid}" onclick="csSelectCard(this.dataset.cid,'regular')">Find Stats \u2192</button>`;
     div.innerHTML = `
       <div style="flex:1;min-width:0">
         <div class="cs-row-name">${csEsc(card.name)}</div>
         <div class="cs-row-sub">${sub}</div>
       </div>
-      <button class="cs-find-btn" data-cid="${csEsc(card.id)}" onclick="csSelectCard(this.dataset.cid)">Find Stats \u2192</button>`;
+      ${btns}`;
     out.appendChild(div);
   });
 
@@ -2593,11 +2606,11 @@ function csRenderResults() {
   }
 }
 
-function csSelectCard(cid) {
+function csSelectCard(cid, variant) {
   csSelectedCard = csApiCards.find(c => c.id === cid) || null;
   if (!csSelectedCard) return;
   csGate = 'verify';
-  csVariant = 'regular';
+  csVariant = variant || 'regular';
   csRenderResults();
 }
 
