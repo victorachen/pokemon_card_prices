@@ -113,6 +113,39 @@ The Browse API does NOT index eBay Live auctions — they're a separate platform
 ### PC Last Sold tab — proxy status (end of 2026-03-27 session)
 Built and pushed but **NOT yet confirmed working** — got "Failed to fetch" with allorigins.win (single proxy). Fixed by adding 3-proxy fallback (corsproxy.io → allorigins.win → codetabs.com) with visible debug log in each card. User went to sleep before re-testing. **Next session: open the site, click PC Last Sold, paste a URL and see what the debug log says.** If all 3 still fail, we may need a small serverless function (Netlify/Vercel) as proxy instead.
 
+---
+
+## Discord ↔ Terminal Mirroring (added 2026-03-27)
+
+### What's working
+- **Discord → Claude context**: `UserPromptSubmit` hook (`discord_mirror_hook.py`) reads `~/discord_mirror.log` since last check and injects new Discord messages as `additionalContext` — Claude sees them every turn
+- **Claude Code → Discord TLDR**: Stop hook fires `discord_tldr.py` on every response; uses Haiku to summarize everything done and POSTs to Discord webhook as "Spidy Bot [Claude]..."
+- **Discord bot terminal mirroring**: `discord_bot.py` writes all Victor messages + bot replies to `~/discord_mirror.log`
+
+### What didn't work / lessons learned
+- **`systemMessage` from hooks** — appears as a subtle UI banner in Claude Code, not prominent terminal text. Victor couldn't see it.
+- **Background process stdout** — bot runs via `run_in_background: true`; its `print()` statements go to a temp task output file, NOT the visible terminal. Cannot use stdout for real-time terminal display.
+- **`CONOUT$` on Windows** — attempted to open Windows console device directly from bot subprocess to write to parent terminal. Did NOT work — background bash subprocess doesn't inherit the same console handle.
+- **Real-time bidirectional mirror is not achievable** with the current architecture (bot as background process + Claude Code as foreground). The hook approach is the closest working solution.
+
+### Current best solution
+1. Victor sends Discord message → bot logs it to `~/discord_mirror.log`
+2. Next time Victor types anything in Claude Code → hook reads log → Claude sees Discord messages in context and can reference them explicitly
+3. Claude finishes responding → Stop hook posts Haiku TLDR to Discord
+
+### If real-time terminal display is needed in future
+- Run bot in a **separate terminal window** (not as Claude Code background task): `python discord_bot.py` — stdout goes directly to that window
+- Or use `Get-Content -Wait ~/discord_mirror.log` in a second terminal to tail the log
+- Or deploy bot to Railway so it doesn't need to run on PC at all
+
+### Key files
+- `discord_bot.py` — bot; writes mirror lines to `~/discord_mirror.log` + `CONOUT$` attempt
+- `discord_tldr.py` — Stop hook; posts Haiku TLDR to Discord webhook
+- `discord_mirror_hook.py` — UserPromptSubmit hook; injects Discord log into Claude context
+- `~/.claude/settings.json` — has both hooks configured
+
+---
+
 ### Next session TODO (in order)
 
 **#1 — Test PC Last Sold tab**
@@ -146,7 +179,7 @@ git add watchlist_data.json && git commit -m "Refresh watchlist data (15 cards)"
 ---
 
 ## Key Files
-- `index.html` — live site: 814 cards across 4 sets + watchlist tab for 15 cards
+- `index.html` — live site: 814 cards across 4 sets + watchlist tab for 16 cards (added Zapdos ex FRLG)
 - `watchlist_data.json` — fetched locally, committed to repo, read by site JS at runtime
 - `fetch_watchlist_prices.py` — run this to refresh prices → commit watchlist_data.json
 - `deal_finder.py` — Discord deal alerts (25% below median); runs via GitHub Actions every 4h
@@ -158,7 +191,10 @@ git add watchlist_data.json && git commit -m "Refresh watchlist data (15 cards)"
 - `Procfile` — Railway deployment config (`worker: python discord_bot.py`)
 - `pc_last_sold.py` — CLI fallback for PriceCharting scraping (if browser proxy fails)
 - `requirements.txt` — all Python dependencies
-- `Cards_I_Care_About.txt` — 15-card personal watchlist
+- `Cards_I_Care_About.txt` — 16-card personal watchlist
+- `discord_bot.py` — Claude Haiku Discord bot; responds to `!claude`/`@mention`/`!status`/`!clear`/`!help`; mirrors to `~/discord_mirror.log`
+- `discord_tldr.py` — Claude Code Stop hook; Haiku TLDR of every response → Discord webhook
+- `discord_mirror_hook.py` — Claude Code UserPromptSubmit hook; injects new Discord messages into Claude context each turn
 - `all_set_cards.json` — full card database (426 cards) from pokemontcg.io API
 - `generate_card_list.py` — re-fetches all set cards from API → updates all_set_cards.json
 - `build_site.py` — re-generates index.html from all_set_cards.json
