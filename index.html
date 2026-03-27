@@ -2034,7 +2034,9 @@ let csApiLoading  = false;
 let csApiError    = false;
 let csSearchTimer = null;
 let csVariant     = 'regular'; // 'regular' | 'reverse' — controls eBay query variant
-const csPcCache   = {};        // card.id → {status:'loading'|'error'|'ok', byGrade:{}, gradeprices:{}}
+let csMode        = 'listings'; // 'listings' | 'sold' — Gate 3 mode toggle
+const csEbayCache = {};         // key: `${card.id}|${grade}|${variant}` → {status, items:[]}
+const csSoldGradeState = {};    // card.id → active grade in sold view
 // priceCache and fetchPrice are shared with the main browse view
 
 function showCardSearch() {
@@ -2192,18 +2194,16 @@ function csBackToSearch() {
 async function csLoadStats() {
   csGate = 'stats';
   csStatsGrade = 'psa9';
-  csRenderResults(); // initial render — shows loading states
+  csMode = 'listings';
+  csRenderResults(); // renders panel with loading state for eBay listings
+
   const id   = csSelectedCard.id;
   const card = csSelectedCard;
 
-  const refresh = () => {
-    if (csGate === 'stats' && csSelectedCard?.id === id) {
-      const bodyEl = document.getElementById('cs-stats-body');
-      if (bodyEl) bodyEl.innerHTML = csStatsBodyHtml(csSelectedCard, priceCache[id]);
-    }
-  };
+  // Start eBay fetch immediately (don't block on TCGPlayer)
+  csTriggerEbayFetch();
 
-  // TCGPlayer: await inline with timeout
+  // TCGPlayer: fetch in background (only needed when user clicks TCGPlayer tab)
   if (!priceCache[id] || priceCache[id] === 'loading') {
     try {
       const ctrl = new AbortController();
@@ -2215,27 +2215,48 @@ async function csLoadStats() {
     } catch(e) {
       if (!priceCache[id] || priceCache[id] === 'loading') priceCache[id] = 'error';
     }
+    // Re-render only if user is now on TCGPlayer tab
+    if (csGate === 'stats' && csSelectedCard?.id === id && csStatsGrade === 'tcgplayer') {
+      const bodyEl = document.getElementById('cs-stats-body');
+      if (bodyEl) bodyEl.innerHTML = csStatsBodyHtml(card, priceCache[id]);
+    }
   }
-  refresh(); // update body once TCGPlayer is done
-
-  // PriceCharting: fetch in background, re-render body when done
-  csPcFetch(card).then(refresh);
 }
 
 function csStatsTab(grade) {
   csStatsGrade = grade;
   document.querySelectorAll('.cs-stab').forEach(b =>
     b.classList.toggle('cs-sactive', b.dataset.grade === grade));
-  const bodyEl = document.getElementById('cs-stats-body');
-  if (bodyEl && csSelectedCard)
-    bodyEl.innerHTML = csStatsBodyHtml(csSelectedCard, priceCache[csSelectedCard.id]);
+  if (grade === 'tcgplayer') {
+    const bodyEl = document.getElementById('cs-stats-body');
+    if (bodyEl && csSelectedCard)
+      bodyEl.innerHTML = csStatsBodyHtml(csSelectedCard, priceCache[csSelectedCard.id]);
+  } else {
+    csTriggerEbayFetch();
+  }
 }
 
 function csSetVariant(v) {
   csVariant = v;
-  const bodyEl = document.getElementById('cs-stats-body');
-  if (bodyEl && csSelectedCard)
-    bodyEl.innerHTML = csStatsBodyHtml(csSelectedCard, priceCache[csSelectedCard.id]);
+  csTriggerEbayFetch();
+}
+
+function csSetMode(mode) {
+  csMode = mode;
+  const btnL = document.getElementById('cs-mbtn-l');
+  const btnS = document.getElementById('cs-mbtn-s');
+  if (btnL) btnL.classList.toggle('wl-mode-active', mode === 'listings');
+  if (btnS) btnS.classList.toggle('wl-mode-active', mode === 'sold');
+  const tabsRow = document.getElementById('cs-grade-tabs-row');
+  if (tabsRow) tabsRow.style.display = mode === 'sold' ? 'none' : '';
+  if (mode === 'listings') {
+    const bodyEl = document.getElementById('cs-stats-body');
+    if (bodyEl && csSelectedCard)
+      bodyEl.innerHTML = csStatsBodyHtml(csSelectedCard, priceCache[csSelectedCard.id]);
+    csTriggerEbayFetch();
+  } else {
+    csSoldRender();
+  }
 }
 
 function csRenderStatsPanel(out) {
@@ -2260,18 +2281,16 @@ function csRenderStatsPanel(out) {
         </div>
         <button class="cs-back-btn" onclick="csBackToSearch()">\u2190 Back</button>
       </div>
-      <div class="cs-stats-tabs">${tabsHtml}</div>
+      <div class="wl-mode-row">
+        <button class="wl-mode-btn wl-mode-active" id="cs-mbtn-l" onclick="csSetMode('listings')">Listings</button>
+        <button class="wl-mode-btn" id="cs-mbtn-s" onclick="csSetMode('sold')">Sold</button>
+      </div>
+      <div id="cs-grade-tabs-row"><div class="cs-stats-tabs">${tabsHtml}</div></div>
       <div id="cs-stats-body" class="cs-stats-body">${csStatsBodyHtml(card, priceCache[card.id])}</div>
     </div>`;
 }
 
 function csStatsBodyHtml(card, api) {
-  const isRev  = csVariant === 'reverse';
-  const rarity = card.rarity || '';
-  const noRev  = ['Rare Holo EX','Rare Holo Star','Rare Secret','Rare BREAK',
-                   'LEGEND','Rare ACE','Rare Prism Star','Rare Shiny',
-                   'Rare Shiny GX','Rare Rainbow','Rare Ultra'].includes(rarity);
-
   // TCGPlayer tab — needs fetched price data
   if (csStatsGrade === 'tcgplayer') {
     if (!api || api === 'loading') return `<div class="cs-spin"></div>`;
@@ -2302,94 +2321,9 @@ function csStatsBodyHtml(card, api) {
     return `${grid}${updated ? `<div class="dp-upd">TCGPlayer data: ${updated}</div>` : ''}${btn}`;
   }
 
-  // eBay/grade tabs — show PriceCharting sales inline + eBay links
-  const gradeLabels = {psa8:'PSA 8',psa9:'PSA 9',psa10:'PSA 10',cgc9:'CGC 9',cgc10:'CGC 10',nm:'NM/LP',raw:'Raw'};
-  const gradeLabel  = gradeLabels[csStatsGrade] || csStatsGrade.toUpperCase();
-
-  const varToggle = !noRev ? `
-    <div class="cs-vtabs" style="margin-bottom:16px">
-      <button class="cs-vtab${!isRev?' cs-vactive':''}" onclick="csSetVariant('regular')">Regular</button>
-      <button class="cs-vtab${isRev?' cs-vactive':''}" onclick="csSetVariant('reverse')">Rev Holo</button>
-    </div>` : '';
-
-  let gradeStr = null, nm = false;
-  if      (csStatsGrade === 'psa8')  gradeStr = 'PSA 8';
-  else if (csStatsGrade === 'psa9')  gradeStr = 'PSA 9';
-  else if (csStatsGrade === 'psa10') gradeStr = 'PSA 10';
-  else if (csStatsGrade === 'cgc9')  gradeStr = 'CGC 9';
-  else if (csStatsGrade === 'cgc10') gradeStr = 'CGC 10';
-  else if (csStatsGrade === 'nm')    { gradeStr = null; nm = true; }
-
-  const q          = csEbayQueryUniv(card, gradeStr, nm, isRev);
-  const activeUrl  = csEbayUrl(q, false);
-  const soldUrl    = csEbayUrl(q, true);
-  const pcUrl      = csPriceChartingUrl(card);
-  const pcGradeKey = (csStatsGrade === 'nm' || csStatsGrade === 'raw') ? 'raw' : csStatsGrade;
-
-  // ── PriceCharting inline sales section ─────────────────────────────────────
-  const pcState = csPcCache[card.id];
-  let pcHtml = '';
-
-  if (!pcState || pcState.status === 'loading') {
-    pcHtml = `<div class="cs-tcg-ref" style="color:var(--muted)">⏳ Loading PriceCharting sales data\u2026</div>`;
-  } else if (pcState.status === 'error') {
-    pcHtml = `<div class="cs-tcg-ref" style="color:var(--muted)">Could not fetch PriceCharting — use the button below.</div>`;
-  } else {
-    const mktPrice  = pcState.gradeprices?.[pcGradeKey];
-    const salesRows = pcState.byGrade?.[pcGradeKey] || [];
-
-    if (mktPrice != null) {
-      pcHtml += `<div class="cs-pc-mkt">${gradeLabel} market: <strong>$${mktPrice.toFixed(2)}</strong></div>`;
-    }
-    if (salesRows.length) {
-      const rowsHtml = salesRows.slice(0, 10).map(r => {
-        const priceMatch = (r.price || '').match(/\$[\d,]+(?:\.\d+)?/);
-        const priceStr   = priceMatch ? priceMatch[0] : (r.price || '\u2014');
-        return `<tr>
-          <td class="cs-sale-price">${priceStr}</td>
-          <td class="cs-sale-date">${r.date || '\u2014'}</td>
-          <td class="cs-sale-title">${csEsc(r.title || '')}</td>
-        </tr>`;
-      }).join('');
-      pcHtml += `
-        <div class="cs-sales-section">
-          <div class="cs-sales-hdr">Recent PriceCharting Sales</div>
-          <table class="cs-sales-tbl">
-            <thead><tr>
-              <th style="width:80px">Price</th>
-              <th style="width:100px">Date Sold</th>
-              <th>Title</th>
-            </tr></thead>
-            <tbody>${rowsHtml}</tbody>
-          </table>
-        </div>`;
-    } else if (!mktPrice) {
-      pcHtml = `<div class="cs-tcg-ref" style="color:var(--muted)">No ${gradeLabel} sales found on PriceCharting.</div>`;
-    }
-  }
-
-  // ── TCGPlayer raw price (bonus reference) ──────────────────────────────────
-  let tcgCtx = '';
-  if (api && api !== 'loading' && api !== 'error') {
-    const tcgPrices = api.tcgplayer?.prices ?? {};
-    const priceKeys = ['holofoil','1stEditionHolofoil','unlimitedHolofoil','normal','reverseHolofoil'];
-    let bestPrice = null;
-    for (const k of priceKeys) { if (tcgPrices[k]?.market != null) { bestPrice = tcgPrices[k].market; break; } }
-    if (bestPrice == null) { const v = Object.values(tcgPrices)[0]; if (v?.market != null) bestPrice = v.market; }
-    if (bestPrice != null) {
-      tcgCtx = `<div class="cs-tcg-ref">TCGPlayer market (raw/NM): <strong>$${bestPrice.toFixed(2)}</strong></div>`;
-    }
-  }
-
-  return `
-    ${varToggle}
-    ${pcHtml}
-    <div class="cs-ebay-gate-row" style="margin-top:16px">
-      <a href="${activeUrl}" target="_blank" class="cs-ebay-btn cs-ebay-active" style="font-size:12px;padding:7px 20px">eBay Active \u2197</a>
-      <a href="${soldUrl}"   target="_blank" class="cs-ebay-btn cs-ebay-sold"   style="font-size:12px;padding:7px 20px">eBay Sold \u2197</a>
-      <a href="${pcUrl}"     target="_blank" class="cs-ebay-btn cs-pc-btn"      style="font-size:12px;padding:7px 20px">PriceCharting \u2197</a>
-    </div>
-    ${tcgCtx}`;
+  // Route based on mode
+  if (csMode === 'sold') return csSoldBodyHtml();
+  return csListingsBodyHtml(card, api);
 }
 
 function csEbayQueryUniv(card, gradeStr, rawNm, isReverse) {
@@ -2443,58 +2377,329 @@ function csPriceChartingUrl(card) {
   return `https://www.pricecharting.com/game/${setSlug}/${nameSlug}-${card.number}`;
 }
 
-// Extract grade market prices from a PriceCharting card page HTML
-function pcParseGradePrices(html) {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  const prices = {};
-  for (const row of doc.querySelectorAll('tr')) {
-    const txt = row.textContent.replace(/\s+/g, ' ');
-    let grade = null;
-    if (/PSA\s*10|GEM.{0,5}MINT\s*10/i.test(txt)) grade = 'psa10';
-    else if (/PSA\s*9(?![.\d])/i.test(txt))         grade = 'psa9';
-    else if (/PSA\s*8(?![.\d])/i.test(txt))         grade = 'psa8';
-    else if (/CGC\s*10/i.test(txt))                 grade = 'cgc10';
-    else if (/CGC\s*9(?![.\d])/i.test(txt))         grade = 'cgc9';
-    if (grade && !prices[grade]) {
-      const m = txt.match(/\$([\d,]+(?:\.\d{2})?)/);
-      if (m) { const v = parseFloat(m[1].replace(/,/g,'')); if (v > 0 && v < 500000) prices[grade] = v; }
-    }
+// ── Card Search Gate 3: eBay listings fetch + sold (PriceCharting paste) ─────
+
+function csEbayParseHtml(html) {
+  const doc   = new DOMParser().parseFromString(html, 'text/html');
+  const items = [];
+  for (const li of doc.querySelectorAll('.s-item')) {
+    const titleEl = li.querySelector('.s-item__title');
+    const priceEl = li.querySelector('.s-item__price');
+    const linkEl  = li.querySelector('a.s-item__link');
+    const typeEl  = li.querySelector('.s-item__purchase-options-with-icon, .s-item__purchase-options, .s-item__detail--primary');
+    if (!titleEl || !priceEl) continue;
+    const title = titleEl.textContent.trim();
+    if (!title || title.toLowerCase() === 'shop on ebay') continue;
+    const priceText  = priceEl.textContent.trim();
+    const priceMatch = priceText.match(/\$([\d,]+(?:\.\d{2})?)/);
+    if (!priceMatch) continue;
+    const price        = parseFloat(priceMatch[1].replace(/,/g, ''));
+    const url          = linkEl?.href || '';
+    const typeText     = (typeEl?.textContent || '').toLowerCase();
+    const isAuction    = typeText.includes('bid') || typeText.includes('auction') || typeText.includes('0 bids');
+    const hasBestOffer = typeText.includes('best offer') || typeText.includes('or best offer');
+    items.push({ title, price, url, type: isAuction ? 'AUCTION' : 'BIN', best_offer: hasBestOffer });
   }
-  return Object.keys(prices).length ? prices : null;
+  return items;
 }
 
-// Fetch PriceCharting page for a card and cache grade sales + market prices
-async function csPcFetch(card) {
-  const id = card.id;
-  if (csPcCache[id]) return; // already fetching or done
-  csPcCache[id] = { status: 'loading' };
-  const url = csPriceChartingUrl(card);
+async function csTriggerEbayFetch() {
+  if (!csSelectedCard || csStatsGrade === 'tcgplayer') return;
+  const card     = csSelectedCard;
+  const grade    = csStatsGrade;
+  const isRev    = csVariant === 'reverse';
+  const cacheKey = `${card.id}|${grade}|${csVariant}`;
+
+  if (csEbayCache[cacheKey]) {
+    // Already cached — re-render body with result
+    const bodyEl = document.getElementById('cs-stats-body');
+    if (bodyEl && csGate === 'stats' && csSelectedCard?.id === card.id && csMode === 'listings')
+      bodyEl.innerHTML = csStatsBodyHtml(card, priceCache[card.id]);
+    return;
+  }
+
+  csEbayCache[cacheKey] = { status: 'loading' };
+  const bodyEl = document.getElementById('cs-stats-body');
+  if (bodyEl && csGate === 'stats' && csSelectedCard?.id === card.id && csMode === 'listings')
+    bodyEl.innerHTML = csStatsBodyHtml(card, priceCache[card.id]);
+
+  let gradeStr = null, nm = false;
+  if      (grade === 'psa8')  gradeStr = 'PSA 8';
+  else if (grade === 'psa9')  gradeStr = 'PSA 9';
+  else if (grade === 'psa10') gradeStr = 'PSA 10';
+  else if (grade === 'cgc9')  gradeStr = 'CGC 9';
+  else if (grade === 'cgc10') gradeStr = 'CGC 10';
+  else if (grade === 'nm')    nm = true;
+
+  const q          = csEbayQueryUniv(card, gradeStr, nm, isRev);
+  const searchUrl  = csEbayUrl(q, false);
+
   let html = null;
   for (const proxy of PC_PROXIES) {
     try {
       const ctrl  = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 12000);
-      const resp  = await fetch(proxy.url + encodeURIComponent(url), {signal: ctrl.signal});
+      const timer = setTimeout(() => ctrl.abort(), 15000);
+      const resp  = await fetch(proxy.url + encodeURIComponent(searchUrl), { signal: ctrl.signal });
       clearTimeout(timer);
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       let raw;
       if (proxy.type === 'json') { const j = await resp.json(); raw = j.contents; }
       else { raw = await resp.text(); }
-      if (!raw || raw.length < 500) throw new Error('Empty');
+      if (!raw || raw.length < 1000) throw new Error('Empty');
       html = raw; break;
     } catch(e) { /* try next proxy */ }
   }
-  if (!html) { csPcCache[id] = { status: 'error' }; return; }
-  const rows        = pcParseHtml(html) || [];
-  const gradeprices = pcParseGradePrices(html) || {};
-  // Group recent sales rows by grade
-  const byGrade = {};
-  for (const r of rows) {
-    const g = r.grade || 'raw';
-    if (!byGrade[g]) byGrade[g] = [];
-    byGrade[g].push(r);
+
+  csEbayCache[cacheKey] = html
+    ? { status: 'ok', items: csEbayParseHtml(html) }
+    : { status: 'error' };
+
+  if (csGate === 'stats' && csSelectedCard?.id === card.id && csMode === 'listings' && csStatsGrade === grade) {
+    const b = document.getElementById('cs-stats-body');
+    if (b) b.innerHTML = csStatsBodyHtml(card, priceCache[card.id]);
   }
-  csPcCache[id] = { status: 'ok', byGrade, gradeprices };
+}
+
+function csListingsBodyHtml(card, api) {
+  const isRev  = csVariant === 'reverse';
+  const rarity = card.rarity || '';
+  const noRev  = ['Rare Holo EX','Rare Holo Star','Rare Secret','Rare BREAK',
+                   'LEGEND','Rare ACE','Rare Prism Star','Rare Shiny',
+                   'Rare Shiny GX','Rare Rainbow','Rare Ultra'].includes(rarity);
+  const varToggle = !noRev ? `
+    <div class="cs-vtabs" style="margin-bottom:12px">
+      <button class="cs-vtab${!isRev?' cs-vactive':''}" onclick="csSetVariant('regular')">Regular</button>
+      <button class="cs-vtab${isRev?' cs-vactive':''}" onclick="csSetVariant('reverse')">Rev Holo</button>
+    </div>` : '';
+
+  const cacheKey  = `${card.id}|${csStatsGrade}|${csVariant}`;
+  const ebayState = csEbayCache[cacheKey];
+
+  let gradeStr = null, nm = false;
+  if      (csStatsGrade === 'psa8')  gradeStr = 'PSA 8';
+  else if (csStatsGrade === 'psa9')  gradeStr = 'PSA 9';
+  else if (csStatsGrade === 'psa10') gradeStr = 'PSA 10';
+  else if (csStatsGrade === 'cgc9')  gradeStr = 'CGC 9';
+  else if (csStatsGrade === 'cgc10') gradeStr = 'CGC 10';
+  else if (csStatsGrade === 'nm')    nm = true;
+  const q         = csEbayQueryUniv(card, gradeStr, nm, isRev);
+  const activeUrl = csEbayUrl(q, false);
+  const soldUrl   = csEbayUrl(q, true);
+  const gradeLabels = {psa8:'PSA 8',psa9:'PSA 9',psa10:'PSA 10',cgc9:'CGC 9',cgc10:'CGC 10',nm:'NM/LP',raw:'Raw'};
+  const lbl = gradeLabels[csStatsGrade] || csStatsGrade;
+
+  let bodyHtml = '';
+  if (!ebayState || ebayState.status === 'loading') {
+    bodyHtml = `<div class="cs-spin"></div>`;
+  } else if (ebayState.status === 'error') {
+    bodyHtml = `<div class="wl-none">Could not fetch eBay listings — <a href="${activeUrl}" target="_blank" style="color:var(--accent)">search eBay manually \u2197</a></div>`;
+  } else if (!ebayState.items || !ebayState.items.length) {
+    bodyHtml = `<div class="wl-none">No ${lbl} listings found right now. <a href="${activeUrl}" target="_blank" style="color:var(--accent)">Search eBay \u2197</a></div>`;
+  } else {
+    const rowsHtml = ebayState.items.map(it => `
+      <tr>
+        <td><span class="wl-price">$${it.price.toFixed(2)}</span></td>
+        <td><span class="${it.type === 'AUCTION' ? 'wl-auc' : 'wl-bin'}">${it.type === 'AUCTION' ? 'Auction' : 'BIN' + (it.best_offer ? '+BO' : '')}</span></td>
+        <td><a href="${it.url}" target="_blank" class="wl-link">${csEsc(it.title)}</a></td>
+      </tr>`).join('');
+    bodyHtml = `<table class="wl-listing-tbl">
+      <thead><tr>
+        <th style="width:80px">Price</th>
+        <th style="width:80px">Type</th>
+        <th>Listing</th>
+      </tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>`;
+  }
+
+  return `${varToggle}${bodyHtml}
+    <div class="cs-ebay-gate-row" style="margin-top:14px">
+      <a href="${activeUrl}" target="_blank" class="cs-ebay-btn cs-ebay-active" style="font-size:12px;padding:7px 20px">eBay Active \u2197</a>
+      <a href="${soldUrl}"   target="_blank" class="cs-ebay-btn cs-ebay-sold"   style="font-size:12px;padding:7px 20px">eBay Sold \u2197</a>
+    </div>`;
+}
+
+// ── Card Search Sold mode (PriceCharting paste, mirrors watchlist sold) ───────
+
+function csSoldKey() { return 'cs_pc_' + (csSelectedCard?.id || 'x'); }
+function csSoldLoad() {
+  try { return JSON.parse(localStorage.getItem(csSoldKey()) || 'null'); }
+  catch(e) { return null; }
+}
+function csSoldSave(data) { localStorage.setItem(csSoldKey(), JSON.stringify(data)); }
+
+function csSoldRender() {
+  if (!csSelectedCard) return;
+  const bodyEl = document.getElementById('cs-stats-body');
+  if (!bodyEl) return;
+  bodyEl.innerHTML = csSoldBodyHtml();
+}
+
+function csSoldBodyHtml() {
+  const card  = csSelectedCard;
+  const saved = csSoldLoad();
+
+  if (!saved || !saved.rows) {
+    const pcUrl = csPriceChartingUrl(card);
+    return `
+      <div class="wl-sold-wrap">
+        <div class="wl-sold-empty">
+          <div class="wl-sold-empty-ico">📈</div>
+          Paste a PriceCharting URL to see sold data for this card.
+          <div class="wl-pc-input-row" style="margin-top:12px">
+            <input class="wl-pc-url" id="cs-pc-url" type="text"
+              placeholder="https://www.pricecharting.com/game/pokemon-\u2026/card-name"/>
+            <button class="wl-pc-fetch-btn" onclick="csSoldFetch()">Fetch</button>
+          </div>
+          <div style="margin-top:8px;font-size:11px;color:var(--muted)">
+            Suggested: <a href="${pcUrl}" target="_blank" style="color:var(--accent);word-break:break-all">${pcUrl}</a>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  const graded = { psa8: [], psa9: [], psa10: [], cgc9: [], cgc10: [], raw: [] };
+  for (const r of saved.rows) {
+    const g = r.grade || pcDetectGrade(r.title);
+    (graded[g] || graded.raw).push(r);
+  }
+  const tabDefs     = [['psa8','PSA 8'],['psa9','PSA 9'],['psa10','PSA 10'],['cgc9','CGC 9'],['cgc10','CGC 10'],['raw','Ungraded']];
+  const available   = tabDefs.filter(([g]) => graded[g].length > 0);
+  const preferOrder = ['psa9','psa10','psa8','cgc9','cgc10','raw'];
+  const defaultGrade= preferOrder.find(g => graded[g]?.length > 0) || 'raw';
+  const cardId      = card.id;
+  const activeGrade = (csSoldGradeState[cardId] && graded[csSoldGradeState[cardId]]?.length > 0)
+    ? csSoldGradeState[cardId] : defaultGrade;
+  csSoldGradeState[cardId] = activeGrade;
+
+  const rows = graded[activeGrade] || [];
+  const rowsHtml = rows.map(r => {
+    const pm  = (r.price || '').match(/\$[\d,]+(?:\.\d+)?/);
+    const pStr= pm ? pm[0] : (r.price || '\u2014');
+    return `<tr>
+      <td><span class="wl-price">${pStr}</span></td>
+      <td><span class="wl-sold-badge">${r.date || '\u2014'}</span></td>
+      <td style="color:var(--text);font-size:12px;line-height:1.4">${r.title || ''}</td>
+    </tr>`;
+  }).join('');
+
+  const tabsHtml = available.map(([g, lbl]) =>
+    `<button class="wl-gtab${g===activeGrade?' wl-gactive':''}" onclick="csSoldGrade('${g}')">${lbl} (${graded[g].length})</button>`
+  ).join('');
+
+  const dbg    = saved.debug || {};
+  const gs     = `PSA8:${graded.psa8.length} PSA9:${graded.psa9.length} PSA10:${graded.psa10.length} Raw:${graded.raw.length}`;
+  const dbgJson= JSON.stringify(saved.rows.slice(0,3), null, 2).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  return `
+    <div>
+      <div class="wl-grade-tabs">${tabsHtml}</div>
+      <div class="wl-listings">
+        <div class="wl-sold-meta">
+          Last fetched: ${saved.fetched}
+          <button class="wl-sold-refetch" onclick="csSoldClear()">Change URL</button>
+          <button class="wl-sold-refetch" onclick="csSoldRefetch()">Refresh</button>
+        </div>
+        ${rows.length
+          ? `<table class="wl-listing-tbl"><thead><tr>
+              <th style="width:90px">Price</th>
+              <th style="width:108px">Date Sold</th>
+              <th>Listing</th>
+            </tr></thead><tbody>${rowsHtml}</tbody></table>`
+          : `<div class="wl-none">No ${tabDefs.find(t=>t[0]===activeGrade)?.[1]||activeGrade} sold data found. Hit Refresh to re-fetch.</div>`
+        }
+        <details style="margin-top:10px;font-size:11px;color:var(--muted)">
+          <summary style="cursor:pointer;user-select:none">▶ Debug (${new Date().toLocaleTimeString()})</summary>
+          <div style="margin-top:6px">
+            <b>Proxy:</b> ${dbg.proxy||'(cached)'} · <b>Total rows:</b> ${saved.rows.length} · ${gs}<br>
+            <pre style="font-size:10px;overflow:auto;max-height:200px;background:var(--surface2);padding:8px;border-radius:4px">${dbgJson}</pre>
+          </div>
+        </details>
+      </div>
+    </div>`;
+}
+
+function csSoldGrade(grade) {
+  if (csSelectedCard) csSoldGradeState[csSelectedCard.id] = grade;
+  csSoldRender();
+}
+
+function csSoldClear() {
+  localStorage.removeItem(csSoldKey());
+  if (csSelectedCard) delete csSoldGradeState[csSelectedCard.id];
+  csSoldRender();
+}
+
+function csSoldRefetch() {
+  const saved = csSoldLoad();
+  if (saved?.url) csSoldFetch(saved.url);
+}
+
+async function csSoldFetch(urlOverride) {
+  if (!csSelectedCard) return;
+  const bodyEl = document.getElementById('cs-stats-body');
+  if (!bodyEl) return;
+
+  let url = urlOverride;
+  if (!url) {
+    const inp = document.getElementById('cs-pc-url');
+    url = inp ? inp.value.trim() : '';
+  }
+  if (!url || !url.includes('pricecharting.com')) {
+    const inp = document.getElementById('cs-pc-url');
+    if (inp) { inp.style.borderColor = 'var(--red)'; setTimeout(() => inp.style.borderColor = '', 1400); }
+    return;
+  }
+
+  bodyEl.innerHTML = `<div class="wl-sold-wrap"><div class="pc-spin"></div></div>`;
+
+  let html = null;
+  const debugLog = [];
+  for (const proxy of PC_PROXIES) {
+    try {
+      const ctrl  = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 12000);
+      const resp  = await fetch(proxy.url + encodeURIComponent(url), { signal: ctrl.signal });
+      clearTimeout(timer);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      let raw;
+      if (proxy.type === 'json') { const j = await resp.json(); raw = j.contents; }
+      else                        { raw = await resp.text(); }
+      if (!raw || raw.length < 200) throw new Error('Empty response');
+      html = raw;
+      debugLog.push('\u2713 ' + proxy.label);
+      break;
+    } catch(err) {
+      debugLog.push('\u2717 ' + proxy.label + ': ' + (err.name === 'AbortError' ? 'timeout' : err.message));
+    }
+  }
+
+  if (!html) {
+    bodyEl.innerHTML = `<div class="wl-sold-wrap"><div class="pc-err">All proxies failed. Try again later.<br><small>${debugLog.join(' \u00b7 ')}</small></div>
+      <div class="wl-pc-input-row" style="margin-top:10px">
+        <input class="wl-pc-url" id="cs-pc-url" type="text" value="${csEsc(url)}"/>
+        <button class="wl-pc-fetch-btn" onclick="csSoldFetch()">Retry</button>
+      </div></div>`;
+    return;
+  }
+
+  const rows = pcParseHtml(html);
+  if (!rows || !rows.length) {
+    const tmpDoc   = new DOMParser().parseFromString(html, 'text/html');
+    const pageTitle = tmpDoc.title || '(no title)';
+    const tableIds  = [...tmpDoc.querySelectorAll('table[id]')].map(t => t.id).join(', ') || '(none)';
+    bodyEl.innerHTML = `<div class="wl-sold-wrap"><div class="pc-err">Page loaded but no sales table found.<br>
+      <small>Title: <b>${pageTitle}</b> \u00b7 Tables: <b>${tableIds}</b><br>${debugLog.join(' \u00b7 ')}</small></div>
+      <div class="wl-pc-input-row" style="margin-top:10px">
+        <input class="wl-pc-url" id="cs-pc-url" type="text" value="${csEsc(url)}"/>
+        <button class="wl-pc-fetch-btn" onclick="csSoldFetch()">Retry</button>
+      </div></div>`;
+    return;
+  }
+
+  const data = { url, rows, fetched: new Date().toLocaleString(), debug: { proxy: debugLog.join(' \u00b7 '), rowCount: rows.length } };
+  csSoldSave(data);
+  csSoldRender();
 }
 
 function csEsc(s) {
