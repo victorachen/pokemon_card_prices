@@ -1,5 +1,24 @@
 # Pokemon Delta Species — Project Notes
 
+## PC Last Sold Tab — Sold Tab Improvements (2026-03-27 evening session)
+
+### What was fixed and built
+1. **ISO date parsing bug** — PriceCharting changed date format from `MM/DD/YYYY` to `YYYY-MM-DD`. Parser fallback regex only matched old format → "no sales table found" on every card. Fixed regex in table detection fallback and smart date scan to accept both formats.
+2. **Sold tab styling** — now matches Listings tab: uses `wl-listing-tbl`, `wl-price` (bold green), gray `wl-sold-badge` for date, same row hover/borders.
+3. **PSA 8/9/10 grade tabs** — `pcParseHtml` now scans ALL tables on the PC page (not just `#completed-auctions`), up to 30 rows each, deduplicates by price+date+title. `pcDetectGrade(title)` detects PSA 8/9/10/CGC 9/CGC 10 from listing title text. `wlSoldRender` groups into tabs (PSA 8 | PSA 9 | PSA 10 | CGC | Ungraded), defaults to PSA 9 if data exists.
+4. **Debug toggle** — visible `▶ Debug (v3)` section at bottom of Sold tab shows proxy used, total rows, grade breakdown counts, and first 3 rows as JSON. Confirmed working.
+
+### Key functions (all in index.html)
+- `pcDetectGrade(title)` — regex grade detection from title string
+- `pcParseHtml(html)` — parses all sold tables, 30 rows each, returns flat array with `grade` field
+- `wlSoldRender(idx)` — groups by grade, renders tabs
+- `wlSoldGrade(idx, grade)` — tab switcher (state in `wlSoldGradeState` object)
+
+### GitHub Pages CDN caching note
+Changes take ~1-2 min to deploy. If user sees old UI, `Ctrl+Shift+R` + wait. Adding a visible marker to card names (e.g. "- debug active") is the fastest way to confirm new code is live.
+
+---
+
 ## Seller Away Monitor (added 2026-03-27)
 
 - **Item**: https://www.ebay.com/itm/157626935379 — seller away until ~Mar 29
