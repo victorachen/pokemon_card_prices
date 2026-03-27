@@ -1861,48 +1861,79 @@ function wlSoldRender(idx) {
     return;
   }
 
-  const rowsHtml = saved.rows.map(r => {
+  // Group rows by grade (backward compat: old rows without grade → 'raw')
+  const graded = { psa8: [], psa9: [], psa10: [], cgc9: [], cgc10: [], raw: [] };
+  for (const r of saved.rows) {
+    const g = r.grade || pcDetectGrade(r.title);
+    (graded[g] || graded.raw).push(r);
+  }
+
+  const tabDefs = [['psa8','PSA 8'],['psa9','PSA 9'],['psa10','PSA 10'],['cgc9','CGC 9'],['cgc10','CGC 10'],['raw','Ungraded']];
+  const available = tabDefs.filter(([g]) => graded[g].length > 0);
+
+  const preferOrder = ['psa9','psa10','psa8','cgc9','cgc10','raw'];
+  const defaultGrade = preferOrder.find(g => graded[g]?.length > 0) || 'raw';
+  const activeGrade = (wlSoldGradeState[idx] && graded[wlSoldGradeState[idx]]?.length > 0)
+    ? wlSoldGradeState[idx] : defaultGrade;
+  wlSoldGradeState[idx] = activeGrade;
+
+  const rows = graded[activeGrade] || [];
+  const rowsHtml = rows.map(r => {
     const priceMatch = (r.price || '').match(/\$[\d,]+(?:\.\d+)?/);
     const priceStr = priceMatch ? priceMatch[0] : (r.price || '—');
-    return `
-    <tr>
+    return `<tr>
       <td><span class="wl-price">${priceStr}</span></td>
       <td><span class="wl-sold-badge">${r.date || '—'}</span></td>
-      <td class="wl-link" style="color:var(--text)">${r.title || ''}</td>
+      <td style="color:var(--text);font-size:12px;line-height:1.4">${r.title || ''}</td>
     </tr>`;
   }).join('');
 
+  const tabsHtml = available.map(([g, lbl]) =>
+    `<button class="wl-gtab${g===activeGrade?' wl-gactive':''}" onclick="wlSoldGrade(${idx},'${g}')" data-grade="${g}">${lbl} (${graded[g].length})</button>`
+  ).join('');
+
   const dbg = saved.debug || {};
-  const rawJson = JSON.stringify(saved.rows, null, 2).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const gradeSummary = `PSA8:${graded.psa8.length} PSA9:${graded.psa9.length} PSA10:${graded.psa10.length} Raw:${graded.raw.length}`;
+  const debugJson = JSON.stringify(saved.rows.slice(0,3), null, 2).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
   wrap.innerHTML = `
-    <div class="wl-listings">
-      <div class="wl-sold-meta">
-        Last fetched: ${saved.fetched}
-        <button class="wl-sold-refetch" onclick="wlSoldClear(${idx})">Change URL</button>
-        <button class="wl-sold-refetch" onclick="wlSoldRefetch(${idx})">Refresh</button>
-      </div>
-      <table class="wl-listing-tbl">
-        <thead><tr>
-          <th style="width:90px">Price</th>
-          <th style="width:108px">Date Sold</th>
-          <th>Listing</th>
-        </tr></thead>
-        <tbody>${rowsHtml}</tbody>
-      </table>
-      <details style="margin-top:10px;font-size:11px;color:var(--muted)">
-        <summary style="cursor:pointer;user-select:none">▶ Debug (v2 — ${new Date().toLocaleTimeString()})</summary>
-        <div style="margin-top:6px">
-          <b>Proxy:</b> ${dbg.proxy || '(cached)'}<br>
-          <b>Rows parsed:</b> ${dbg.rowCount ?? saved.rows.length}<br>
-          <b>Raw data:</b><br>
-          <pre style="font-size:10px;overflow:auto;max-height:200px;background:var(--surface2);padding:8px;border-radius:4px">${rawJson}</pre>
+    <div>
+      <div class="wl-grade-tabs">${tabsHtml}</div>
+      <div class="wl-listings">
+        <div class="wl-sold-meta">
+          Last fetched: ${saved.fetched}
+          <button class="wl-sold-refetch" onclick="wlSoldClear(${idx})">Change URL</button>
+          <button class="wl-sold-refetch" onclick="wlSoldRefetch(${idx})">Refresh</button>
         </div>
-      </details>
+        ${rows.length
+          ? `<table class="wl-listing-tbl"><thead><tr>
+              <th style="width:90px">Price</th>
+              <th style="width:108px">Date Sold</th>
+              <th>Listing</th>
+            </tr></thead><tbody>${rowsHtml}</tbody></table>`
+          : `<div class="wl-none">No ${tabDefs.find(t=>t[0]===activeGrade)?.[1]||activeGrade} sold data found. Hit Refresh to re-fetch.</div>`
+        }
+        <details style="margin-top:10px;font-size:11px;color:var(--muted)">
+          <summary style="cursor:pointer;user-select:none">▶ Debug (v3 — ${new Date().toLocaleTimeString()})</summary>
+          <div style="margin-top:6px">
+            <b>Proxy:</b> ${dbg.proxy||'(cached)'} · <b>Total rows:</b> ${saved.rows.length} · ${gradeSummary}<br>
+            <b>First 3 rows:</b>
+            <pre style="font-size:10px;overflow:auto;max-height:200px;background:var(--surface2);padding:8px;border-radius:4px">${debugJson}</pre>
+          </div>
+        </details>
+      </div>
     </div>`;
 }
 
 function wlSoldClear(idx) {
   localStorage.removeItem(wlSoldKey(idx));
+  delete wlSoldGradeState[idx];
+  wlSoldRender(idx);
+}
+
+const wlSoldGradeState = {};
+function wlSoldGrade(idx, grade) {
+  wlSoldGradeState[idx] = grade;
   wlSoldRender(idx);
 }
 
@@ -2487,49 +2518,66 @@ async function pcFetchOne(id) {
   pcRender();
 }
 
+function pcDetectGrade(title) {
+  const t = (title || '').toUpperCase();
+  if (/PSA\s*10|GEM.{0,4}MINT\s*10/.test(t)) return 'psa10';
+  if (/PSA\s*9(?:[^.\d]|$)/.test(t))          return 'psa9';
+  if (/PSA\s*8(?:[^.\d]|$)/.test(t))          return 'psa8';
+  if (/CGC\s*10/.test(t))                      return 'cgc10';
+  if (/CGC\s*9(?:[^.\d]|$)/.test(t))          return 'cgc9';
+  return 'raw';
+}
+
 function pcParseHtml(html) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
 
-  // Find the completed-auctions table; PriceCharting uses this id
-  let table = doc.getElementById('completed-auctions')
-    || doc.getElementById('sold_list');
-
-  if (!table) {
-    // Fallback: any table whose text has both a $ price and a date (MM/DD/YYYY or YYYY-MM-DD)
-    for (const t of doc.querySelectorAll('table')) {
-      const txt = t.textContent;
-      if (/\$[\d,]+/.test(txt) && (/\d{2}\/\d{2}\/\d{4}/.test(txt) || /\d{4}-\d{2}-\d{2}/.test(txt))) { table = t; break; }
+  // Collect ALL tables that look like sold listings (price + date)
+  const tables = [];
+  for (const t of doc.querySelectorAll('table')) {
+    const txt = t.textContent;
+    if (/\$[\d,]+/.test(txt) && (/\d{2}\/\d{2}\/\d{4}/.test(txt) || /\d{4}-\d{2}-\d{2}/.test(txt))) {
+      tables.push(t);
     }
   }
-  if (!table) return null;
+  // Ensure named tables are included even if they somehow slipped by
+  for (const id of ['completed-auctions','sold_list']) {
+    const t = doc.getElementById(id);
+    if (t && !tables.includes(t)) tables.unshift(t);
+  }
+  if (!tables.length) return null;
 
-  // Map header columns
-  const hdrRow   = table.querySelector('tr');
-  const hdrCells = hdrRow ? [...hdrRow.querySelectorAll('th,td')] : [];
-  const hdrs     = hdrCells.map(c => c.textContent.trim().toLowerCase());
-  const idx = kw => hdrs.findIndex(h => kw.some(k => h.includes(k)));
-
-  const iTitle = idx([['title','name','listing']].flat());
-  const iDate  = idx([['date']]);
-  const iPrice = idx([['price']]);
-  const iGrade = idx([['grade','condition','grading']]);
-
+  const seen = new Set();
   const rows = [];
-  for (const tr of [...table.querySelectorAll('tr')].slice(1, 6)) {
-    const cells = [...tr.querySelectorAll('td,th')];
-    if (!cells.length) continue;
-    const get = i => (i >= 0 && i < cells.length) ? cells[i].textContent.trim() : '';
 
-    // Smart price: use column if found, else scan for $X pattern
-    let price = get(iPrice);
-    if (!price) price = cells.map(c => c.textContent.trim()).find(t => /^\$[\d,]+/.test(t)) || '';
-    if (!price) continue; // skip rows without a price
+  for (const table of tables) {
+    const hdrRow   = table.querySelector('tr');
+    const hdrCells = hdrRow ? [...hdrRow.querySelectorAll('th,td')] : [];
+    const hdrs     = hdrCells.map(c => c.textContent.trim().toLowerCase());
+    const idxFn    = kw => hdrs.findIndex(h => kw.some(k => h.includes(k)));
 
-    // Smart date: use column if found, else scan for MM/DD/YYYY or YYYY-MM-DD
-    let date = get(iDate);
-    if (!date) date = cells.map(c => c.textContent.trim()).find(t => /\d{2}\/\d{2}\/\d{4}/.test(t) || /\d{4}-\d{2}-\d{2}/.test(t)) || '';
+    const iTitle = idxFn(['title','name','listing']);
+    const iDate  = idxFn(['date']);
+    const iPrice = idxFn(['price']);
 
-    rows.push({ price, date, title: get(iTitle), grade: get(iGrade) });
+    for (const tr of [...table.querySelectorAll('tr')].slice(1, 31)) {
+      const cells = [...tr.querySelectorAll('td,th')];
+      if (!cells.length) continue;
+      const get = i => (i >= 0 && i < cells.length) ? cells[i].textContent.trim() : '';
+
+      let price = get(iPrice);
+      if (!price) price = cells.map(c => c.textContent.trim()).find(t => /^\$[\d,]+/.test(t)) || '';
+      if (!price) continue;
+
+      let date = get(iDate);
+      if (!date) date = cells.map(c => c.textContent.trim()).find(t => /\d{2}\/\d{2}\/\d{4}/.test(t) || /\d{4}-\d{2}-\d{2}/.test(t)) || '';
+
+      const title = get(iTitle);
+      const dedup = `${price}|${date}|${title.slice(0,40)}`;
+      if (seen.has(dedup)) continue;
+      seen.add(dedup);
+
+      rows.push({ price, date, title, grade: pcDetectGrade(title) });
+    }
   }
   return rows.length ? rows : null;
 }
