@@ -1,5 +1,73 @@
 # Pokemon Delta Species — Project Notes
 
+## Card Search Gate 3 — Cloudflare Worker needed (2026-03-27 night session)
+
+### Why Cloudflare Worker is needed
+Watchlist gets eBay listings from `watchlist_data.json` — pre-fetched server-side by `fetch_watchlist_prices.py` using real eBay API credentials. Card Search is pure browser JS — can't use API keys (they'd be exposed in HTML). Scraping eBay's search page doesn't work because **eBay's SRP is a React SPA** — listing items are JS-rendered client-side, never in the server HTML. Confirmed via debug: 626k HTML returned, `s-item` only appears inside `<script>` strings, not DOM elements. eBay RSS feed (`?_rss=1`) is also dead — returns same HTML. A Cloudflare Worker is a ~30-line serverless function that holds credentials safely and proxies the real eBay Browse API.
+
+### Status
+- Cloudflare account created ✓
+- Worker NOT yet deployed (user was on mobile)
+- `-debug` suffix still on card names in `csRenderStatsPanel` — remove after Worker is wired in
+
+### Complete Worker script (paste into Cloudflare Worker editor, replacing all default code)
+```javascript
+export default {
+  async fetch(request, env) {
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      }});
+    }
+    const url = new URL(request.url);
+    const q   = url.searchParams.get('q') || '';
+    if (!q) return json({ error: 'Missing q' }, 400);
+    try {
+      const creds = btoa(`${env.EBAY_APP_ID}:${env.EBAY_CERT_ID}`);
+      const tok = await fetch('https://api.ebay.com/identity/v1/oauth2/token', {
+        method: 'POST',
+        headers: { 'Authorization': `Basic ${creds}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'grant_type=client_credentials&scope=https%3A%2F%2Fapi.ebay.com%2Foauth%2Fapi_scope',
+      }).then(r => r.json());
+      if (!tok.access_token) return json({ error: 'Token failed', detail: tok }, 500);
+      const data = await fetch(
+        `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${encodeURIComponent(q)}&limit=20`,
+        { headers: { 'Authorization': `Bearer ${tok.access_token}`, 'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US' }}
+      ).then(r => r.json());
+      const items = (data.itemSummaries || []).map(i => ({
+        title: i.title, price: parseFloat(i.price?.value || 0), url: i.itemWebUrl,
+        type: i.buyingOptions?.includes('AUCTION') ? 'AUCTION' : 'BIN',
+        best_offer: i.buyingOptions?.includes('BEST_OFFER') || false,
+      }));
+      return json({ items });
+    } catch(e) { return json({ error: e.message }, 500); }
+  }
+};
+function json(d, s=200) {
+  return new Response(JSON.stringify(d), { status: s,
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }});
+}
+```
+
+### Mobile deployment steps (6 steps)
+1. cloudflare.com → log in → **Workers & Pages** → **Create application** → **Create Worker**
+2. Delete all default code → paste Worker script above
+3. Click **Save and Deploy**
+4. Worker page → **Settings** → **Variables** → add two vars:
+   - `EBAY_APP_ID` = value from your `.env` file
+   - `EBAY_CERT_ID` = value from your `.env` file
+5. Copy the Worker URL (e.g. `https://something.yourname.workers.dev`)
+6. Give URL to Claude → wired into site in 2 min → done
+
+### What Claude does after getting the Worker URL
+- Update `csTriggerEbayFetch` to call `WORKER_URL?q=QUERY` instead of fetching eBay directly
+- Parse the JSON response `{ items: [...] }` instead of RSS/HTML
+- Remove `-debug` suffix from card names
+- Commit + push
+
+---
+
 ## PC Last Sold Tab — Sold Tab Improvements (2026-03-27 evening session)
 
 ### What was fixed and built
@@ -19,14 +87,17 @@ Changes take ~1-2 min to deploy. If user sees old UI, `Ctrl+Shift+R` + wait. Add
 
 ---
 
-## Seller Away Monitor (added 2026-03-27)
+## Seller Away Monitor (added 2026-03-27, updated 2026-03-27)
 
 - **Item**: https://www.ebay.com/itm/157626935379 — seller away until ~Mar 29
-- **Script**: `monitor_seller.py` — scrapes listing page for away/vacation text
+- **Script**: `monitor_seller.py` — uses eBay Browse API (OAuth), NOT HTML scraping
 - **Workflow**: `.github/workflows/seller_monitor.yml` — runs hourly via GH Actions cron
-- **Discord pings**: every hour with status snippet; one-time `🟢 BACK` alert when seller returns
+- **How it works**: Browse API returns 404 when seller is on vacation (listing hidden). Returns 200 when seller is back (listing visible again). No scraping = no CAPTCHA/bot-detection issues from cloud IPs.
+- **Discord pings**: every hour with status; one-time `SELLER IS BACK -- BUY NOW!` alert when listing reappears
 - **Dedup**: `seller_alerted.flag` (cached in GH Actions) prevents repeat "back" pings
+- **Secrets needed in GH Actions**: `DISCORD_WEBHOOK_URL`, `EBAY_APP_ID`, `EBAY_CERT_ID`
 - **After buying**: disable the workflow in GitHub Actions → Settings → Actions
+- **Lesson learned**: eBay aggressively blocks HTML scraping from cloud IPs (GitHub Actions, Cloudflare Workers). Always use the Browse API instead.
 
 ---
 
