@@ -1,8 +1,7 @@
 """
 monitor_seller.py — Checks eBay item listing for seller away notice.
-Sends a Discord ping when the seller is back and accepting orders.
-
-State is tracked via seller_alerted.flag so you only get pinged once.
+Pings Discord every hour with current status.
+Sends a special "BACK!" alert (only once) when seller returns.
 """
 
 import os, sys, json, re
@@ -52,7 +51,6 @@ def check_listing():
     print(f"Checking: {ITEM_URL}")
     try:
         r = requests.get(ITEM_URL, headers=HEADERS, timeout=15)
-        r.raise_for_status()
     except Exception as e:
         print(f"Fetch error: {e}")
         return {"status": "error", "error": str(e)}
@@ -60,21 +58,21 @@ def check_listing():
     soup = BeautifulSoup(r.text, "html.parser")
     page_text = soup.get_text(separator=" ").lower()
 
-    # Check for "item not found / ended" — listing may have been pulled
+    # Check for ended listing
     if r.status_code == 404 or "this listing has ended" in page_text or "item not found" in page_text:
-        return {"status": "ended", "note": "Listing is no longer available"}
+        return {"status": "ended"}
 
-    # Check for away / vacation notice anywhere on the page
+    # Check for away / vacation notice
     for phrase in AWAY_PHRASES:
         if phrase in page_text:
-            # Try to extract the context around the phrase for logging
             idx = page_text.find(phrase)
-            snippet = page_text[max(0, idx-20):idx+80].strip()
-            print(f"Away notice found: '...{snippet}...'")
-            return {"status": "away", "phrase": phrase, "snippet": snippet}
+            snippet = page_text[max(0, idx - 10):idx + 80].strip()
+            # Capitalise for display
+            snippet = snippet.strip().capitalize()
+            print(f"Away notice: '{snippet}'")
+            return {"status": "away", "snippet": snippet}
 
-    # No away notice found — seller is back
-    # Try to grab the item title for the Discord message
+    # No away notice — seller is back
     title_tag = soup.find("h1", {"class": re.compile(r"x-item-title", re.I)})
     if not title_tag:
         title_tag = soup.find("h1")
@@ -83,45 +81,57 @@ def check_listing():
     return {"status": "back", "title": title}
 
 
-def send_discord_alert(title):
+def send_discord(msg):
     if not DISCORD_WEBHOOK_URL:
-        print("No DISCORD_WEBHOOK_URL set — skipping Discord ping")
+        print("No DISCORD_WEBHOOK_URL — skipping")
         return
-
-    msg = (
-        f"**Seller is BACK!** Time to buy!\n\n"
-        f"**{title}**\n"
-        f"{ITEM_URL}\n\n"
-        f"_(This monitor will now stop sending alerts)_"
+    r = requests.post(
+        DISCORD_WEBHOOK_URL,
+        json={"content": msg, "username": "eBay Seller Monitor"},
+        timeout=10,
     )
-    payload = {"content": msg, "username": "eBay Seller Monitor"}
-    r = requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=10)
-    if r.status_code in (200, 204):
-        print("Discord ping sent!")
-    else:
-        print(f"Discord error: {r.status_code} {r.text}")
+    print(f"Discord: {r.status_code}")
 
 
 def main():
-    if already_alerted():
-        print("Already alerted — seller was back as of last check. Remove seller_alerted.flag to re-enable.")
-        return
-
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     result = check_listing()
-    print(f"Result: {json.dumps(result, indent=2)}")
+    print(json.dumps(result, indent=2))
 
-    if result["status"] == "back":
-        send_discord_alert(result.get("title", f"Item {ITEM_ID}"))
-        mark_alerted()
-        print("Flag written — won't ping again unless flag is deleted.")
+    if result["status"] == "away":
+        send_discord(
+            f"⏰ **Seller still away** ({now})\n"
+            f"> {result['snippet']}\n"
+            f"{ITEM_URL}"
+        )
+
+    elif result["status"] == "back":
+        if not already_alerted():
+            send_discord(
+                f"🟢 **SELLER IS BACK — BUY NOW!** ({now})\n"
+                f"**{result['title']}**\n"
+                f"{ITEM_URL}"
+            )
+            mark_alerted()
+            print("Flag written.")
+        else:
+            send_discord(
+                f"✅ **Seller is back** (already alerted, just confirming) ({now})\n"
+                f"{ITEM_URL}"
+            )
+
     elif result["status"] == "ended":
-        print("Listing ended or removed — sending one-time alert.")
-        send_discord_alert(f"Item {ITEM_ID} listing has ENDED (may have sold or been removed)")
+        send_discord(
+            f"❌ **Listing ended or removed** ({now})\n"
+            f"{ITEM_URL}"
+        )
         mark_alerted()
-    elif result["status"] == "away":
-        print("Seller still away — no ping.")
-    else:
-        print(f"Check failed: {result}")
+
+    elif result["status"] == "error":
+        send_discord(
+            f"⚠️ **Check failed** ({now}): {result.get('error', 'unknown error')}\n"
+            f"{ITEM_URL}"
+        )
         sys.exit(1)
 
 
