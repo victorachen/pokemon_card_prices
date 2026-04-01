@@ -1,8 +1,8 @@
 name: Seller Status Monitor
 
 on:
-  schedule:
-    - cron: '0 * * * *'  # every hour
+  # schedule disabled — seller monitor no longer needed (2026-04-01)
+  # was: cron: '0 * * * *' (every hour)
   workflow_dispatch:      # manual trigger from GitHub UI
 
 jobs:
